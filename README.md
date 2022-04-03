@@ -29,5 +29,5 @@
 6. In the middle of the screen (or on the top banner) you will see "Push commits to the origin remote." If you are sure that the commit is ready, click "Push origin."
 6. Check the project online and see if the changes have been reflected.
 
-### Using Terminal
-Please refer to https://rocketry.gitbook.io/public/tutorials/avionics/git-and-workflow for more information
+### Using command lines
+Please refer to https://rocketry.gitbook.io/public/tutorials/avionics/git-and-workflow for more information.
