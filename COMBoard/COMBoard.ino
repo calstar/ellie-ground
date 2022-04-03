@@ -5,7 +5,7 @@
 #include <Arduino.h>
 #include "HX711.h"
 
-
+float pressTime = 0;
 const int buttonpin1 = 15;
 const int LEDpin = 27;
 String success;
@@ -130,14 +130,22 @@ if (valveOpened) {
   digitalWrite(LEDpin,LOW);
 }
 
+if (prevPressed && (millis() - pressTime > 5.000)) {
+  prevPressed = false;
+  Commands.S1 = 180 - servo1_curr;
+  servo1_curr = 180 - servo1_curr;
+}
 
   if (pressed && !prevPressed) {
-    Commands.S1 = 90 - servo1_curr;
-    servo1_curr = 90 - servo1_curr;
+    Commands.S1 = 180 - servo1_curr;
+    servo1_curr = 180 - servo1_curr;
+    pressTime = millis();
     //remove the following line with code that detects the status of the valve
   //  valveOpened = !valveOpened;
-  }
+  // ADDED
   prevPressed = pressed;
+  }
+  //prevPressed = pressed;
 
   //servo2control
 //  currval2 = digitalRead(buttonpin2);
