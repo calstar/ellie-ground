@@ -276,3 +276,4 @@ void getReadings(){
    pt2 = scale2.read();
 
 }
+// hi! How r u?
