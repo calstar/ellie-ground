@@ -2,8 +2,8 @@
 2022 Eillie Hot-firing Electronics control
 
 ## Summary
-**DAQboard ino** file commands the ESP32 that reads data from sensors and commands from the COM Board, and sends data in a package to the COM Board
-**COMBoard ino** file commands the ESP32 that receives data in a package from the DAQ Board, sends commands to the DAQ Board, and sends data to MATLAB for plotting and data-saving purposes through the serial port.
+**DAQboard ino** file commands the ESP32 that reads data from sensors and commands from the COM Board, and sends data in a package to the COM Board \n
+**COMBoard ino** file commands the ESP32 that receives data in a package from the DAQ \n Board, sends commands to the DAQ Board, and sends data to MATLAB for plotting and data-saving purposes through the serial port. \n
 **liveplot.m** file is a MATLAB file that can receive data from the COM Board, create live plots, and save the data.
 
 ## Software requirement
@@ -22,7 +22,7 @@
 3. Search in "Filter you repositories" using keyword "ellie-ground." Select the correct repository and click "Clone."
   - If you want this cloned repository to be in a different folder, change the "Local Path."
 4. After you edit the file in the local repository, GitHub Desktop will detect changes and prompt you to commit. Make sure to double check your changes before committing.
-5. On the bottom left corner, put down a short summary that describes what you have changed, then click "Commit to *main*"
+5. On the bottom left corner, put down a short summary that describes what you have changed, then click "Commit to **main**"
 6. In the middle of the screen (or on the top banner) you will see "Push commits to the origin remote." If you are sure that the commit is ready, click "Push origin."
 6. Check the project online and see if the changes have been reflected.
 
