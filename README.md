@@ -21,7 +21,7 @@
 ### Using Github Desktop
 1. Make sure you have access to this project
     - Check with you administrators
-2. Go to the Github app, sign in, and click on the top left corner. You should see a pop-up window with an "Add" button. Select that button and choose "Clone repository"
+2. Go to the Github app, sign in, and click on the top left corner. You should see a pop-up window with an "Add" button. Select that button and choose "Clone repository."
 3. Search in "Filter you repositories" using the keyword "ellie-ground." Select the correct repository and click "Clone."
     - If you want this cloned repository to be in a different folder, change the "Local Path."
 4. After you edit the file in the local repository, GitHub Desktop will detect changes and prompt you to commit. Make sure to double check your changes before committing.
