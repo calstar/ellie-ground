@@ -9,7 +9,7 @@
 **liveplot.m** is a MATLAB file that can receive data from the COM Board, create live plots, and save the data.
 
 ## Software requirement
-**Ctrl click (Windows) or Cmd click the following link to open them in new tabs**
+**Ctrl click (Windows) or Cmd click the following links to open them in new tabs**
 1. Arduino (https://www.arduino.cc/en/software)
 2. MATLAB (https://software.berkeley.edu/matlab®)
     - To control the serial port, you need to install the [**Instrument Control Toolbox**](https://www.mathworks.com/products/instrument.html).
