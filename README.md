@@ -24,7 +24,7 @@
 2. Go to the Github app, sign in, and click on the top left corner. You should see a pop-up window with an "Add" button. Select that button and choose "Clone repository."
 3. Search in "Filter you repositories" using the keyword "ellie-ground." Select the correct repository and click "Clone."
     - If you want this cloned repository to be in a different folder, change the "Local Path."
-4. After you have edited the file in the local repository, GitHub Desktop will detect changes and prompt you to commit. Make sure to double check your changes before committing.
+4. After you have edited and saved the file in the local repository, GitHub Desktop will detect changes and prompt you to commit. Make sure to double check your changes before committing.
 5. On the bottom left corner, put down a short summary that describes what you have changed, then click "Commit to **main**."
 6. In the middle of the screen (or on the top banner) you will see "Push commits to the origin remote." If you are sure that the commit is ready, click "Push origin."
 6. Check the project online and see if the changes have been reflected.
