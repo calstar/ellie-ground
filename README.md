@@ -2,8 +2,10 @@
 2022 Eillie Hot-firing Electronics control
 
 ## Summary
-**DAQboard ino** file commands the ESP32 that reads data from sensors and commands from the COM Board, and sends data in a package to the COM Board \n
-**COMBoard ino** file commands the ESP32 that receives data in a package from the DAQ \n Board, sends commands to the DAQ Board, and sends data to MATLAB for plotting and data-saving purposes through the serial port. \n
+**DAQboard ino** file commands the ESP32 that reads data from sensors and commands from the COM Board, and sends data in a package to the COM Board
+
+**COMBoard ino** file commands the ESP32 that receives data in a package from the DAQ  Board, sends commands to the DAQ Board, and sends data to MATLAB for plotting and data-saving purposes through the serial port.
+
 **liveplot.m** file is a MATLAB file that can receive data from the COM Board, create live plots, and save the data.
 
 ## Software requirement
