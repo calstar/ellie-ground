@@ -30,4 +30,4 @@
 6. Check the project online and see if the changes have been reflected.
 
 ### Using Terminal
-(I don't know the technical details so if anyone does please add on)
+Please refer to https://rocketry.gitbook.io/public/tutorials/avionics/git-and-workflow for more information
