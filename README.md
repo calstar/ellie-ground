@@ -1,5 +1,5 @@
 # ellie-ground
-2022 Eillie Hot-firing Electronics control
+2022 Eillie Hot-fire Electronics Control
 
 ## Summary
 **DAQboard.ino** file commands the ESP32 that reads data from sensors and commands from the COM Board, and sends data in a package to the COM Board.
