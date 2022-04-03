@@ -10,12 +10,12 @@
 
 ## Software requirement
 **Ctrl click (Windows) or Cmd click the following link to open them in new tabs**
-1. Arduino (https://www.arduino.cc/en/software){:target="\_blank"}
-2. MATLAB (https://software.berkeley.edu/matlab®){:target="\_blank"}
-    - To control the serial port, you need to install the [**Instrument Control Toolbox**](https://www.mathworks.com/products/instrument.html){:target="\_blank"}.
-3. (optional) An external code editing software such as Atom (https://atom.io) {:target="_blank"} or Visual Studio (https://visualstudio.microsoft.com/downloads/) {:target="_blank"}.
+1. Arduino (https://www.arduino.cc/en/software)
+2. MATLAB (https://software.berkeley.edu/matlab®)
+    - To control the serial port, you need to install the [**Instrument Control Toolbox**](https://www.mathworks.com/products/instrument.html).
+3. (optional) An external code editing software such as Atom (https://atom.io) or Visual Studio (https://visualstudio.microsoft.com/downloads/).
     - Arduino IDE and MATLAB are sufficient for all the coding
-4. (recommended) GitHub Desktop (https://desktop.github.com) {:target="_blank"}. You can pull, push, and edit files with ease. **Step 3 required if you would like to download GitHub Desktop as the software requires an external editor.**
+4. (recommended) GitHub Desktop (https://desktop.github.com). You can pull, push, and edit files with ease. **Step 3 required if you would like to download GitHub Desktop as the software requires an external editor.**
 
 ## How to update
 ### Using Github Desktop
