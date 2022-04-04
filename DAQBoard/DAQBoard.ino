@@ -16,7 +16,7 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 //define pins to use for the various sensors and connetcions. define takes up less space on the chip
 #define ONBOARD_LED  12
 #define PT1DOUT 26
-#define PT2DOUT 44
+#define PT2DOUT 16
 
 #define CLK 25
 #define FM 4
@@ -128,7 +128,7 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 // Callback when data is received
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&Commands, incomingData, sizeof(Commands));
-  Serial.print("Bytes received: ");
+  // Serial.print("Bytes received: ");
   Serial.println(len);
   S1 =Commands.S1;
   S2 = Commands.S2;
@@ -275,7 +275,7 @@ void getReadings(){
 
    pt2 = scale2.read();
 
-   // Serial.print(String(pt1)+" ");
+   Serial.print(String(pt1)+" ");
    Serial.println(String(pt2));
 
 }

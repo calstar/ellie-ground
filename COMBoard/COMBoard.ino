@@ -69,12 +69,12 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&incomingReadings, incomingData, sizeof(incomingReadings));
  // Serial.print("Bytes received: ");
   //Serial.println(len);
-  incomingPT1 = 1000000;
-  incomingPT2 = 1000000;
-  incomingPT3 = 1000000;
-  incomingPT4 = 1000000;
-  incomingPT5 = 1000000;
-  incomingFM = 1000000;
+  incomingPT1 = incomingReadings.pt1;
+  incomingPT2 = incomingReadings.pt2;
+  incomingPT3 = incomingReadings.pt3;
+  incomingPT4 = incomingReadings.pt4;
+  incomingPT5 = incomingReadings.pt5;
+  incomingFM = incomingReadings.fm;
   incomingLC1 = incomingReadings.lc1;
   incomingLC2 = incomingReadings.lc2;
   incomingLC3 = incomingReadings.lc3;
@@ -133,13 +133,13 @@ if (valveOpened) {
 
 if (prevPressed && (millis() - pressTime > 5000)) {
   prevPressed = false;
-  Commands.S1 = angle - servo1_curr;
-  servo1_curr = angle - servo1_curr;
+  Commands.S1 = 90 - servo1_curr;
+  servo1_curr = 90 - servo1_curr;
 }
 
   if (pressed && !prevPressed) {
-    Commands.S1 = angle - servo1_curr;
-    servo1_curr = angle - servo1_curr;
+    Commands.S1 = 90 - servo1_curr;
+    servo1_curr = 90 - servo1_curr;
     pressTime = millis();
     //remove the following line with code that detects the status of the valve
   //  valveOpened = !valveOpened;

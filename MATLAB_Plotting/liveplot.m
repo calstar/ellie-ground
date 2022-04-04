@@ -19,7 +19,7 @@ timeFactor = 24 * 60 * 60;
 
 % set up serial object
 serialPortName = '/dev/cu.SLAB_USBtoUART'; % on Windows would be COMx
-s = serial(serialPortName,'BaudRate',115200);
+s = serialport(serialPortName,115200); 
 
 % open serial port
 fopen(s);
