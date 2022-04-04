@@ -1,13 +1,12 @@
-% Clear everything
+% Clear everything 
 close all; clear all;
 % reset all ports; otherwise might be unable to connect to port
-% make sure to install
-instrreset;
+instrreset; 
 
 % set up data monitoring frequency
 pauseTime = 0.05;
-% set up plotting frequency
-plotTime = 0.03;
+% set up plotting frequency 
+plotTime = 0.2;
 
 % frequency
 fetchFrequency = 1/pauseTime;
@@ -19,9 +18,8 @@ observationInterval = 5;
 timeFactor = 24 * 60 * 60;
 
 % set up serial object
-% serialPortName = 'COM10'; % on Windows would be COMx
-serialPortName = '/dev/tty.SLAB_USBtoUART'; % Hubert's Device
-s = serialport(serialPortName,115200);
+serialPortName = '/dev/cu.SLAB_USBtoUART'; % on Windows would be COMx
+s = serial(serialPortName,'BaudRate',115200);
 
 % open serial port
 fopen(s);
@@ -87,14 +85,14 @@ while(1)
         timeZeroer = str2double(str{1});
         timeInterval(i) = (str2double(str{1})-timeZeroer)/1000;
     end
-
+    
     % data1 receives flowrate in L/min
     % data1(i) = str2double(str{2})/10000;
 
     % data1 receives PT1
-    data1(i) = str2double(str{2})*2.3013*10^(-5)+15.977;
+    data1(i) = str2double(str{2})*1.0533*10^(-4)+20.8469;
     % data2 receives PT2
-    data2(i) = str2double(str{3})*2.3013*10^(-5)+15.977;
+    data2(i) = str2double(str{3})*1.0323*10^(-4)+17.9758;
     % data3 receives PT3
     data3(i) = str2double(str{4})*2.3013*10^(-5)+15.977;
     % data4 receives PT4
@@ -114,8 +112,8 @@ while(1)
 
     if (now() - timeControl) * 24 * 60 * 60 >= plotTime % plot every x seconds
         if timeInterval(end)-timeInterval(1) <= observationInterval
-
-
+            
+            
             axes(ax1);
             plot(timeInterval,data1);
             title('Pressure Transducer 1')
@@ -161,12 +159,9 @@ while(1)
             title('Pressure Transducer 1')
 
             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
-
+            
             axes(ax2);
-            % change the number e.g "-6" according to trials.
-            % Because data can only be sent at a rate, if the number is too big too much data will be subtracted--
-            % the system is demanding to subtract more data than what came in in the first 5 seconds; 
-            % if too small, then more than 5 seconds of data will be present at all time
+            % change the number e.g "-6" according to trials. 
             plot(timeInterval(end-observationInterval/pauseTime:end),data2(end-observationInterval/pauseTime:end));
             title('Pressure Transducer 2')
 
@@ -174,7 +169,7 @@ while(1)
             % ylim([-500000 100000]);
 
             axes(ax3);
-            % change the number e.g "-6" according to trials.
+            % change the number e.g "-6" according to trials. 
             plot(timeInterval(end-observationInterval/pauseTime:end),data3(end-observationInterval/pauseTime:end));
             title('Pressure Transducer 3')
 
@@ -182,35 +177,36 @@ while(1)
             % ylim([-500000 100000]);
 
             axes(ax4);
-            % change the number e.g "-6" according to trials.
+            % change the number e.g "-6" according to trials. 
             plot(timeInterval(end-observationInterval/pauseTime:end),data4(end-observationInterval/pauseTime:end));
             title('Pressure Transducer 4')
 
             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
 
             axes(ax5);
-            % change the number e.g "-6" according to trials.
+            % change the number e.g "-6" according to trials. 
             plot(timeInterval(end-observationInterval/pauseTime:end),data5(end-observationInterval/pauseTime:end));
             title('Pressure Transducer 5')
 
             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
-
+            
             axes(ax6);
             plot(timeInterval(end-observationInterval/pauseTime:end),data6(end-observationInterval/pauseTime:end));
             % set the x limits so that only the last 5 seconds of data is
             % plotted
             title('Flow Meter')
 
-            xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
+            xlim([timeInterval(i)-observationInterval, timeInterval(i)]); 
         end
         timeControl = now();
     end
     endTime=datestr(now,'dd-mm-yyyy HH:MM:SS FFF');
     endTime=endTime(21:23);
 
-    timeDifference=str2num(endTime)-str2num(startTime);
+    timeDifference=str2num(endTime)-str2num(startTime)
     if timeDifference<pauseTime
         pause(timeDifference);
     end
     i = i+1;
 end
+

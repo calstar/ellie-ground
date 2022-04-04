@@ -4,12 +4,12 @@
 #include <Wire.h>
 #include <Arduino.h>
 #include "HX711.h"
-
+int angle = 90;
 float pressTime = 0;
 const int buttonpin1 = 15;
 const int LEDpin = 27;
 String success;
-int servo1_curr = 0;
+int servo1_curr = 90;
 int servo2_curr = 0;
 int incomingS1 = 0;
 float incomingPT1 = 0;
@@ -82,6 +82,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 
 }
 void setup() {
+  Commands.S1 = 90;
   // put your setup code here, to run once:
   Serial.begin(115200);
   pinMode(buttonpin1,INPUT);
@@ -119,7 +120,7 @@ void loop() {
   pressed = digitalRead(buttonpin1); //push button to send servo signals
 
   // Serial.println("incomingS1, "+String(incomingS1)+", servo1_curr, "+String(servo1_curr));
-  if (incomingS1 > 0){
+  if (incomingS1 == 90){
   valveOpened = true;
 } else {
   valveOpened = false;
@@ -130,15 +131,15 @@ if (valveOpened) {
   digitalWrite(LEDpin,LOW);
 }
 
-if (prevPressed && (millis() - pressTime > 5.000)) {
+if (prevPressed && (millis() - pressTime > 5000)) {
   prevPressed = false;
-  Commands.S1 = 180 - servo1_curr;
-  servo1_curr = 180 - servo1_curr;
+  Commands.S1 = angle - servo1_curr;
+  servo1_curr = angle - servo1_curr;
 }
 
   if (pressed && !prevPressed) {
-    Commands.S1 = 180 - servo1_curr;
-    servo1_curr = 180 - servo1_curr;
+    Commands.S1 = angle - servo1_curr;
+    servo1_curr = angle - servo1_curr;
     pressTime = millis();
     //remove the following line with code that detects the status of the valve
   //  valveOpened = !valveOpened;
