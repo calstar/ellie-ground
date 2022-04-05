@@ -5,10 +5,10 @@ close all; clear all;
 instrreset;
 
 % create our clean up object for interrupt
-  cleanupObj = onCleanup(@cleanMeUp);
+cleanupObj = onCleanup(@cleanMeUp);
 
 % NAME THE TEST FIRST (only change the second part)
-fileName = [datestr(now,'yyyy-mm-dd_HHMMSS'),'_test2'];
+fileName = [datestr(now,'yyyy-mm-dd_HHMMSS'),'_test3'];
 
 % set up data monitoring frequency
 pauseTime = 0.05;
@@ -120,14 +120,14 @@ while(1)
     testDataTable(i,:) = {timeInterval(i),data1(i),data2(i),data3(i),data4(i),data5(i),data6(i)};
 
 
-   
+
     % data7 receives LC1
     % data7(i) = str2double(str{7});
     % data8 receives LC2
     % data8(i) = str2double(str{8});
     % data9 receives LC3
     % data9(i) = str2double(str{9});
-    
+
 
 
 
@@ -230,27 +230,27 @@ while(1)
     end
     i = i+1;
 end
-function cleanMeUp()
+    function cleanMeUp()
         % saves data to file (or could save to workspace)
         fprintf('saving test data as %s.xls\n',fileName);
         setUpTest(['Test_Data_',datestr(now,'yyyy-mm-dd')],fileName,testDataTable);
-%         writetable(testDataTable,fileName,"FileType","spreadsheet");
-end
+        %         writetable(testDataTable,fileName,"FileType","spreadsheet");
+    end
 
 
 
 end
 
 function setUpTest(folderName,fileName,testDataTable)
-    if ~exist(folderName, 'dir')
-       mkdir(folderName);
-       fprintf("test data folder created\n");
-    else
-        fprintf("folder already exists\n")
-    end
-    writetable(testDataTable,fileName,"FileType","spreadsheet");
-    fileString = fileName + ".xls";
-    movefile(fileString,folderName);
+if ~exist(folderName, 'dir')
+    mkdir(folderName);
+    fprintf("test data folder created\n");
+else
+    fprintf("folder already exists\n")
+end
+writetable(testDataTable,fileName,"FileType","spreadsheet");
+fileString = fileName + ".xls";
+movefile(fileString,folderName);
 
 end
 
