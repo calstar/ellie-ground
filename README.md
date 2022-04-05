@@ -1,6 +1,7 @@
 # ellie-ground
 2022 Eillie Hot-fire Electronics Control
 
+
 ## Summary
 **DAQboard.ino** file commands the ESP32 that reads data from sensors and commands from the COM Board, and sends data in a package to the COM Board.
 
@@ -10,6 +11,7 @@
   1. **Change the test file name according to the trial number in the liveplot.m file.**
   2. Click "Run" to start the code, and close the plotting window to stop the code. Test data will be automatically stored in a spreadsheet under a folder called "**Test_Data_yyyy-mm-dd**."
 
+
 ## Software requirement
 **Ctrl click (Windows) or Cmd click the following links to open them in new tabs**
 1. Arduino (https://www.arduino.cc/en/software)
@@ -18,6 +20,7 @@
 3. (optional) An external code editing software such as Atom (https://atom.io) or Visual Studio (https://visualstudio.microsoft.com/downloads/).
     - Arduino IDE and MATLAB are sufficient for all the coding
 4. (recommended) GitHub Desktop (https://desktop.github.com). You can pull, push, and edit files with ease. **Step 3 required if you would like to download GitHub Desktop as the software requires an external editor.**
+
 
 ## How to update
 ### Using Github Desktop
@@ -31,8 +34,10 @@
 6. In the middle of the screen (or on the top banner) you will see "Push commits to the origin remote." If you are sure that the commit is ready, click "Push origin."
 6. Check the project online and see if the changes have been reflected.
 
+
 ### Using Git
 Please refer to https://rocketry.gitbook.io/public/tutorials/avionics/git-and-workflow for more information.
+
 
 ## Helpful resources
 ### ESP32-DevkitC
