@@ -216,7 +216,9 @@ if (prevPressed && (millis() - pressTime > 5000)) {
 
  // FM Test
 
-    Serial.println(incomingFM);
+    Serial.print(incomingFM);
+    Serial.print(" ");
+    Serial.println(pressed);
 
     // Print the cumulative total of litres flowed since starting
    //Serial.print("Output Liquid Quantity: ");

@@ -7,6 +7,8 @@
 **COMBoard.ino** file commands the ESP32 that receives data in a package from the DAQ  Board, sends commands to the DAQ Board, and sends data to MATLAB for plotting and data-saving purposes through the serial port.
 
 **liveplot.m** is a MATLAB file that can receive data from the COM Board, create live plots, and save the data.
+  1. **Change the test file name according to the trial number in the liveplot.m file.**
+  2. Click "Run" to start the code, and close the plotting window to stop the code. Test data will be automatically stored in a spreadsheet under a folder called "**Test_Data_yyyy-mm-dd**."
 
 ## Software requirement
 **Ctrl click (Windows) or Cmd click the following links to open them in new tabs**
