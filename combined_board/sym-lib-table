@@ -1,5 +1,7 @@
 (sym_lib_table
-  (lib (name "hx711")(type "KiCad")(uri "C:/Users/Susanne/OneDrive/Documents/Berkeley/Research/URAP/all_board/sensor_board/hx711.kicad_sym")(options "")(descr ""))
-  (lib (name "pressure_sensor")(type "KiCad")(uri "C:/Users/Susanne/OneDrive/Documents/Berkeley/Research/URAP/all_board/sensor_board/pressure_sensor.kicad_sym")(options "")(descr ""))
+  (lib (name "hx711")(type "KiCad")(uri "C:/Users/Susanne/OneDrive/Documents/Berkeley/Research/URAP/all_board/sensor_board/hx711.kicad_sym")(options "")(descr "")(disabled))
+  (lib (name "pressure_sensor")(type "KiCad")(uri "C:/Users/Susanne/OneDrive/Documents/Berkeley/Research/URAP/all_board/sensor_board/pressure_sensor.kicad_sym")(options "")(descr "")(disabled))
   (lib (name "relay_board")(type "KiCad")(uri "${KIPRJMOD}/relay_board.kicad_sym")(options "")(descr ""))
+  (lib (name "ELLIE_Symbol_Library")(type "KiCad")(uri "${KIPRJMOD}/ELLIE_Symbol_Library.kicad_sym")(options "")(descr ""))
+  (lib (name "ESP32-DEVKITC-32D")(type "Legacy")(uri "${KIPRJMOD}/ESP32-DEVKITC-32D.lib")(options "")(descr ""))
 )
