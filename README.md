@@ -33,3 +33,13 @@
 
 ### Using Git
 Please refer to https://rocketry.gitbook.io/public/tutorials/avionics/git-and-workflow for more information.
+
+## Helpful resources
+### ESP32-DevkitC
+Getting started
+
+https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/esp32/get-started-devkitc.html
+
+Pinout reference
+
+![esp32 devkitC pinout](https://github.com/calstar/ellie-ground/blob/main/Misc_resources/esp32-devkitC-v4-pinout.png?raw=true "ESP32 DevkitC Pinout")
