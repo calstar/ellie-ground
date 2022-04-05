@@ -45,7 +45,6 @@ float flowRate;
 boolean currentState;
 boolean lastState = false;
 
-
 //Initialize the PT and LC sensor objects which use the HX711 breakout board
 HX711 scale1;
 HX711 scale2;
@@ -57,7 +56,6 @@ Servo servo2;
 //define servo necessary values
 int ADC_Max = 4096;
 
-
 ///////////////
 //IMPORTANT
 //////////////
@@ -65,7 +63,6 @@ int ADC_Max = 4096;
 uint8_t broadcastAddress[] = {0xC4, 0xDD, 0x57, 0x9E, 0x91, 0x6C};
 
 int count=3;
-
 
 // Define variables to store readings to be sent
 float pt1=1;
@@ -80,15 +77,11 @@ float fm=2;
 //the following are only used in the oposite diretcion, they are included because it may be necessary for the structure to be the same in both directions
 int S1; int S2; int S1S2; int I;
 
-
-
-
 // Define variables to store incoming commands, servos and igniter
 int incomingS1;
 int incomingS2;
 int incomingS1S2;
 bool incomingI;
-
 
 float endTime;
 float timeDiff;
@@ -128,7 +121,6 @@ void calibrationISR() {
   float pt1_now = scale1.read();
   float pt2_now = scale2.read();
   Serial.println("Pulse time: " + str(difference) + " PT1: " + str(pt1_now) + " PT2: " + str(pt2_now));
-
 }
 
 void setup() {
@@ -153,15 +145,12 @@ void setup() {
  pinMode(FM, INPUT);           //Sets the pin as an input
  attachInterrupt(FM, Flow, RISING);
 
-  Serial.begin(115200);
-
+ Serial.begin(115200);
 
   // Set device as a Wi-Fi Station
 
   programStart = millis();
 }
-
-
 
 void loop() {
   //Set LED back to low
@@ -173,7 +162,6 @@ void loop() {
   }
    //ADD PRINT STATEMENTS FOR DEBUGGING HERE IF NCESSARY
  // printSerial();
-
 
 //UPDATE SERVO POSITIONS
   //Check new data for servo status updates
@@ -195,7 +183,6 @@ void loop() {
 
   getReadings();
 
-
   // Set values to send
   Readings.pt1 = pt1;
   Readings.pt2 = pt2;
@@ -212,7 +199,6 @@ void loop() {
 //  if (timeDiff<loopTime) {
 //    delay(timeDiff);
 //  }
-
 }
 
 void getReadings(){

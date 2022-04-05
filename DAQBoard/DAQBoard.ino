@@ -40,7 +40,6 @@ float flowRate;
 boolean currentState;
 boolean lastState = false;
 
-
 //Initialize the PT and LC sensor objects which use the HX711 breakout board
 HX711 scale1;
 HX711 scale2;
@@ -52,7 +51,6 @@ Servo servo2;
 //define servo necessary values
 int ADC_Max = 4096;
 
-
 ///////////////
 //IMPORTANT
 //////////////
@@ -60,7 +58,6 @@ int ADC_Max = 4096;
 uint8_t broadcastAddress[] = {0xC4, 0xDD, 0x57, 0x9E, 0x91, 0x6C};
 
 int count=3;
-
 
 // Define variables to store readings to be sent
 float pt1=1;
@@ -74,9 +71,6 @@ float lc3=1;
 float fm=2;
 //the following are only used in the oposite direction, they are included because it may be necessary for the structure to be the same in both directions
 int S1; int S2; int S1S2; int I;
-
-
-
 
 // Define variables to store incoming commands, servos and igniter
 int incomingS1;
@@ -141,9 +135,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   S2 = Commands.S2;
   S1S2 = Commands.S1S2;
   I = Commands.I;
-
 }
-
 
 void setup() {
   //attach servo pins
@@ -195,18 +187,13 @@ void setup() {
   esp_now_register_recv_cb(OnDataRecv);
 }
 
-
-
 void loop() {
   startTime=millis();
   //Set LED back to low
     digitalWrite(ONBOARD_LED,LOW);
 
-
-
  //ADD PRINT STATEMENTS FOR DEBUGGING HERE IF NCESSARY
  // printSerial();
-
 
 //UPDATE SERVO POSITIONS
   //Check new data for servo status updates
@@ -227,7 +214,6 @@ void loop() {
   servo1write(S1);
 
   getReadings();
-
 
   // Set values to send
   Readings.pt1 = pt1;
@@ -256,10 +242,7 @@ void loop() {
 //  if (timeDiff<loopTime) {
 //    delay(timeDiff);
 //  }
-
 }
-
-
 
 void getReadings(){
   currentMillis = millis();
