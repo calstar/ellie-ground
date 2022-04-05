@@ -13,7 +13,7 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 #include <Arduino.h>
 #include "HX711.h"
 
-//define pins to use for the various sensors and connetcions. define takes up less space on the chip
+//define pins to use for the various sensors and connections. define takes up less space on the chip
 #define ONBOARD_LED  12
 #define PT1DOUT 26
 #define PT2DOUT 16
@@ -27,7 +27,7 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 #define SERVO_MIN_USEC (900)
 #define SERVO_MAX_USEC (2100)
 
-//Initialize flow meter variables for how it computes the flow ammount
+//Initialize flow meter variables for how it computes the flow amount
 float currentMillis = 0;
 float goalTime = 100;
 float currReading1;
@@ -72,7 +72,7 @@ float lc1=1;
 float lc2=1;
 float lc3=1;
 float fm=2;
-//the following are only used in the oposite diretcion, they are included because it may be necessary for the structure to be the same in both directions
+//the following are only used in the oposite direction, they are included because it may be necessary for the structure to be the same in both directions
 int S1; int S2; int S1S2; int I;
 
 
@@ -210,20 +210,21 @@ void loop() {
 
 //UPDATE SERVO POSITIONS
   //Check new data for servo status updates
-  switch (S1) {
-    case 0:
-        servo1.write(0);
-        break;
-     case 45:
-        servo1.write(45);
-        break;
-    case 90:
-        servo1.write(90);
-        break;
-    case 130:
-        servo1.write(135);
-        break;
-  }
+  //switch (S1) {
+    //case 0:
+        //servo1.write(0);
+        //break;
+     //case 45:
+        //servo1.write(45);
+        //break;
+    //case 90:
+        //servo1.write(90);
+        //break;
+    //case 130:
+        //servo1.write(135);
+        //break;
+  //}
+  servo1write(S1);
 
   getReadings();
 
@@ -262,24 +263,17 @@ void loop() {
 
 void getReadings(){
   currentMillis = millis();
- // if (goalTime < currentMillis) {
- //
- //   goalTime = currentMillis + 50;
- //   flowRate=fmcount;
- //   fmcount=0;
- // }
+  fmcount = 0;
+  while (millis() - currentMillis < goalTime) {
+    currentState = digitalRead(FM);
+    if (!(currentState == lastState)) {
+      lastState = currentState;
+      fmcount += 1;
+    }
+  }
+  flowRate = fmcount * 1000 / goalTime;
+  fm =int(flowRate*10000+1);  // Print the integer part of the variable
 
-
-
-  fm =count;  // Print the integer part of the variable
-  count=4;
-   pt1 = scale1.read();
-
-   pt2 = scale2.read();
-
-}
-
-void Flow()
-{
-   count++; //Every time this function is called, increment "count" by 1
+  pt1 = scale1.read();
+  pt2 = scale2.read();
 }
