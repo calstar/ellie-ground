@@ -49,7 +49,7 @@ Pinout reference
 
 ![esp32 devkitC pinout](https://github.com/calstar/ellie-ground/blob/main/Misc_resources/esp32-devkitC-v4-pinout.png?raw=true "ESP32 DevkitC Pinout")
 
-### ESP32 (for breadboard/protoboard application)
+### ESP32-HUZZAH (for breadboard/protoboard application)
 
 Pinout reference
 ![esp32 devkitC pinout](https://github.com/calstar/ellie-ground/blob/main/Misc_resources/esp32-huzzah-pinout.png?raw=true "ESP32 HUZZAH Pinout")
