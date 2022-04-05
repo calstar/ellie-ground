@@ -37,4 +37,4 @@ Please refer to https://rocketry.gitbook.io/public/tutorials/avionics/git-and-wo
 ## Helpful resources
 ### ESP32-DevkitC
 https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/esp32/get-started-devkitc.html
-![ESP32](Misc_resources\esp32-devkitC-v4-pinout.png "Title")
+![alt text](https://github.com/calstar/ellie-ground/blob/main/Misc_resources/esp32-devkitC-v4-pinout.png?raw=true)
