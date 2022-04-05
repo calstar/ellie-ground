@@ -40,7 +40,7 @@ Please refer to https://rocketry.gitbook.io/public/tutorials/avionics/git-and-wo
 
 
 ## Helpful resources
-### ESP32-DevkitC
+### ESP32-DevkitC (for PCB application)
 Getting started
 
 https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/esp32/get-started-devkitc.html
@@ -48,3 +48,8 @@ https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/esp32/g
 Pinout reference
 
 ![esp32 devkitC pinout](https://github.com/calstar/ellie-ground/blob/main/Misc_resources/esp32-devkitC-v4-pinout.png?raw=true "ESP32 DevkitC Pinout")
+
+### ESP32 (for breadboard/protoboard application)
+
+Pinout reference
+![esp32 devkitC pinout](https://github.com/calstar/ellie-ground/blob/main/Misc_resources/esp32-huzzah-pinout.png?raw=true "ESP32 Pinout")
