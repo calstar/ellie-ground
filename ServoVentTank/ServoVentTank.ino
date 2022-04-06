@@ -35,11 +35,11 @@ const int buttonpin1 = 27;
 bool pressed = false;
 bool prevPressed = false;
 bool valveOpened = false;
-int incomingS1 = 0;
+int incomingS1 = 90;
 int angle = 90;
 float pressTime = 0;
 int servo1_curr = 90;
-int servo2_curr = 0;
+int servo2_curr = 90;
 int S1=90;
 
 
@@ -117,7 +117,7 @@ void setup() {
 //Flowmeter untreupt
  pinMode(FM, INPUT);           //Sets the pin as an input
 
- Serial.begin(230400);
+ Serial.begin(115200);
 
   // Set device as a Wi-Fi Station
 
@@ -127,31 +127,26 @@ void setup() {
 void loop() {
 
   pressed = digitalRead(buttonpin1); //push button to send servo signals
-  
+
 
 Commands.S1=90;
 if (pressed) {
-  Commands.S1 =0;
+  Commands.S1 =75;
   pressTime=millis();
   prevPressed=true;
 }
 
 if (prevPressed && (millis() - pressTime < 1000)) {
 
-  Commands.S1 = 0;
+  Commands.S1 = 75;
 }
 else {
     prevPressed = false;
 }
 
-
   S1=Commands.S1;
 
   servo1.write(S1);
-
-
-
-  getReadings();
 
 
 //  }
@@ -164,17 +159,23 @@ void getReadings(){
     currentState = digitalRead(FM);
     if (!(currentState == lastState)) {
       lastState = currentState;
+      Serial.print(1);
+      Serial.print(" ");
+      Serial.print(1);
+      Serial.print(" ");
+      Serial.print(1);        
+      Serial.print(" ");
       Serial.println(millis());
 
       
     }
   }
 
-      Serial.print(1);
+      Serial.print(millis());
       Serial.print(" ");
       Serial.print(scale1.read());
       Serial.print(" ");
       Serial.print(scale2.read());        
       Serial.print(" ");
-      Serial.println(millis());
+      Serial.println(1);
 }
