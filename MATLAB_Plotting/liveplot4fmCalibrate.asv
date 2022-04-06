@@ -8,7 +8,7 @@ instrreset;
 cleanupObj = onCleanup(@cleanMeUp);
 
 % NAME THE TEST FIRST (only change the second part)
-fileName = [datestr(now,'yyyy-mm-dd_HHMMSS'),'_test3'];
+fileName = [datestr(now,'yyyy-mm-dd_HHMMSS'),'_fm_test1'];
 
 % set up data monitoring frequency
 pauseTime = 0.05;
@@ -32,8 +32,9 @@ testDataTable = table('Size',sz,'VariableTypes',dataTypes,'VariableNames',dataLa
 
 
 % set up serial object
-serialPortName = '/dev/cu.SLAB_USBtoUART'; % on Windows would be COMx
-s = serialport(serialPortName,115200);
+serialPortName = 'COM6'; % on Windows would be COMx
+%s = serialport(serialPortName,115200);
+s = serial(serialPortName,'BaudRate',115200);
 
 % open serial port
 fopen(s);
@@ -112,13 +113,13 @@ while(1)
     % data3 receives FM_pin_change_time
     data3(i) = str2double(str{4});
 
-    if (data3(i)~=1)
-        if i == 1
-            cyclePerTime(i) = 1/(data3(i)-0); % convert pin change time difference into frequencies
-        else 
-            cyclePerTime(i) = data3(i)-data3(i-1);
-        end
-    else
+%    if (data3(i)~=1)
+ %       if i == 1
+  %          cyclePerTime(i) = 1/(data3(i)-0); % convert pin change time difference into frequencies
+ %       else 
+%            cyclePerTime(i) = 1/(data3(i)-data3(i-1));
+%        end
+%    else
         if i == 1
             cyclePerTime(i) = 1/(data3(i)-0);
         else
@@ -262,13 +263,13 @@ if ~exist(folderName, 'dir')
 else
     fprintf("folder already exists\n")
 end
-plot(timeInterval,cyclePerTime)
 totalCycle = timeInterval * cyclePerTime'
 writetable(testDataTable,fileName,"FileType","spreadsheet");
 fileString = fileName + ".xls";
-writecell(fileString,"Total_cycle",'Sheet1','E1')
-writecell(fileString,totalCycle,'Sheet1','E2')
+% writecell(fileString,"Total_cycle",'Sheet1','E1')
+% writecell(fileString,totalCycle,'Sheet1','E2')
 movefile(fileString,folderName);
+plot(timeInterval,cyclePerTime);
 
 end
 

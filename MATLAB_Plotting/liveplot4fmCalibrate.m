@@ -32,8 +32,9 @@ testDataTable = table('Size',sz,'VariableTypes',dataTypes,'VariableNames',dataLa
 
 
 % set up serial object
-serialPortName = '/dev/cu.SLAB_USBtoUART'; % on Windows would be COMx
-s = serialport(serialPortName,115200);
+serialPortName = 'COM6'; % on Windows would be COMx
+%s = serialport(serialPortName,115200);
+s = serial(serialPortName,'BaudRate',115200);
 
 % open serial port
 fopen(s);
@@ -112,24 +113,24 @@ while(1)
     % data3 receives FM_pin_change_time
     data3(i) = str2double(str{4});
 
-    if (data3(i)~=1)
-        if i == 1
-            cyclePerTime(i) = 1/(data3(i)-0); % convert pin change time difference into frequencies
-        else 
-            cyclePerTime(i) = 1/(data3(i)-data3(i-1));
-        end
-    else
-        if i == 1
-            cyclePerTime(i) = 1/(data3(i)-0);
-        else
-            cyclePerTime(i) = cyclePerTime(i-1);
-        end
-    end
+%    if (data3(i)~=1)
+ %       if i == 1
+  %          cyclePerTime(i) = 1/(data3(i)-0); % convert pin change time difference into frequencies
+ %       else 
+%            cyclePerTime(i) = 1/(data3(i)-data3(i-1));
+%        end
+%    else
+%        if i == 1
+%            cyclePerTime(i) = 1/(data3(i)-0);
+%        else
+%            cyclePerTime(i) = cyclePerTime(i-1);
+%        end
+%    end
         
 
 
 
-    testDataTable(i,:) = {timeInterval(i),data1(i),data2(i),cyclePerTime(i)};
+    testDataTable(i,:) = {timeInterval(i),data1(i),data2(i),data3(i)};
 
 
 
@@ -262,7 +263,7 @@ if ~exist(folderName, 'dir')
 else
     fprintf("folder already exists\n")
 end
-totalCycle = timeInterval * cyclePerTime'
+%totalCycle = timeInterval * cyclePerTime'
 writetable(testDataTable,fileName,"FileType","spreadsheet");
 fileString = fileName + ".xls";
 % writecell(fileString,"Total_cycle",'Sheet1','E1')
