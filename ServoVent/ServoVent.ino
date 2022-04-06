@@ -126,39 +126,11 @@ void setup() {
 
 void loop() {
 
-  pressed = digitalRead(buttonpin1); //push button to send servo signals
 
-
-if (valveOpened) {
-  digitalWrite( ONBOARD_LED,HIGH);
-} else {
-  digitalWrite( ONBOARD_LED,LOW);
-}
-
-if (prevPressed && (millis() - pressTime > 500)) {
-  prevPressed = false;
-  Commands.S1 = 90 - servo1_curr;
-  servo1_curr = 90 - servo1_curr;
-}
-
-  if (pressed && !prevPressed) {
-    Commands.S1 = 90 - servo1_curr;
-    servo1_curr = 90 - servo1_curr;
-    pressTime = millis();
-    Serial.print("button");
-    //remove the following line with code that detects the status of the valve
-  //  valveOpened = !valveOpened;
-  // ADDED
-  prevPressed = pressed;
-  }
-
-  S1=Commands.S1;
-
-  servo1.write(S1);
+  servo1.write(0);
 
 
 
-  getReadings();
 
 
 //  }
