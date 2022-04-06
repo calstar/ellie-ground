@@ -249,6 +249,7 @@ void getReadings(){
   fmcount = 0;
   while (millis() - currentMillis < goalTime) {
     currentState = digitalRead(FM);
+    Serial.print(currentState);
     if (!(currentState == lastState)) {
       lastState = currentState;
       fmcount += 1;
