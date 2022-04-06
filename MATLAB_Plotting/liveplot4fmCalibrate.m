@@ -26,7 +26,7 @@ pauseTime = 0.05;
 
 % set up table to collect data
 dataTypes = ["double","double","double","double"];
-dataLabels = ["time","PT1","PT2","FM_pin_change_time"];
+dataLabels = ["FM_pin_change_time","PT1","PT2","time"];
 sz = [1,4];
 testDataTable = table('Size',sz,'VariableTypes',dataTypes,'VariableNames',dataLabels);
 
@@ -35,7 +35,7 @@ testDataTable = table('Size',sz,'VariableTypes',dataTypes,'VariableNames',dataLa
 % serialPortName = '/dev/cu.SLAB_USBtoUART'
 serialPortName = 'COM6'; % on Windows would be COMx
 %s = serialport(serialPortName,115200);
-s = serial(serialPortName,'BaudRate',115200);
+s = serial(serialPortName,'BaudRate',230400);
 
 % open serial port
 fopen(s);
@@ -96,11 +96,18 @@ while(1)
     startTime=datestr(now,'dd-mm-yyyy HH:MM:SS FFF');
     startTime=startTime(21:23);
     str = split(fscanf(s));
+
+if size(str,1)==2
+    timeInterval(i) = str2double(str{1});
+
+        testDataTable(i,:) = {timeInterval(i),0,0,0};
+
+else 
     % each data line represents one sensor data
-    timeInterval(i) = (str2double(str{1})-timeZeroer)/1000;
+    timeInterval(i) = (str2double(str{4})-timeZeroer)/1000;
     if i == 1
-        timeZeroer = str2double(str{1});
-        timeInterval(i) = (str2double(str{1})-timeZeroer)/1000;
+        timeZeroer = str2double(str{4});
+        timeInterval(i) = (str2double(str{4})-timeZeroer)/1000;
     end
 
 
@@ -131,9 +138,9 @@ while(1)
 
 
 
-    testDataTable(i,:) = {timeInterval(i),data1(i),data2(i),data3(i)};
+    testDataTable(i,:) = {data3(i),data1(i),data2(i),timeInterval(i)};
 
-
+end
 
     % data7 receives LC1
     % data7(i) = str2double(str{7});
