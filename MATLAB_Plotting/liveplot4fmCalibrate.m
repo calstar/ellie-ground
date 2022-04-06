@@ -32,6 +32,7 @@ testDataTable = table('Size',sz,'VariableTypes',dataTypes,'VariableNames',dataLa
 
 
 % set up serial object
+% serialPortName = '/dev/cu.SLAB_USBtoUART'
 serialPortName = 'COM6'; % on Windows would be COMx
 %s = serialport(serialPortName,115200);
 s = serial(serialPortName,'BaudRate',115200);
@@ -248,6 +249,8 @@ end
         fprintf('saving test data as %s.xls\n',fileName);
         setUpTest(['Test_Data_',datestr(now,'yyyy-mm-dd')],fileName,testDataTable,timeInterval,cyclePerTime);
 %         data3 = data3(data3~=1);
+        fclose(s);
+        instrreset;
 %         testDataTable = {timeInterval(i),data1(i),data2(i),data3(i)};
         %         writetable(testDataTable,fileName,"FileType","spreadsheet");
     end
