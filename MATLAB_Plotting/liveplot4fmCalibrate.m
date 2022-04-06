@@ -32,8 +32,8 @@ testDataTable = table('Size',sz,'VariableTypes',dataTypes,'VariableNames',dataLa
 
 
 % set up serial object
-% serialPortName = '/dev/cu.SLAB_USBtoUART'
-serialPortName = 'COM6'; % on Windows would be COMx
+serialPortName = '/dev/cu.SLAB_USBtoUART'
+% serialPortName = 'COM6'; % on Windows would be COMx
 %s = serialport(serialPortName,115200);
 s = serial(serialPortName,'BaudRate',230400);
 
