@@ -18,7 +18,9 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 #define PT1DOUT 26
 #define PT2DOUT 16
 
-#define CLK 25
+#define CLK 19
+#define CLK2 25
+
 #define FM 4
 
 #define S1S 21
@@ -155,7 +157,6 @@ void setup() {
   scale2.set_gain(64);
 //Flowmeter untreupt
  pinMode(FM, INPUT);           //Sets the pin as an input
- attachInterrupt(FM, Flow, RISING);
 
   Serial.begin(115200);
 
@@ -211,9 +212,11 @@ void loop() {
         //servo1.write(135);
         //break;
   //}
-  servo1write(S1);
+  servo1.write(S1);
+    Serial.print("loop");
 
   getReadings();
+    Serial.print("loop2");
 
   // Set values to send
   Readings.pt1 = pt1;
@@ -242,22 +245,32 @@ void loop() {
 //  if (timeDiff<loopTime) {
 //    delay(timeDiff);
 //  }
+
+  delay(50); 
+
+  
 }
 
 void getReadings(){
   currentMillis = millis();
   fmcount = 0;
-  while (millis() - currentMillis < goalTime) {
-    currentState = digitalRead(FM);
-    Serial.print(currentState);
-    if (!(currentState == lastState)) {
-      lastState = currentState;
-      fmcount += 1;
-    }
-  }
-  flowRate = fmcount * 1000 / goalTime;
-  fm =int(flowRate*10000+1);  // Print the integer part of the variable
 
-  pt1 = scale1.read();
-  pt2 = scale2.read();
+ while (millis() - currentMillis < goalTime) {
+
+    currentState = digitalRead(FM);
+    if (!(currentState == lastState)) {
+
+     lastState = currentState;
+     fmcount += 1;
+   }
+ }
+  flowRate = fmcount;
+  fm =int(flowRate+1);  // Print the integer part of the variable
+
+ pt1 = scale1.read();
+      Serial.print("pt1");
+
+ pt2 = scale2.read();
+      Serial.print("pt2");
+
 }

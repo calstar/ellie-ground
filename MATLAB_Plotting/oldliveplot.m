@@ -1,19 +1,13 @@
-function liveplot
 % Clear everything
 close all; clear all;
 % reset all ports; otherwise might be unable to connect to port
+% make sure to install
 instrreset;
-
-% create our clean up object for interrupt
-cleanupObj = onCleanup(@cleanMeUp);
-
-% NAME THE TEST FIRST (only change the second part)
-fileName = [datestr(now,'yyyy-mm-dd_HHMMSS'),'_test3'];
 
 % set up data monitoring frequency
 pauseTime = 0.05;
 % set up plotting frequency
-plotTime = 0.2;
+plotTime = 0.03;
 
 % frequency
 fetchFrequency = 1/pauseTime;
@@ -24,15 +18,9 @@ observationInterval = 5;
 % time conversion factor
 timeFactor = 24 * 60 * 60;
 
-% set up table to collect data
-dataTypes = ["double","double","double","double","double","double","double"];
-dataLabels = ["time","PT1","PT2","PT3","PT4","PT5","FM"];
-sz = [1,7];
-testDataTable = table('Size',sz,'VariableTypes',dataTypes,'VariableNames',dataLabels);
-
-
 % set up serial object
-serialPortName = 'COM10'; % on Windows would be COMx
+% serialPortName = 'COM10'; % on Windows would be COMx
+serialPortName = 'COM6'; % Hubert's Device
 s = serial(serialPortName,'BaudRate',115200);
 
 % open serial port
@@ -84,7 +72,7 @@ timeControl = now();
 i = 1;
 % read data
 flushinput(s);
-fscanf(s);
+fscanf(s)
 
 % accounts for any time delay from reading
 timeZeroer = 0;
@@ -100,14 +88,13 @@ while(1)
         timeInterval(i) = (str2double(str{1})-timeZeroer)/1000;
     end
 
-
     % data1 receives flowrate in L/min
     % data1(i) = str2double(str{2})/10000;
 
     % data1 receives PT1
-    data1(i) = str2double(str{2})*1.0533*10^(-4)+20.8469;
+    data1(i) = str2double(str{2})*2.3013*10^(-5)+15.977;
     % data2 receives PT2
-    data2(i) = str2double(str{3})*1.0323*10^(-4)+17.9758;
+    data2(i) = str2double(str{3})*2.3013*10^(-5)+15.977;
     % data3 receives PT3
     data3(i) = str2double(str{4})*2.3013*10^(-5)+15.977;
     % data4 receives PT4
@@ -116,18 +103,12 @@ while(1)
     data5(i) = str2double(str{6})*2.3013*10^(-5)+15.977;
     % data6 receives flowrate in L/min
     data6(i) = str2double(str{7})/10000;
-
-    testDataTable(i,:) = {timeInterval(i),data1(i),data2(i),data3(i),data4(i),data5(i),data6(i)};
-
-
-
     % data7 receives LC1
     % data7(i) = str2double(str{7});
     % data8 receives LC2
     % data8(i) = str2double(str{8});
     % data9 receives LC3
     % data9(i) = str2double(str{9});
-
 
 
 
@@ -183,6 +164,9 @@ while(1)
 
             axes(ax2);
             % change the number e.g "-6" according to trials.
+            % Because data can only be sent at a rate, if the number is too big too much data will be subtracted--
+            % the system is demanding to subtract more data than what came in in the first 5 seconds; 
+            % if too small, then more than 5 seconds of data will be present at all time
             plot(timeInterval(end-observationInterval/pauseTime:end),data2(end-observationInterval/pauseTime:end));
             title('Pressure Transducer 2')
 
@@ -224,35 +208,9 @@ while(1)
     endTime=datestr(now,'dd-mm-yyyy HH:MM:SS FFF');
     endTime=endTime(21:23);
 
-    timeDifference=str2double(endTime)-str2double(startTime);
+    timeDifference=str2num(endTime)-str2num(startTime);
     if timeDifference<pauseTime
         pause(timeDifference);
     end
     i = i+1;
 end
-    function cleanMeUp()
-        % saves data to file (or could save to workspace)
-        fprintf('saving test data as %s.xls\n',fileName);
-        setUpTest(['Test_Data_',datestr(now,'yyyy-mm-dd')],fileName,testDataTable);
-        %         writetable(testDataTable,fileName,"FileType","spreadsheet");
-    end
-
-
-
-end
-
-function setUpTest(folderName,fileName,testDataTable)
-if ~exist(folderName, 'dir')
-    mkdir(folderName);
-    fprintf("test data folder created\n");
-else
-    fprintf("folder already exists\n")
-end
-writetable(testDataTable,fileName,"FileType","spreadsheet");
-fileString = fileName + ".xls";
-movefile(fileString,folderName);
-
-end
-
-
-

@@ -6,7 +6,7 @@ A = table2array(t)
 C1 = 13337-12734
 
 timeInterval = C1
-numTics = 74
+numTics = 74 -8%included non mass flow meter tics in this, 74 vs 68
 cyclesPerSecond = (numTics/timeInterval)*1000
 
 pInitial = 105;
