@@ -6,7 +6,7 @@ A = table2array(t)
 C1 = 11358-10735
 
 timeInterval = C1
-numTics = 77
+numTics = 77 -6%included non mass flow data points in this 77 vs 71
 cyclesPerSecond = (numTics/timeInterval)*1000
 
 pInitial = 92.9807;

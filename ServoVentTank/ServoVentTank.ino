@@ -131,14 +131,14 @@ void loop() {
 
 Commands.S1=90;
 if (pressed) {
-  Commands.S1 =75;
+  Commands.S1 =180;
   pressTime=millis();
   prevPressed=true;
 }
 
 if (prevPressed && (millis() - pressTime < 1000)) {
 
-  Commands.S1 = 75;
+  Commands.S1 = 180;
 }
 else {
     prevPressed = false;

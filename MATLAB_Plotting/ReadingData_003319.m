@@ -5,10 +5,10 @@ t = readtable(fileName)
 A = table2array(t)
 C1 = t{70:166,1}
 
-timeInterval = 20836-20025
-numTics = numel(C1)-8
+timeInterval = 20836-20042 %inconsistently done before, has 20025
+numTics = numel(C1)-8 %done properly 
 cyclesPerSecond = (numTics/timeInterval)*1000
-tt
+
 pInitial = 146;
 pFinal = 166;
 pDiff = (pFinal-pInitial)*6894.76*1000
