@@ -36,9 +36,9 @@ bool pressed = false;
 bool prevPressed = false;
 bool valveOpened = false;
 int incomingS1 = 0;
-int angle = 90;
+int angle = 180;
 float pressTime = 0;
-int servo1_curr = 90;
+int servo1_curr = 0;
 int servo2_curr = 0;
 int S1=0;
 
@@ -126,11 +126,35 @@ void setup() {
 
 void loop() {
 
-
-  servo1.write(0);
-
+  pressed = digitalRead(buttonpin1); //push button to send servo signals
 
 
+if (valveOpened) {
+  digitalWrite( ONBOARD_LED,HIGH);
+} else {
+  digitalWrite( ONBOARD_LED,LOW);
+}
+
+if (prevPressed && (millis() - pressTime > 5000)) {
+  prevPressed = false;
+  Commands.S1 = 180 - servo1_curr;
+  servo1_curr = 180 - servo1_curr;
+}
+
+  if (pressed && !prevPressed) {
+    Commands.S1 = 180 - servo1_curr;
+    servo1_curr = 180 - servo1_curr;
+    pressTime = millis();
+    Serial.print("button");
+    //remove the following line with code that detects the status of the valve
+  //  valveOpened = !valveOpened;
+  // ADDED
+  prevPressed = pressed;
+  }
+
+  S1=Commands.S1;
+
+  servo1.write(S1);
 
 
 //  }
