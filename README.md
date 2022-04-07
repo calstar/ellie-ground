@@ -11,6 +11,19 @@
   1. **Change the test file name according to the trial number in the liveplot.m file.**
   2. Click "Run" to start the code, and close the plotting window to stop the code. Test data will be automatically stored in a spreadsheet under a folder called "**Test_Data_yyyy-mm-dd**."
 
+## ESP32 MAC Addresses
+- DAQ Breadboard:{0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC}
+- COM Breadboard:{0xC4, 0xDD, 0x57, 0x9E, 0x91, 0x6C};
+- DAQ Protoboard:
+
+## ESP32 Pinouts (Updated 4/6)
+-DAQ Breadboard:
+  
+  
+
+
+
+
 
 ## Software requirement
 **Ctrl click (Windows) or Cmd click the following links to open them in new tabs**
