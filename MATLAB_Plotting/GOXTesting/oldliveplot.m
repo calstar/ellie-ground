@@ -93,8 +93,11 @@ while(1)
 
     % data1 receives PT1
     data1(i) = str2double(str{2})*1.0533*10^(-4)+20.8469;
-    % data2 receives PT2
+    %data1(i) = str2double(str{2});
+   
+   % data2 receives PT2
     data2(i) = str2double(str{3})*1.0323*10^(-4)+17.9758;
+   % data2(i) = str2double(str{3});
     % data3 receives PT3
     data3(i) = str2double(str{4})*2.3013*10^(-5)+15.977;
     % data4 receives PT4
@@ -104,7 +107,7 @@ while(1)
     % data6 receives flowrate in samples/50ms, multiplies by calibration
     % coefficent [g/cycle] and 20 to convert samples per 50 ms to samples per second
     % (20 observation intervals of 50ms in 1 s)
-    data6(i) = str2double(str{7}-1)*.0763*20;
+    data6(i) = (str2double(str{7})-1)*.0763*20;
     % data7 receives LC1
     % data7(i) = str2double(str{7});
     % data8 receives LC2
