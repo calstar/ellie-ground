@@ -270,7 +270,7 @@ void getReadings(){
  pt1 = scale1.read();
       Serial.print("pt1");
 
- pt2 = scale2.read();
+ //pt2 = scale2.read();
       Serial.print("pt2");
 
 }
