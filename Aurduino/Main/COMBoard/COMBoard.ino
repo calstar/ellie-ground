@@ -7,7 +7,7 @@
 int angle = 90;
 float pressTime = 0;
 const int buttonpin1 = 15;
-const int LEDpin = 27;
+const int LEDpin = 13;
 String success;
 int servo1_curr = 90;
 int servo2_curr = 0;
@@ -87,6 +87,7 @@ void setup() {
   Serial.begin(115200);
   pinMode(buttonpin1,INPUT);
   pinMode(LEDpin,OUTPUT);
+  digitalWrite(LEDpin,LOW);
 
   //set device as WiFi station
   WiFi.mode(WIFI_STA);
@@ -118,29 +119,31 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   pressed = digitalRead(buttonpin1); //push button to send servo signals
-
+  valveOpened=false;
+  
   // Serial.println("incomingS1, "+String(incomingS1)+", servo1_curr, "+String(servo1_curr));
   if (incomingS1 == 90){
   valveOpened = true;
 } else {
   valveOpened = false;
 }
-if (valveOpened) {
-  digitalWrite(LEDpin,HIGH);
-} else {
-  digitalWrite(LEDpin,LOW);
-}
+
 
 if (prevPressed && (millis() - pressTime > 5000)) {
   prevPressed = false;
   Commands.S1 = 90 - servo1_curr;
   servo1_curr = 90 - servo1_curr;
-}
+  digitalWrite(LEDpin,LOW);}
+
+
+
 
   if (pressed && !prevPressed) {
     Commands.S1 = 90 - servo1_curr;
     servo1_curr = 90 - servo1_curr;
     pressTime = millis();
+      digitalWrite(LEDpin,HIGH);
+
     //remove the following line with code that detects the status of the valve
   //  valveOpened = !valveOpened;
   // ADDED

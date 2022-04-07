@@ -114,8 +114,10 @@ while(1)
     data4(i) = str2double(str{5})*2.3013*10^(-5)+15.977;
     % data5 receives PT5
     data5(i) = str2double(str{6})*2.3013*10^(-5)+15.977;
-    % data6 receives flowrate in L/min
-    data6(i) = str2double(str{7})/10000;
+    % data6 receives flowrate in samples/50ms, multiplies by calibration
+    % coefficent [g/cycle] and 20 to convert samples per 50 ms to samples per second
+    % (20 observation intervals of 50ms in 1 s)
+    data6(i) = str2double(str{7})*.0763*20;
 
     testDataTable(i,:) = {timeInterval(i),data1(i),data2(i),data3(i),data4(i),data5(i),data6(i)};
 
