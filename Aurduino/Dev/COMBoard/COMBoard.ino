@@ -8,6 +8,7 @@ int angle = 90;
 float pressTime = 0;
 const int buttonpin1 = 15;
 const int buttonpin2 = 14;
+const int buttonpin3 = //SET PIN NUMBER BASED ON SOLDERING
 const int LEDpin = 27;
 String success;
 int servo1_curr = 90;
@@ -41,6 +42,10 @@ float loopTime = 0;
 bool MatlabPlot = false;
 int state = 0;
 //
+
+void shutdownISR() {
+  state = 3;
+}
 
 
 //DAQ Breadboard {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC}
@@ -107,7 +112,7 @@ void setup() {
   Serial.begin(115200);
   pinMode(buttonpin1,INPUT);
   pinMode(buttonpin2, INPUT);
-  pinMode(LEDpin,OUTPUT);
+  pinMode(buttonpin3, INPUT);
   digitalWrite(LEDpin,LOW);
 
   //set device as WiFi station
@@ -154,6 +159,7 @@ void loop() {
       if (pressed1 && ((currTime - button1Time) > 1000)) {
         state = 1;
         button1Time = currTime;
+        Serial.println("State 1");
         //Serial.println("BUTTON 1 GOOD");
       }
       break;
@@ -165,10 +171,12 @@ void loop() {
       currTime = millis();
       if (pressed2) {
         state = 2;
+        Serial.println("State 2");
       }
       if (pressed3 && ((currTime - button1Time) > 1000)) {
         button1Time = currTime;
         state = 0;
+        Serial.println("State 0");
       }
       break;
     case 2:
@@ -253,18 +261,8 @@ void loop() {
       } else {
         while (!Serial.available()) {
           pressed3 = digitalRead(buttonpin1);
-          if (pressed3) {
-            state = 0;
-            break;}  //waiting for inputs
-          }
-        String angles = Serial.readString();
-        String readAngle1 = angles.substring(0, 3);
-        String readAngle2 = angles.substring(4, 7);
-        Serial.println(readAngle1);
-        Serial.println(readAngle2);
-        Commands.S1 = readAngle1.toInt();
-        Commands.S2 = readAngle2.toInt();
-        esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+          delay(5);
+          esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
             if (result != ESP_OK) {
               break;
             // Serial.println("Sent with success");
@@ -272,7 +270,37 @@ void loop() {
             //else {
               //Serial.println("Error sending the data");
             //}
+          if (pressed3) {
+            state = 0;
+            Serial.println("State 0");
+            break;}  //waiting for inputs
+          }
+        String angles = Serial.readString();
+        int index = angles.indexOf(",");
+        String readAngle1 = angles.substring(0, index);
+        String readAngle2 = angles.substring(index+1, angles.length());
+        if (angles.length() >= 3) {
+          Serial.println(readAngle1);
+          Serial.println(readAngle2);
+          Commands.S1 = readAngle1.toInt();
+          Commands.S2 = readAngle2.toInt();
+          esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+            if (result != ESP_OK) {
+              break;
+            // Serial.println("Sent with success");
+            }
+            //else {
+              //Serial.println("Error sending the data");
+            //}
+
+        }
+
       }
+      break;
+     case 4:
+      Commands.S1 = 0;
+      Commands.S2 = 0;
+      break;
   }
 
   //pressed = digitalRead(buttonpin1); //push button to send servo signals
