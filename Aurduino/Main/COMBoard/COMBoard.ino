@@ -26,8 +26,9 @@ bool pressed = false;
 bool prevPressed = false;
 bool valveOpened = false;
 
-
-uint8_t broadcastAddress[] = {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC}; //change to new Mac Address
+//DAQ Breadboard {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC}
+//DAQ Protoboard {0x0C, 0xDC, 0x7E, 0xCB, 0x05, 0xC4}
+uint8_t broadcastAddress[] = {0x0C, 0xDC, 0x7E, 0xCB, 0x05, 0xC4}; //change to new Mac Address
 
 //Structure example to send data
 //Must match the receiver structure
@@ -219,8 +220,10 @@ if (prevPressed && (millis() - pressTime > 5000)) {
 
  // FM Test
 
-    Serial.println(incomingFM);
+    Serial.print(incomingFM);
+    Serial.print(" ");
 
+   Serial.println(Commands.S1 );
     // Print the cumulative total of litres flowed since starting
    //Serial.print("Output Liquid Quantity: ");
     //Serial.print(totalMilliLitres);
