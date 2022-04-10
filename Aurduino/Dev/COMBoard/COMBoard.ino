@@ -8,8 +8,12 @@ int angle = 90;
 float pressTime = 0;
 const int buttonpin1 = 15;
 const int buttonpin2 = 14;
-const int buttonpin3 = //SET PIN NUMBER BASED ON SOLDERING
+const int buttonpin3 = 10;//SET PIN NUMBER BASED ON SOLDERING//
 const int LEDpin = 27;
+const int servo1Open = 11;//SET PIN NUMBER BASED ON SOLDERING//
+const int servo2Open = 12;//SET PIN NUMBER BASED ON SOLDERING//
+const int DAQIndicator = 13;//SET PIN NUMBER BASED ON SOLDERING//
+const int COMIndicator = 18;//SET PIN NUMBER BASED ON SOLDERING//
 String success;
 int servo1_curr = 90;
 int servo2_curr = 90;
@@ -34,12 +38,16 @@ float button1Time = 0;
 float currentTime = 0;
 float currTime = 0;
 float loopTime = 0;
+int closedAngle1 = 0;//SET ANGLE
+int closedAngle2 = 0; //Set ANGLE
+float receiveTimeDAQ = 0;
+float receiveTimeCOM = 0;
 
 
 //SET IF PLOTTING WITH MATLAB OR NOT. SERVO MANUAL CONTROL AND
 //MATLAB PLOTTING ARE NOT COMPATIBLE DUE TO USING THE SAME SERIAL
 //INPUT. IF TRUE, PLOTTING ENABLED. IF FALSE, MANUAL CONTROL ENABLED
-bool MatlabPlot = false;
+bool MatlabPlot = true;
 int state = 0;
 //
 
@@ -80,11 +88,14 @@ struct_message Commands;
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
  // Serial.print("\r\nLast Packet Send Status:\t");
  // Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
-  if (status ==0){
+  if (status == 0){
     success = "Delivery Success :)";
+    digitalWrite(DAQIndicator, HIGH);
+    receiveTimeDAQ = millis();
   }
   else{
     success = "Delivery Fail :(";
+    digitalWrite(DAQIndicator, LOW);
   }
 }
 
@@ -102,6 +113,8 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   incomingLC2 = incomingReadings.lc2;
   incomingLC3 = incomingReadings.lc3;
   incomingS1 = incomingReadings.S1;
+  digitalWrite(COMIndicator, HIGH);
+  receiveTimeCOM = millis();
 
 }
 
@@ -114,6 +127,10 @@ void setup() {
   pinMode(buttonpin2, INPUT);
   pinMode(buttonpin3, INPUT);
   digitalWrite(LEDpin,LOW);
+  digitalWrite(servo1Open, LOW);
+  digitalWrite(servo2Open, LOW);
+  digitalWrite(DAQIndicator, LOW);
+  digitalWrite(COMIndicator, LOW);
 
   //set device as WiFi station
   WiFi.mode(WIFI_STA);
@@ -140,6 +157,8 @@ void setup() {
   // Register for a callback function that will be called when data is received
   esp_now_register_recv_cb(OnDataRecv);
 
+  attachInterrupt(digitalPinToInterrupt(buttonpin3), shutdownISR, RISING);
+
 }
 
 
@@ -162,6 +181,12 @@ void loop() {
         Serial.println("State 1");
         //Serial.println("BUTTON 1 GOOD");
       }
+      if ((millis() - receiveTimeDAQ) > 500) {
+        digitalWrite(DAQIndicator, LOW);
+      }
+      if ((millis() - receiveTimeCOM) > 500) {
+        digitalWrite(COMIndicator, LOW);
+      }
       break;
     case 1:
       //Serial.println("IN CASE 1");
@@ -178,6 +203,12 @@ void loop() {
         state = 0;
         Serial.println("State 0");
       }
+      if ((millis() - receiveTimeDAQ) > 500) {
+        digitalWrite(DAQIndicator, LOW);
+      }
+      if ((millis() - receiveTimeCOM) > 500) {
+        digitalWrite(COMIndicator, LOW);
+      }
       break;
     case 2:
       //Serial.println("IN CASE 2");
@@ -192,6 +223,15 @@ void loop() {
           if (pressed3) {
             state = 0;
             break;
+          }
+          if (state == 3) {
+            break;
+          }
+          if ((millis() - receiveTimeDAQ) > 500) {
+            digitalWrite(DAQIndicator, LOW);
+          }
+          if ((millis() - receiveTimeCOM) > 500) {
+            digitalWrite(COMIndicator, LOW);
           }
 
           if ((millis() - loopTime) >= 50) {
@@ -236,8 +276,9 @@ void loop() {
             Serial.print(incomingFM);
             Serial.print(" ");
 
-            Serial.println("Commands Follow");
-            Serial.println(Commands.S1);
+            //Serial.println("Commands Follow");
+            Serial.print(Commands.S1);
+            Serial.print(" ");
             Serial.println(Commands.S2);
              // Print the cumulative total of litres flowed since starting
             //Serial.print("Output Liquid Quantity: ");
@@ -262,6 +303,12 @@ void loop() {
         while (!Serial.available()) {
           pressed3 = digitalRead(buttonpin1);
           delay(5);
+          if ((millis() - receiveTimeDAQ) > 500) {
+            digitalWrite(DAQIndicator, LOW);
+          }
+          if ((millis() - receiveTimeCOM) > 500) {
+            digitalWrite(COMIndicator, LOW);
+          }
           esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
             if (result != ESP_OK) {
               break;
@@ -284,8 +331,19 @@ void loop() {
           Serial.println(readAngle2);
           Commands.S1 = readAngle1.toInt();
           Commands.S2 = readAngle2.toInt();
+          if (Commands.S1 == closedAngle1) {
+            digitalWrite(servo1Open, LOW);
+          } else {
+            digitalWrite(servo1Open, HIGH);
+          }
+
+          if (Commands.S2 == closedAngle2) {
+            digitalWrite(servo2Open, LOW);
+          } else {
+            digitalWrite(servo2Open, HIGH);
+          }
           esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
-            if (result != ESP_OK) {
+          if (result != ESP_OK) {
               break;
             // Serial.println("Sent with success");
             }
@@ -297,132 +355,15 @@ void loop() {
 
       }
       break;
-     case 4:
-      Commands.S1 = 0;
-      Commands.S2 = 0;
+     case 3:
+      Commands.S1 = closedAngle1;
+      Commands.S2 = closedAngle2;
+      digitalWrite(DAQIndicator, LOW);
+      digitalWrite(COMIndicator, LOW);
+      digitalWrite(servo1Open, LOW);
+      digitalWrite(servo2Open, LOW);
       break;
   }
 
-  //pressed = digitalRead(buttonpin1); //push button to send servo signals
-  //valveOpened=false;
-
-  // Serial.println("incomingS1, "+String(incomingS1)+", servo1_curr, "+String(servo1_curr));
-  //if (incomingS1 == 90){
-  //valveOpened = true;
-//} else {
-  //valveOpened = false;
-//}
-
-
-//if (prevPressed && (millis() - pressTime > 5000)) {
-  //prevPressed = false;
-  //Commands.S1 = 90 - servo1_curr;
-  //servo1_curr = 90 - servo1_curr;
-  //digitalWrite(LEDpin,LOW);}
-
-
-
-
-  //if (pressed && !prevPressed) {
-    //Commands.S1 = 90 - servo1_curr;
-    //servo1_curr = 90 - servo1_curr;
-    //pressTime = millis();
-    //digitalWrite(LEDpin,HIGH);
-
-    //remove the following line with code that detects the status of the valve
-  //  valveOpened = !valveOpened;
-  // ADDED
-  //prevPressed = pressed;
-  //}
-  //prevPressed = pressed;
-
-  //servo2control
-//  currval2 = digitalRead(buttonpin2);
-//  if(prevval2==0 && currval2==1){
-//  Commands.S2 = 90 - servo2_curr;
-//  servo2_curr = 90 - servo2_curr;
-//  }
-//
-//  //servo1andservo2control
-//  currval3 = digitalRead(buttonpin3);
-//  if(prevval3==0 && currval3==1){
-//  Commands.S2 = 90 - servo2_curr;
-//  servo2_curr = 90 - servo2_curr;
-//  Commands.S1 = 90 - servo1_curr;
-//  servo1_curr = 90 - servo1_curr;
-//  }
-  //start igniter, leave on for a second
-//  Commands.I =  (digitalRead(buttonpin4)==1);
-//  if(Commands.I){
-//  delay(1000);}
-//  Commands.I = false;
-//  }
-//
-  //sends inputs for servos based on buttons
-  //esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
-  //if (result == ESP_OK) {
-   // Serial.println("Sent with success");
-  //}
-  //else {
-    //Serial.println("Error sending the data");
-  //}
-//   prevval2 = currval2;
-//   prevval3 = currval3;
-
-
-///part to deal with MATLAB interfacing
-
-
- //Serial.print(millis());
- //Serial.print(" ");
-   // Print the flow rate for this second in litres / minute
-   // Serial.print("Flow rate: ");
-   //Serial.print(incomingFM);  // Print the integer part of the variable
-   //Serial.print("L/min");
-   //Serial.print(" ");       // Print tab space
-
-
-
-
-  //PT TEST
-
-
-   //Serial.print("Output Pressures: ");
-   //Serial.print(incomingPT1);
-   //Serial.print(" ");
-   //Serial.print(incomingPT2);
-   //Serial.print(" ");
-   //Serial.print(incomingPT3);
-   //Serial.print(" ");
-   //Serial.print(incomingPT4);
-   //Serial.print(" ");
-   //Serial.print(incomingPT5);
-   //Serial.print(" ");
-   //Serial.println("psi / ");
-
- //  Serial.print(" ");       // Print tab space
-
- // FM Test
-
-    //Serial.print(incomingFM);
-    //Serial.print(" ");
-
-   //Serial.println(Commands.S1 );
-    // Print the cumulative total of litres flowed since starting
-   //Serial.print("Output Liquid Quantity: ");
-    //Serial.print(totalMilliLitres);
-    //Serial.print("mL / ");
-    //Serial.print(totalMilliLitres / 1000);
-    //Serial.print("L");
-    //Serial.print("\t");       // Print tab space
-
-  //LC TEST
-
-  //Serial.print("Load Cell Stuff:");
-  //Serial.print(incomingLC1);
-  //Serial.print(incomingLC2);
-  //Serial.print(incomingLC3);
-
-  //delay(50); //delay of 50 optimal for recieving and transmitting
 
 }
