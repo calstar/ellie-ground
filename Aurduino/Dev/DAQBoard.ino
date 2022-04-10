@@ -191,7 +191,7 @@ void setup() {
 void loop() {
   startTime=millis();
   //Set LED back to low
-    digitalWrite(ONBOARD_LED,LOW);
+  digitalWrite(ONBOARD_LED,LOW);
 
  //ADD PRINT STATEMENTS FOR DEBUGGING HERE IF NCESSARY
  // printSerial();
@@ -213,11 +213,12 @@ void loop() {
         //break;
   //}
   servo1.write(S1);
-  
-    Serial.print("loop");
+  servo2.write(S2);
+
+  //Serial.print("loop");
 
   getReadings();
-    Serial.print("loop2");
+  //Serial.print("loop2");
 
   // Set values to send
   Readings.pt1 = pt1;
@@ -247,9 +248,9 @@ void loop() {
 //    delay(timeDiff);
 //  }
 
-  delay(50); 
+  delay(50);
 
-  
+
 }
 
 void getReadings(){

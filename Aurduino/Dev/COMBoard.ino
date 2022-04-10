@@ -23,7 +23,8 @@ float incomingLC1 = 0;
 float incomingLC2 = 0;
 float incomingLC3 = 0;
 esp_now_peer_info_t peerInfo;
-bool pressed = false;
+bool pressed1 = false;
+bool pressed2 = false;
 bool prevPressed = false;
 bool valveOpened = false;
 bool armed = false;
@@ -34,6 +35,7 @@ float loopTime = 0;
 //MATLAB PLOTTING ARE NOT COMPATIBLE DUE TO USING THE SAME SERIAL
 //INPUT. IF TRUE, PLOTTING ENABLED. IF FALSE, MANUAL CONTROL ENABLED
 bool MatlabPlot = true;
+int state = 0;
 
 //DAQ Breadboard {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC}
 //DAQ Protoboard {0x0C, 0xDC, 0x7E, 0xCB, 0x05, 0xC4}
@@ -92,19 +94,6 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 
 }
 
-void button1ISR() {
-  currentTime = millis();
-  if (currentTime - button1Time) >= 3000) {
-    armed = !armed;
-    button1Time = currentTime;
-  }
-  if (armed) {
-    state = 1;
-  } else {
-    state = 0;
-  }
-}
-
 void setup() {
   Commands.S1 = 90;
   Commands.S2 = 90;
@@ -140,8 +129,6 @@ void setup() {
   // Register for a callback function that will be called when data is received
   esp_now_register_recv_cb(OnDataRecv);
 
-  int state = 0;
-  attachInterrupt(digitalPinToInterrupt(buttonpin1), button1ISR, RISING);
 }
 
 
@@ -154,16 +141,24 @@ void loop() {
   //     READY FOR SERVO VALVE ANGLE INPUTS (IN FORM angle1,angle2)
   switch (state) {
     case 0:
+      Serial.println("IN CASE 0");
       digitalWrite(LEDpin, LOW);
+      pressed1 = digitalRead(buttonpin1);
+      if (pressed1) {
+        state = 1;
+        //Serial.println("BUTTON 1 GOOD");
+      }
       break;
     case 1:
+      Serial.println("IN CASE 1");
       digitalWrite(LEDpin, HIGH);
-      pressed = digitalRead(buttonpin2);
-      if (pressed) {
+      pressed2 = digitalRead(buttonpin2);
+      if (pressed2) {
         state = 2;
       }
       break;
     case 2:
+      Serial.println("IN CASE 2");
       if (MatlabPlot) {
         Commands.S1 = 90 - servo1_curr;
         Commands.S2 = 90 - servo2_curr;
@@ -213,7 +208,8 @@ void loop() {
             Serial.print(incomingFM);
             Serial.print(" ");
 
-            Serial.println(Commands.S1 );
+            Serial.println(Commands.S1);
+            Serial.println(Commands.S2);
              // Print the cumulative total of litres flowed since starting
             //Serial.print("Output Liquid Quantity: ");
              //Serial.print(totalMilliLitres);
@@ -242,8 +238,8 @@ void loop() {
         String angles = Serial.readString();
         String readAngle1 = angles.substring(0, 1);
         String readAngle2 = angles.substring(3, 4);
-        commands.S1 = readAngle1;
-        commands.S2 = readAngle2;
+        Commands.S1 = readAngle1.toInt();
+        Commands.S2 = readAngle2.toInt();
       }
   }
 
