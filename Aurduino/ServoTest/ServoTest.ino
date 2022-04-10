@@ -154,36 +154,8 @@ if (prevPressed && (millis() - pressTime > 5000)) {
 
   S1=Commands.S1;
 
-  servo1.write(S1);
+  servo1.write(90);
 
 
 //  }
-}
-
-void getReadings(){
-  currentMillis = millis();
-  fmcount = 0;
-  while (millis() - currentMillis < goalTime) {
-    currentState = digitalRead(FM);
-    if (!(currentState == lastState)) {
-      lastState = currentState;
-      Serial.print(1);
-      Serial.print(" ");
-      Serial.print(1);
-      Serial.print(" ");
-      Serial.print(1);        
-      Serial.print(" ");
-      Serial.println(millis());
-
-      
-    }
-  }
-
-      Serial.print(millis());
-      Serial.print(" ");
-      Serial.print(scale1.read());
-      Serial.print(" ");
-      Serial.print(scale2.read());        
-      Serial.print(" ");
-      Serial.println(1);
 }

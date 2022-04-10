@@ -13,17 +13,26 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 #include <Arduino.h>
 #include "HX711.h"
 
+
 //define pins to use for the various sensors and connections. define takes up less space on the chip
 #define ONBOARD_LED  13
-#define PT1DOUT 26
-#define PT2DOUT 16
+#define PT1DOUT 33
+#define PT2DOUT 16 //update
+#define CLKPT1 27
+#define CLKPT2 25 //update
+#define FM 4 //update
+#define S1S 23
+//RESOLDER GROUND ON PROTOBOARD
 
-#define CLK 19
-#define CLK2 25
 
-#define FM 4
 
-#define S1S 21
+//For breadboard
+//#define PT1DOUT 26
+//#define PT2DOUT 16
+//#define CLKPT1 19
+//#define CLKPT2 25
+//#define FM 4
+//#define S1S 21
 
 //define servo min and max values
 #define SERVO_MIN_USEC (900)
@@ -57,6 +66,10 @@ int ADC_Max = 4096;
 //IMPORTANT
 //////////////
 // REPLACE WITH THE MAC Address of your receiver
+
+//OLD COM BOARD {0xC4, 0xDD, 0x57, 0x9E, 0x91, 0x6C}
+//COM BOARD {0x7C, 0x9E, 0xBD, 0xD7, 0x2B, 0xE8}
+uint8_t broadcastAddress[] = {0x7C, 0x9E, 0xBD, 0xD7, 0x2B, 0xE8};
 uint8_t broadcastAddress[] = {0xC4, 0xDD, 0x57, 0x9E, 0x91, 0x6C};
 
 int count=3;

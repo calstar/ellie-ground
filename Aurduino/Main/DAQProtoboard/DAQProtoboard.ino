@@ -21,6 +21,7 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 #define CLKPT2 25 //update
 #define FM 4 //update
 #define S1S 23
+//RESOLDER GROUND ON PROTOBOARD
 
 
 
@@ -66,7 +67,10 @@ int ADC_Max = 4096;
 //IMPORTANT
 //////////////
 // REPLACE WITH THE MAC Address of your receiver
-uint8_t broadcastAddress[] = {0xC4, 0xDD, 0x57, 0x9E, 0x91, 0x6C};
+
+//OLD COM BOARD {0xC4, 0xDD, 0x57, 0x9E, 0x91, 0x6C}
+//COM BOARD {0x7C, 0x9E, 0xBD, 0xD7, 0x2B, 0xE8}
+uint8_t broadcastAddress[] = {0x7C, 0x9E, 0xBD, 0xD7, 0x2B, 0xE8};
 
 int count=3;
 
@@ -280,7 +284,7 @@ void getReadings(){
  pt1 = scale1.read();
       Serial.print("pt1");
 
- pt2 = scale2.read();
-      Serial.print("pt2");
+ //pt2 = scale2.read();
+    //  Serial.print("pt2");
 
 }
