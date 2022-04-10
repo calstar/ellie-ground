@@ -7,10 +7,11 @@
 int angle = 90;
 float pressTime = 0;
 const int buttonpin1 = 15;
+const int buttonpin2 = 14;
 const int LEDpin = 13;
 String success;
 int servo1_curr = 90;
-int servo2_curr = 0;
+int servo2_curr = 90;
 int incomingS1 = 0;
 float incomingPT1 = 0;
 float incomingPT2 = 0;
@@ -25,6 +26,14 @@ esp_now_peer_info_t peerInfo;
 bool pressed = false;
 bool prevPressed = false;
 bool valveOpened = false;
+bool armed = false;
+float button1Time = 0;
+float currentTime;
+float loopTime = 0;
+//SET IF PLOTTING WITH MATLAB OR NOT. SERVO MANUAL CONTROL AND
+//MATLAB PLOTTING ARE NOT COMPATIBLE DUE TO USING THE SAME SERIAL
+//INPUT. IF TRUE, PLOTTING ENABLED. IF FALSE, MANUAL CONTROL ENABLED
+bool MatlabPlot = true;
 
 //DAQ Breadboard {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC}
 //DAQ Protoboard {0x0C, 0xDC, 0x7E, 0xCB, 0x05, 0xC4}
@@ -82,11 +91,27 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   incomingS1 = incomingReadings.S1;
 
 }
+
+void button1ISR() {
+  currentTime = millis();
+  if (currentTime - button1Time) >= 3000) {
+    armed = !armed;
+    button1Time = currentTime;
+  }
+  if (armed) {
+    state = 1;
+  } else {
+    state = 0;
+  }
+}
+
 void setup() {
   Commands.S1 = 90;
+  Commands.S2 = 90;
   // put your setup code here, to run once:
   Serial.begin(115200);
   pinMode(buttonpin1,INPUT);
+  pinMode(buttonpin2, INPUT);
   pinMode(LEDpin,OUTPUT);
   digitalWrite(LEDpin,LOW);
 
@@ -114,42 +139,145 @@ void setup() {
   }
   // Register for a callback function that will be called when data is received
   esp_now_register_recv_cb(OnDataRecv);
+
+  int state = 0;
+  attachInterrupt(digitalPinToInterrupt(buttonpin1), button1ISR, RISING);
 }
 
 
 void loop() {
   // put your main code here, to run repeatedly:
-  pressed = digitalRead(buttonpin1); //push button to send servo signals
-  valveOpened=false;
-  
+  // STATES:
+  // 0 = RESTING
+  // 1 = ARMED
+  // 2 = ACTUATE VALVES ON PRE_SET PARAMETERS (IF USING MATLAB)
+  //     READY FOR SERVO VALVE ANGLE INPUTS (IN FORM angle1,angle2)
+  switch (state) {
+    case 0:
+      digitalWrite(LEDpin, LOW);
+      break;
+    case 1:
+      digitalWrite(LEDpin, HIGH);
+      pressed = digitalRead(buttonpin2);
+      if (pressed) {
+        state = 2;
+      }
+      break;
+    case 2:
+      if (MatlabPlot) {
+        Commands.S1 = 90 - servo1_curr;
+        Commands.S2 = 90 - servo2_curr;
+        servo1_curr = 90 - servo1_curr;
+        servo2_curr = 90 - servo2_curr;
+        pressTime = millis();
+        while (millis() - pressTime <= 5000) {
+          esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+          if (result != ESP_OK) {
+            break;
+           // Serial.println("Sent with success");
+          }
+          //else {
+            //Serial.println("Error sending the data");
+          //}
+          if ((millis() - loopTime) >= 50) {
+            loopTime = millis();
+            Serial.print(loopTime);
+            Serial.print(" ");
+            // Print the flow rate for this second in litres / minute
+            // Serial.print("Flow rate: ");
+            //Serial.print(incomingFM);  // Print the integer part of the variable
+            //Serial.print("L/min");
+            //Serial.print(" ");       // Print tab space
+
+
+
+
+           //PT TEST
+            //Serial.print("Output Pressures: ");
+            Serial.print(incomingPT1);
+            Serial.print(" ");
+            Serial.print(incomingPT2);
+            Serial.print(" ");
+            Serial.print(incomingPT3);
+            Serial.print(" ");
+            Serial.print(incomingPT4);
+            Serial.print(" ");
+            Serial.print(incomingPT5);
+            Serial.print(" ");
+            //Serial.println("psi / ");
+
+          //  Serial.print(" ");       // Print tab space
+
+          // FM Test
+
+            Serial.print(incomingFM);
+            Serial.print(" ");
+
+            Serial.println(Commands.S1 );
+             // Print the cumulative total of litres flowed since starting
+            //Serial.print("Output Liquid Quantity: ");
+             //Serial.print(totalMilliLitres);
+             //Serial.print("mL / ");
+             //Serial.print(totalMilliLitres / 1000);
+             //Serial.print("L");
+             //Serial.print("\t");       // Print tab space
+
+           //LC TEST
+
+           //Serial.print("Load Cell Stuff:");
+           //Serial.print(incomingLC1);
+           //Serial.print(incomingLC2);
+           //Serial.print(incomingLC3);
+
+           //delay(50); //delay of 50 optimal for recieving and transmitting
+         }
+        }
+        Commands.S1 = 90 - servo1_curr;
+        Commands.S2 = 90 - servo2_curr;
+        servo1_curr = 90 - servo1_curr;
+        servo2_curr = 90 - servo2_curr;
+
+      } else {
+        while (!Serial.available()) {}  //waiting for inputs
+        String angles = Serial.readString();
+        String readAngle1 = angles.substring(0, 1);
+        String readAngle2 = angles.substring(3, 4);
+        commands.S1 = readAngle1;
+        commands.S2 = readAngle2;
+      }
+  }
+
+  //pressed = digitalRead(buttonpin1); //push button to send servo signals
+  //valveOpened=false;
+
   // Serial.println("incomingS1, "+String(incomingS1)+", servo1_curr, "+String(servo1_curr));
-  if (incomingS1 == 90){
-  valveOpened = true;
-} else {
-  valveOpened = false;
-}
+  //if (incomingS1 == 90){
+  //valveOpened = true;
+//} else {
+  //valveOpened = false;
+//}
 
 
-if (prevPressed && (millis() - pressTime > 5000)) {
-  prevPressed = false;
-  Commands.S1 = 90 - servo1_curr;
-  servo1_curr = 90 - servo1_curr;
-  digitalWrite(LEDpin,LOW);}
+//if (prevPressed && (millis() - pressTime > 5000)) {
+  //prevPressed = false;
+  //Commands.S1 = 90 - servo1_curr;
+  //servo1_curr = 90 - servo1_curr;
+  //digitalWrite(LEDpin,LOW);}
 
 
 
 
-  if (pressed && !prevPressed) {
-    Commands.S1 = 90 - servo1_curr;
-    servo1_curr = 90 - servo1_curr;
-    pressTime = millis();
-      digitalWrite(LEDpin,HIGH);
+  //if (pressed && !prevPressed) {
+    //Commands.S1 = 90 - servo1_curr;
+    //servo1_curr = 90 - servo1_curr;
+    //pressTime = millis();
+    //digitalWrite(LEDpin,HIGH);
 
     //remove the following line with code that detects the status of the valve
   //  valveOpened = !valveOpened;
   // ADDED
-  prevPressed = pressed;
-  }
+  //prevPressed = pressed;
+  //}
   //prevPressed = pressed;
 
   //servo2control
@@ -175,13 +303,13 @@ if (prevPressed && (millis() - pressTime > 5000)) {
 //  }
 //
   //sends inputs for servos based on buttons
-  esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
-  if (result == ESP_OK) {
+  //esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+  //if (result == ESP_OK) {
    // Serial.println("Sent with success");
-  }
-  else {
+  //}
+  //else {
     //Serial.println("Error sending the data");
-  }
+  //}
 //   prevval2 = currval2;
 //   prevval3 = currval3;
 
@@ -189,8 +317,8 @@ if (prevPressed && (millis() - pressTime > 5000)) {
 ///part to deal with MATLAB interfacing
 
 
- Serial.print(millis());
-   Serial.print(" ");
+ //Serial.print(millis());
+ //Serial.print(" ");
    // Print the flow rate for this second in litres / minute
    // Serial.print("Flow rate: ");
    //Serial.print(incomingFM);  // Print the integer part of the variable
@@ -204,26 +332,26 @@ if (prevPressed && (millis() - pressTime > 5000)) {
 
 
    //Serial.print("Output Pressures: ");
-   Serial.print(incomingPT1);
-   Serial.print(" ");
-   Serial.print(incomingPT2);
-   Serial.print(" ");
-   Serial.print(incomingPT3);
-   Serial.print(" ");
-   Serial.print(incomingPT4);
-   Serial.print(" ");
-   Serial.print(incomingPT5);
-   Serial.print(" ");
+   //Serial.print(incomingPT1);
+   //Serial.print(" ");
+   //Serial.print(incomingPT2);
+   //Serial.print(" ");
+   //Serial.print(incomingPT3);
+   //Serial.print(" ");
+   //Serial.print(incomingPT4);
+   //Serial.print(" ");
+   //Serial.print(incomingPT5);
+   //Serial.print(" ");
    //Serial.println("psi / ");
 
  //  Serial.print(" ");       // Print tab space
 
  // FM Test
 
-    Serial.print(incomingFM);
-    Serial.print(" ");
+    //Serial.print(incomingFM);
+    //Serial.print(" ");
 
-   Serial.println(Commands.S1 );
+   //Serial.println(Commands.S1 );
     // Print the cumulative total of litres flowed since starting
    //Serial.print("Output Liquid Quantity: ");
     //Serial.print(totalMilliLitres);
@@ -239,6 +367,6 @@ if (prevPressed && (millis() - pressTime > 5000)) {
   //Serial.print(incomingLC2);
   //Serial.print(incomingLC3);
 
-  delay(50); //delay of 50 optimal for recieving and transmitting
+  //delay(50); //delay of 50 optimal for recieving and transmitting
 
 }
