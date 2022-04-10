@@ -8,7 +8,7 @@ int angle = 90;
 float pressTime = 0;
 const int buttonpin1 = 15;
 const int buttonpin2 = 14;
-const int LEDpin = 13;
+const int LEDpin = 27;
 String success;
 int servo1_curr = 90;
 int servo2_curr = 90;
@@ -25,17 +25,23 @@ float incomingLC3 = 0;
 esp_now_peer_info_t peerInfo;
 bool pressed1 = false;
 bool pressed2 = false;
+bool pressed3 = false;
 bool prevPressed = false;
 bool valveOpened = false;
 bool armed = false;
 float button1Time = 0;
-float currentTime;
+float currentTime = 0;
+float currTime = 0;
 float loopTime = 0;
+
+
 //SET IF PLOTTING WITH MATLAB OR NOT. SERVO MANUAL CONTROL AND
 //MATLAB PLOTTING ARE NOT COMPATIBLE DUE TO USING THE SAME SERIAL
 //INPUT. IF TRUE, PLOTTING ENABLED. IF FALSE, MANUAL CONTROL ENABLED
-bool MatlabPlot = true;
+bool MatlabPlot = false;
 int state = 0;
+//
+
 
 //DAQ Breadboard {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC}
 //DAQ Protoboard {0x0C, 0xDC, 0x7E, 0xCB, 0x05, 0xC4}
@@ -141,24 +147,32 @@ void loop() {
   //     READY FOR SERVO VALVE ANGLE INPUTS (IN FORM angle1,angle2)
   switch (state) {
     case 0:
-      Serial.println("IN CASE 0");
+      //Serial.println("IN CASE 0");
       digitalWrite(LEDpin, LOW);
       pressed1 = digitalRead(buttonpin1);
-      if (pressed1) {
+      currTime = millis();
+      if (pressed1 && ((currTime - button1Time) > 1000)) {
         state = 1;
+        button1Time = currTime;
         //Serial.println("BUTTON 1 GOOD");
       }
       break;
     case 1:
-      Serial.println("IN CASE 1");
+      //Serial.println("IN CASE 1");
       digitalWrite(LEDpin, HIGH);
       pressed2 = digitalRead(buttonpin2);
+      pressed3 = digitalRead(buttonpin1);
+      currTime = millis();
       if (pressed2) {
         state = 2;
       }
+      if (pressed3 && ((currTime - button1Time) > 1000)) {
+        button1Time = currTime;
+        state = 0;
+      }
       break;
     case 2:
-      Serial.println("IN CASE 2");
+      //Serial.println("IN CASE 2");
       if (MatlabPlot) {
         Commands.S1 = 90 - servo1_curr;
         Commands.S2 = 90 - servo2_curr;
@@ -166,15 +180,21 @@ void loop() {
         servo2_curr = 90 - servo2_curr;
         pressTime = millis();
         while (millis() - pressTime <= 5000) {
-          esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
-          if (result != ESP_OK) {
+          pressed3 = digitalRead(buttonpin1);
+          if (pressed3) {
+            state = 0;
             break;
-           // Serial.println("Sent with success");
           }
-          //else {
-            //Serial.println("Error sending the data");
-          //}
+
           if ((millis() - loopTime) >= 50) {
+            esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+            if (result != ESP_OK) {
+              break;
+            // Serial.println("Sent with success");
+            }
+            //else {
+              //Serial.println("Error sending the data");
+            //}
             loopTime = millis();
             Serial.print(loopTime);
             Serial.print(" ");
@@ -208,6 +228,7 @@ void loop() {
             Serial.print(incomingFM);
             Serial.print(" ");
 
+            Serial.println("Commands Follow");
             Serial.println(Commands.S1);
             Serial.println(Commands.S2);
              // Print the cumulative total of litres flowed since starting
@@ -228,18 +249,29 @@ void loop() {
            //delay(50); //delay of 50 optimal for recieving and transmitting
          }
         }
-        Commands.S1 = 90 - servo1_curr;
-        Commands.S2 = 90 - servo2_curr;
-        servo1_curr = 90 - servo1_curr;
-        servo2_curr = 90 - servo2_curr;
 
       } else {
-        while (!Serial.available()) {}  //waiting for inputs
+        while (!Serial.available()) {
+          pressed3 = digitalRead(buttonpin1);
+          if (pressed3) {
+            state = 0;
+            break;}  //waiting for inputs
+          }
         String angles = Serial.readString();
-        String readAngle1 = angles.substring(0, 1);
-        String readAngle2 = angles.substring(3, 4);
+        String readAngle1 = angles.substring(0, 3);
+        String readAngle2 = angles.substring(4, 7);
+        Serial.println(readAngle1);
+        Serial.println(readAngle2);
         Commands.S1 = readAngle1.toInt();
         Commands.S2 = readAngle2.toInt();
+        esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+            if (result != ESP_OK) {
+              break;
+            // Serial.println("Sent with success");
+            }
+            //else {
+              //Serial.println("Error sending the data");
+            //}
       }
   }
 
