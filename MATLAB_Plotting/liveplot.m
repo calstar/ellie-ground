@@ -32,8 +32,8 @@ testDataTable = table('Size',sz,'VariableTypes',dataTypes,'VariableNames',dataLa
 
 
 % set up serial object
-% serialPortName = 'COM5'; % on Windows would be COMx
-serialPortName = '/dev/cu.SLAB_USBtoUART'
+serialPortName = 'COM5'; % on Windows would be COMx
+% serialPortName = '/dev/cu.SLAB_USBtoUART'
 s = serial(serialPortName,'BaudRate',115200);
 
 % open serial port
@@ -85,7 +85,7 @@ timeControl = now();
 i = 1;
 % read data
 flushinput(s);
-fscanf(s)
+fscanf(s);
 
 % accounts for any time delay from reading
 timeZeroer = 0;
