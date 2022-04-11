@@ -22,6 +22,8 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 #define CLKPT2 25 //update
 #define FM 4 //update
 #define S1S 23
+#define S2S 22
+
 //RESOLDER GROUND ON PROTOBOARD
 
 
@@ -40,7 +42,7 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 
 //Initialize flow meter variables for how it computes the flow amount
 float currentMillis = 0;
-float goalTime = 100;
+float goalTime = 10;
 float currReading1;
 float currReading2;
 float loopTime=100;
@@ -70,7 +72,6 @@ int ADC_Max = 4096;
 //OLD COM BOARD {0xC4, 0xDD, 0x57, 0x9E, 0x91, 0x6C}
 //COM BOARD {0x7C, 0x9E, 0xBD, 0xD7, 0x2B, 0xE8}
 uint8_t broadcastAddress[] = {0x7C, 0x9E, 0xBD, 0xD7, 0x2B, 0xE8};
-uint8_t broadcastAddress[] = {0xC4, 0xDD, 0x57, 0x9E, 0x91, 0x6C};
 
 int count=3;
 
@@ -146,6 +147,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&Commands, incomingData, sizeof(Commands));
   Serial.print("Bytes received: ");
   Serial.println(len);
+      digitalWrite(ONBOARD_LED,HIGH);
   S1 =Commands.S1;
   S2 = Commands.S2;
   S1S2 = Commands.S1S2;
@@ -155,6 +157,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 void setup() {
   //attach servo pins
   servo1.attach(S1S,SERVO_MIN_USEC,SERVO_MAX_USEC );
+  servo2.attach(S2S,SERVO_MIN_USEC,SERVO_MAX_USEC );
 
   // attach onboard LED
   pinMode(ONBOARD_LED,OUTPUT);
@@ -164,9 +167,9 @@ void setup() {
   //pinMode(FM, INPUT_PULLUP);
 
 //set gains for pt pins
-  scale1.begin(PT1DOUT, CLK);
+  scale1.begin(PT1DOUT, CLKPT1);
   scale1.set_gain(64);
-  scale2.begin(PT2DOUT, CLK2);
+  scale2.begin(PT2DOUT, CLKPT2);
   scale2.set_gain(64);
 //Flowmeter untreupt
  pinMode(FM, INPUT);           //Sets the pin as an input
@@ -249,7 +252,6 @@ void loop() {
 
   if (result == ESP_OK) {
     Serial.println("Sent with success");
-    digitalWrite(ONBOARD_LED,HIGH);
   }
   else {
     Serial.println("Error sending the data");
@@ -261,7 +263,7 @@ void loop() {
 //    delay(timeDiff);
 //  }
 
-  delay(50);
+  delay(20);
 
 
 }
