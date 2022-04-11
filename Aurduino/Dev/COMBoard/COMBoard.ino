@@ -172,11 +172,12 @@ void loop() {
   switch (state) {
     case 0:
       //Serial.println("IN CASE 0");
-      digitalWrite(LEDpin, LOW);
+      // digitalWrite(LEDpin, LOW);
       pressed1 = digitalRead(buttonpin1);
       currTime = millis();
       if (pressed1 && ((currTime - button1Time) > 1000)) {
         state = 1;
+        digitalWrite(LEDpin,HIGH);
         button1Time = currTime;
         Serial.println("State 1");
         //Serial.println("BUTTON 1 GOOD");
@@ -190,7 +191,7 @@ void loop() {
       break;
     case 1:
       //Serial.println("IN CASE 1");
-      digitalWrite(LEDpin, HIGH);
+      // digitalWrite(LEDpin, HIGH);
       pressed2 = digitalRead(buttonpin2);
       pressed3 = digitalRead(buttonpin1);
       currTime = millis();
@@ -201,6 +202,7 @@ void loop() {
       if (pressed3 && ((currTime - button1Time) > 1000)) {
         button1Time = currTime;
         state = 0;
+        digitalWrite(LEDpin,LOW);
         Serial.println("State 0");
       }
       if ((millis() - receiveTimeDAQ) > 500) {
@@ -222,6 +224,7 @@ void loop() {
           pressed3 = digitalRead(buttonpin1);
           if (pressed3) {
             state = 0;
+            digitalWrite(LEDpin,LOW);
             break;
           }
           if (state == 3) {
@@ -319,6 +322,7 @@ void loop() {
             //}
           if (pressed3) {
             state = 0;
+            digitalWrite(LEDpin,LOW);
             Serial.println("State 0");
             break;}  //waiting for inputs
           }
