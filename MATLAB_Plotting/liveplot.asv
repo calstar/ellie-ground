@@ -92,11 +92,12 @@ timeZeroer = 0;
 
 strlengthWarned = false;
 
-while (strlength(split(fscanf(s))) < 1)
+while (strlength(s) < 1)
     if strlengthWarned == 1
         fprintf("No data/not enough data received through the serial port\n")
     end
     strlengthWarned = 1;
+    delay(50)
     
 end
 
