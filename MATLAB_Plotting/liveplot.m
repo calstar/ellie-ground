@@ -96,7 +96,7 @@ while (strlength(split(fscanf(s))) < 1)
     if strlengthWarned == 1
         fprintf("No data/not enough data received through the serial port\n")
     end
-    strlengthWarned = 1;
+    strlengthWarned = true;
     
 end
 
