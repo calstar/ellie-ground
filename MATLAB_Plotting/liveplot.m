@@ -32,8 +32,8 @@ testDataTable = table('Size',sz,'VariableTypes',dataTypes,'VariableNames',dataLa
 
 
 % set up serial object
-% serialPortName = 'COM10'; % on Windows would be COMx
-serialPortName = '/dev/cu.SLAB_USBtoUART'
+serialPortName = 'COM5'; % on Windows would be COMx
+% serialPortName = '/dev/cu.SLAB_USBtoUART'
 s = serial(serialPortName,'BaudRate',115200);
 
 % open serial port
@@ -93,11 +93,11 @@ timeZeroer = 0;
 strlengthWarned = false;
 
 while (strlength(split(fscanf(s))) < 1)
-    if strlengthWarned == 1
+    if strlengthWarned == false
         fprintf("No data/not enough data received through the serial port\n")
     end
     strlengthWarned = true;
-    
+
 end
 
 while(1)
@@ -131,7 +131,7 @@ while(1)
     data6(i) = str2double(str{7})*.0763*20;
 
 
-    testDataTable(i,:) = {timeInterval(i),data1(i),data2(i),data3(i),data4(i),data5(i),data6(i)}
+    testDataTable(i,:) = {timeInterval(i),data1(i),data2(i),data3(i),data4(i),data5(i),data6(i)};
 
 
 
@@ -269,6 +269,3 @@ fileString = fileName + ".xls";
 movefile(fileString,folderName);
 
 end
-
-
-
