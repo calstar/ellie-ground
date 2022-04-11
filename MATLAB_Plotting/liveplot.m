@@ -32,7 +32,8 @@ testDataTable = table('Size',sz,'VariableTypes',dataTypes,'VariableNames',dataLa
 
 
 % set up serial object
-serialPortName = 'COM10'; % on Windows would be COMx
+% serialPortName = 'COM10'; % on Windows would be COMx
+serialPortName = '/dev/cu.SLAB_USBtoUART'
 s = serial(serialPortName,'BaudRate',115200);
 
 % open serial port
@@ -93,6 +94,7 @@ while(1)
     startTime=datestr(now,'dd-mm-yyyy HH:MM:SS FFF');
     startTime=startTime(21:23);
     str = split(fscanf(s));
+    str
     % each data line represents one sensor data
     timeInterval(i) = (str2double(str{1})-timeZeroer)/1000;
     if i == 1
@@ -119,7 +121,8 @@ while(1)
     % (20 observation intervals of 50ms in 1 s)
     data6(i) = str2double(str{7})*.0763*20;
 
-    testDataTable(i,:) = {timeInterval(i),data1(i),data2(i),data3(i),data4(i),data5(i),data6(i)};
+
+    testDataTable(i,:) = {timeInterval(i),data1(i),data2(i),data3(i),data4(i),data5(i),data6(i)}
 
 
 
@@ -237,6 +240,8 @@ end
         fprintf('saving test data as %s.xls\n',fileName);
         setUpTest(['Test_Data_',datestr(now,'yyyy-mm-dd')],fileName,testDataTable);
         %         writetable(testDataTable,fileName,"FileType","spreadsheet");
+        fclose(s);
+        instrreset;
     end
 
 

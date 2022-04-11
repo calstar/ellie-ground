@@ -273,13 +273,13 @@ void loop() {
 
           // FM Test
 
-            Serial.print(incomingFM);
-            Serial.print(" ");
+            Serial.println(incomingFM);
+            // Serial.print(" ");
 
             //Serial.println("Commands Follow");
-            Serial.print(Commands.S1);
-            Serial.print(" ");
-            Serial.println(Commands.S2);
+            // Serial.print(Commands.S1);
+            // Serial.print(" ");
+            // Serial.println(Commands.S2);
              // Print the cumulative total of litres flowed since starting
             //Serial.print("Output Liquid Quantity: ");
              //Serial.print(totalMilliLitres);
