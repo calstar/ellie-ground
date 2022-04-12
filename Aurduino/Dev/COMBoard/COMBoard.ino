@@ -123,6 +123,7 @@ void setup() {
   Commands.S2 = 90;
   // put your setup code here, to run once:
   Serial.begin(115200);
+  Serial.print("yeah");
   pinMode(buttonpin1,INPUT);
   pinMode(buttonpin2, INPUT);
   pinMode(buttonpin3, INPUT);
@@ -179,7 +180,7 @@ void loop() {
         state = 1;
         button1Time = currTime;
         Serial.println("State 1");
-        //Serial.println("BUTTON 1 GOOD");
+        Serial.println("BUTTON 1 GOOD");
       }
       if ((millis() - receiveTimeDAQ) > 500) {
         digitalWrite(DAQIndicator, LOW);
