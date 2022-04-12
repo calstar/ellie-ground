@@ -2,7 +2,7 @@ function liveplot
 % Clear everything
 close all; clear all;
 % reset all ports; otherwise might be unable to connect to port
-instrreset;
+% instrreset;
 
 % create our clean up object for interrupt
 cleanupObj = onCleanup(@cleanMeUp);
@@ -16,13 +16,13 @@ pauseTime = 0.05;
 plotTime = 0.2;
 
 % frequency
-fetchFrequency = 1/pauseTime;
+% fetchFrequency = 1/pauseTime;
 
 % observation time window
 observationInterval = 5;
 
 % time conversion factor
-timeFactor = 24 * 60 * 60;
+% timeFactor = 24 * 60 * 60;
 
 % set up table to collect data
 dataTypes = ["double","double","double","double","double","double","double"];
@@ -33,8 +33,9 @@ testDataTable = table('Size',sz,'VariableTypes',dataTypes,'VariableNames',dataLa
 
 % set up serial object
 % serialPortName = 'COM5'; % on Windows would be COMx
-serialPortName = '/dev/cu.SLAB_USBtoUART' % Please don't delete this line--Hubert uses it for testing
+serialPortName = '/dev/cu.SLAB_USBtoUART'; % Please don't delete this line--Hubert uses it for testing
 s = serial(serialPortName,'BaudRate',115200);
+% s = serialport(serialPortName,115200);
 % open serial port
 fopen(s);
 % remember to fclose(s) in the command windows after ctrl+C exit the
@@ -256,7 +257,8 @@ end
         fprintf('Saving test data as %s.xls\n',fileName);
         setUpTest(['Test_Data_',datestr(now,'yyyy-mm-dd')],fileName,testDataTable);
         %         writetable(testDataTable,fileName,"FileType","spreadsheet");
-        fclose(s);
+%         fclose(s);
+        clear s
         instrreset;
     end
 

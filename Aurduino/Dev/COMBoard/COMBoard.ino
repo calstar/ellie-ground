@@ -321,6 +321,7 @@ void loop() {
       } else {
         while (!Serial.available()) {
           pressed3 = digitalRead(buttonpin1);
+          Serial.print(pressed3);
           delay(5);
           if ((millis() - receiveTimeDAQ) > 500) {
             digitalWrite(DAQIndicator, LOW);
