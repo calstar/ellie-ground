@@ -1,11 +1,10 @@
-function liveplot
 % Clear everything
 close all; clear all;
 % reset all ports; otherwise might be unable to connect to port
 % instrreset;
 
 % create our clean up object for interrupt
-cleanupObj = onCleanup(@cleanMeUp);
+% cleanupObj = onCleanup(@cleanMeUp);
 
 % NAME THE TEST FIRST (only change the second part)
 fileName = [datestr(now,'yyyy-mm-dd_HHMMSS'),'_test3'];
@@ -16,13 +15,13 @@ pauseTime = 0.05;
 plotTime = 0.2;
 
 % frequency
-% fetchFrequency = 1/pauseTime;
+fetchFrequency = 1/pauseTime;
 
 % observation time window
 observationInterval = 5;
 
 % time conversion factor
-% timeFactor = 24 * 60 * 60;
+timeFactor = 24 * 60 * 60;
 
 % set up table to collect data
 dataTypes = ["double","double","double","double","double","double","double"];
@@ -33,9 +32,8 @@ testDataTable = table('Size',sz,'VariableTypes',dataTypes,'VariableNames',dataLa
 
 % set up serial object
 % serialPortName = 'COM5'; % on Windows would be COMx
-serialPortName = '/dev/cu.SLAB_USBtoUART'; % Please don't delete this line--Hubert uses it for testing
+serialPortName = '/dev/cu.SLAB_USBtoUART' % Please don't delete this line--Hubert uses it for testing
 s = serial(serialPortName,'BaudRate',115200);
-% s = serialport(serialPortName,115200);
 % open serial port
 fopen(s);
 % remember to fclose(s) in the command windows after ctrl+C exit the
@@ -251,30 +249,4 @@ while(1)
         pause(timeDifference);
     end
     i = i+1;
-end
-    function cleanMeUp()
-        % saves data to file (or could save to workspace)
-        fprintf('Saving test data as %s.xls\n',fileName);
-        setUpTest(['Test_Data_',datestr(now,'yyyy-mm-dd')],fileName,testDataTable);
-        %         writetable(testDataTable,fileName,"FileType","spreadsheet");
-%         fclose(s);
-        clear s
-        instrreset;
-    end
-
-
-
-end
-
-function setUpTest(folderName,fileName,testDataTable)
-if ~exist(folderName, 'dir')
-    mkdir(folderName);
-    fprintf("Test data folder created\n");
-else
-    fprintf("Folder already exists\n")
-end
-writetable(testDataTable,fileName,"FileType","spreadsheet");
-fileString = fileName + ".xls";
-movefile(fileString,folderName);
-
 end

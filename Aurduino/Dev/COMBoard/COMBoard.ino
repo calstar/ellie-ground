@@ -7,8 +7,9 @@
 int angle = 90;
 float pressTime = 0;
 const int buttonpin1 = 15;
+//const int buttonpin1 = 27;
 const int buttonpin2 = 14;
-const int buttonpin3 = 10;//SET PIN NUMBER BASED ON SOLDERING//
+const int buttonpin3 = 16;//SET PIN NUMBER BASED ON SOLDERING//ß
 const int LEDpin = 27;
 const int servo1Open = 11;//SET PIN NUMBER BASED ON SOLDERING//
 const int servo2Open = 12;//SET PIN NUMBER BASED ON SOLDERING//
@@ -42,6 +43,11 @@ int closedAngle1 = 0;//SET ANGLE
 int closedAngle2 = 0; //Set ANGLE
 float receiveTimeDAQ = 0;
 float receiveTimeCOM = 0;
+
+//for blinking LED during Data Collection
+int x = 1;
+unsigned long t1;
+unsigned long t2;
 
 
 //SET IF PLOTTING WITH MATLAB OR NOT. SERVO MANUAL CONTROL AND
@@ -123,10 +129,10 @@ void setup() {
   Commands.S2 = 90;
   // put your setup code here, to run once:
   Serial.begin(115200);
-  Serial.print("yeah");
   pinMode(buttonpin1,INPUT);
   pinMode(buttonpin2, INPUT);
   pinMode(buttonpin3, INPUT);
+  pinMode(LEDpin, OUTPUT);
   digitalWrite(LEDpin,LOW);
   digitalWrite(servo1Open, LOW);
   digitalWrite(servo2Open, LOW);
@@ -166,10 +172,11 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   // STATES:
-  // 0 = RESTING
-  // 1 = ARMED
-  // 2 = ACTUATE VALVES ON PRE_SET PARAMETERS (IF USING MATLAB)
+  // 0 = RESTING LED dark
+  // 1 = ARMED LED Bright
+  // 2 = ACTUATE VALVES ON PRE_SET PARAMETERS (IF USING MATLAB) LED Blinking
   //     READY FOR SERVO VALVE ANGLE INPUTS (IN FORM angle1,angle2)
+
   switch (state) {
     case 0:
       //Serial.println("IN CASE 0");
@@ -179,8 +186,8 @@ void loop() {
       if (pressed1 && ((currTime - button1Time) > 1000)) {
         state = 1;
         button1Time = currTime;
-        Serial.println("State 1");
-        Serial.println("BUTTON 1 GOOD");
+        // Serial.println("State 1");
+        // Serial.println("BUTTON 1 GOOD");
       }
       if ((millis() - receiveTimeDAQ) > 500) {
         digitalWrite(DAQIndicator, LOW);
@@ -197,12 +204,12 @@ void loop() {
       currTime = millis();
       if (pressed2) {
         state = 2;
-        Serial.println("State 2");
+        // Serial.println("State 2");
       }
       if (pressed3 && ((currTime - button1Time) > 1000)) {
         button1Time = currTime;
         state = 0;
-        Serial.println("State 0");
+        // Serial.println("State 0");
       }
       if ((millis() - receiveTimeDAQ) > 500) {
         digitalWrite(DAQIndicator, LOW);
@@ -219,7 +226,18 @@ void loop() {
         servo1_curr = 90 - servo1_curr;
         servo2_curr = 90 - servo2_curr;
         pressTime = millis();
+
+
         while (millis() - pressTime <= 5000) {
+
+          t2=millis();
+          if (t2-t1 >=100){
+              x=1-x;
+              t1=millis();
+              digitalWrite(LEDpin,x);
+              // Serial.print(t1);
+            }
+
           pressed3 = digitalRead(buttonpin1);
           if (pressed3) {
             state = 0;
@@ -303,6 +321,7 @@ void loop() {
       } else {
         while (!Serial.available()) {
           pressed3 = digitalRead(buttonpin1);
+          Serial.print(pressed3);
           delay(5);
           if ((millis() - receiveTimeDAQ) > 500) {
             digitalWrite(DAQIndicator, LOW);
@@ -320,7 +339,7 @@ void loop() {
             //}
           if (pressed3) {
             state = 0;
-            Serial.println("State 0");
+            // Serial.println("State 0");
             break;}  //waiting for inputs
           }
         String angles = Serial.readString();
