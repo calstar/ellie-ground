@@ -84,22 +84,18 @@ timeControl = now();
 i = 1;
 % read data
 flushinput(s);
-% if there is not reading coming from the serial port, this command will
-% result in a timeout before proceeding (default 10s, but the following
-% command changes the time)
-set(s, 'TimeOut', 2)
+tic
 fscanf(s);
-
+toc
 
 % accounts for any time delay from reading
 timeZeroer = 0;
 
 strlengthWarned = false;
 
-
 while (strlength(split(fscanf(s))) < 1)
     if strlengthWarned == false
-        fprintf("No data/not enough data received through the serial port, check board\n")
+        fprintf("No data/not enough data received through the serial port\n")
     end
     strlengthWarned = true;
 
@@ -253,7 +249,7 @@ while(1)
 end
     function cleanMeUp()
         % saves data to file (or could save to workspace)
-        fprintf('Saving test data as %s.xls\n',fileName);
+        fprintf('saving test data as %s.xls\n',fileName);
         setUpTest(['Test_Data_',datestr(now,'yyyy-mm-dd')],fileName,testDataTable);
         %         writetable(testDataTable,fileName,"FileType","spreadsheet");
         fclose(s);
@@ -267,9 +263,9 @@ end
 function setUpTest(folderName,fileName,testDataTable)
 if ~exist(folderName, 'dir')
     mkdir(folderName);
-    fprintf("Test data folder created\n");
+    fprintf("test data folder created\n");
 else
-    fprintf("Folder already exists\n")
+    fprintf("folder already exists\n")
 end
 writetable(testDataTable,fileName,"FileType","spreadsheet");
 fileString = fileName + ".xls";
