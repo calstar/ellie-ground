@@ -70,6 +70,9 @@ Pinout reference
 
 ### Presure transducer color code
 Red - E+
+
 Black - E-
+
 Green - A-
+
 White - A+
