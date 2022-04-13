@@ -68,7 +68,7 @@ Pinout reference
 ![esp32 devkitC pinout](https://github.com/calstar/ellie-ground/blob/main/Misc_resources/esp32-huzzah-pinout.png?raw=true "ESP32 HUZZAH Pinout")
 
 
-### Presure transducer color
+### Presure transducer color code
 Red - E+
 Black - E-
 Green - A-
