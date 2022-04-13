@@ -9,18 +9,16 @@ int servo1OpenPosition = 90;
 int servo2ClosedPosition = 0;
 int servo2OpenPosition = 90;
 float pressTime = 0;
-const int buttonpin1 = 15;
+const int buttonpin1 = 16;
 //const int buttonpin1 = 27;
-const int buttonpin2 = 14;
-const int buttonpin3 = 16;//SET PIN NUMBER BASED ON SOLDERING//
-const int igniterIndicator = // SET PIN NUMBER//
-const int LEDpin = 27;
-const int servo1Open = 11;//SET PIN NUMBER BASED ON SOLDERING//
-const int servo2Open = 12;//SET PIN NUMBER BASED ON SOLDERING//
-const int DAQIndicator = 13;//SET PIN NUMBER BASED ON SOLDERING//
-const int COMIndicator = 18;//SET PIN NUMBER BASED ON SOLDERING//
-const int igniterPin = //SET PIN NUMBER
-const int firePin = //SET PIN NUMBER
+const int buttonpin2 = 19;
+const int igniterIndicator = 17;
+const int LEDpin = 32;
+const int servo1Open = 14;//SET PIN NUMBER BASED ON SOLDERING//
+const int servo2Open = 22;//SET PIN NUMBER BASED ON SOLDERING//
+const int DAQIndicator = 23;//SET PIN NUMBER BASED ON SOLDERING//
+const int COMIndicator = 25;//SET PIN NUMBER BASED ON SOLDERING//
+const int firePin = 21; //SET PIN NUMBER
 String success;
 int servo1_curr = 90;
 int servo2_curr = 90;
@@ -129,7 +127,6 @@ void setup() {
   Serial.begin(115200);
   pinMode(buttonpin1,INPUT);
   pinMode(buttonpin2, INPUT);
-  pinMode(buttonpin3, INPUT);
   pinMode(LEDpin, OUTPUT);
   digitalWrite(LEDpin,LOW);
   digitalWrite(servo1Open, LOW);
@@ -380,14 +377,33 @@ void loop() {
       digitalWrite(COMIndicator, LOW);
       digitalWrite(servo1Open, LOW);
       digitalWrite(servo2Open, LOW);
+      if ((millis() - receiveTimeDAQ) > 500) {
+        digitalWrite(DAQIndicator, LOW);
+      }
+      if ((millis() - receiveTimeCOM) > 500) {
+        digitalWrite(COMIndicator, LOW);
+      }
+
       break;
     case 4:
       if (digitalRead(igniterIndicator)) {
-        digitalWrite(igniterPin, HIGH);
+        Commands.S1S2 = 99;
+        esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+        if (result != ESP_OK) {
+            break;
+          // Serial.println("Sent with success");
+          }
+        Commands.S1S2 = 0;
         state = 5;
       }
       if (digitalRead(buttonpin1)) {
         state = 0;
+      }
+      if ((millis() - receiveTimeDAQ) > 500) {
+        digitalWrite(DAQIndicator, LOW);
+      }
+      if ((millis() - receiveTimeCOM) > 500) {
+        digitalWrite(COMIndicator, LOW);
       }
       break;
     case 5:
@@ -402,10 +418,32 @@ void loop() {
         Commands.S1 = servo1OpenPosition;
         Commands.S2 = servo2OpenPosition;
         state = 0;
+        float now = millis();
+        float runningTime = millis();
+        digitalWrite(servo1Open, HIGH);
+        digitalWrite(servo2Open, HIGH);
+        while ((runningTime - now) <= 3000) {
+          runningTime = millis();
+        }
+        digitalWrite(servo1Open, LOW);
+        now = millis();
+        runningTime = millis();
+        while ((runningTime - now) <= 500) {
+          runningTime = millis();
+        }
+        digitalWrite(servo2Open, LOW);
       }
       if (digitalRead(buttonpin1)) {
         state = 0;
       }
+      if ((millis() - receiveTimeDAQ) > 500) {
+        digitalWrite(DAQIndicator, LOW);
+      }
+      if ((millis() - receiveTimeCOM) > 500) {
+        digitalWrite(COMIndicator, LOW);
+      }
+
+
   }
 
 

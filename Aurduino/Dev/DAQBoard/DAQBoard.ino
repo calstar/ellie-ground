@@ -23,6 +23,7 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 #define FM 4 //update
 #define S1S 23
 #define S2S 22
+#define igniterPin 21
 
 //RESOLDER GROUND ON PROTOBOARD
 
@@ -158,6 +159,9 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   if (I) {
     fireSequence();
   }
+  if (S1S2 == 100) {
+    digitalWrite(igniterPin, HIGH);
+  }
 }
 
 void fireSequence() {
@@ -184,6 +188,8 @@ void setup() {
 
   // attach onboard LED
   pinMode(ONBOARD_LED,OUTPUT);
+  pinMode(igniterPin, OUTPUT);
+  digitalWrite(igniterPin, LOW);
 
 
 //attach flowmeter pin
