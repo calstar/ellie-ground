@@ -4,17 +4,23 @@
 #include <Wire.h>
 #include <Arduino.h>
 #include "HX711.h"
-int angle = 90;
+int servo1ClosedPosition = 0;
+int servo1OpenPosition = 90;
+int servo2ClosedPosition = 0;
+int servo2OpenPosition = 90;
 float pressTime = 0;
 const int buttonpin1 = 15;
 //const int buttonpin1 = 27;
 const int buttonpin2 = 14;
-const int buttonpin3 = 16;//SET PIN NUMBER BASED ON SOLDERING//ß
+const int buttonpin3 = 16;//SET PIN NUMBER BASED ON SOLDERING//
+const int igniterIndicator = // SET PIN NUMBER//
 const int LEDpin = 27;
 const int servo1Open = 11;//SET PIN NUMBER BASED ON SOLDERING//
 const int servo2Open = 12;//SET PIN NUMBER BASED ON SOLDERING//
 const int DAQIndicator = 13;//SET PIN NUMBER BASED ON SOLDERING//
 const int COMIndicator = 18;//SET PIN NUMBER BASED ON SOLDERING//
+const int igniterPin = //SET PIN NUMBER
+const int firePin = //SET PIN NUMBER
 String success;
 int servo1_curr = 90;
 int servo2_curr = 90;
@@ -32,11 +38,8 @@ esp_now_peer_info_t peerInfo;
 bool pressed1 = false;
 bool pressed2 = false;
 bool pressed3 = false;
-bool prevPressed = false;
-bool valveOpened = false;
-bool armed = false;
+bool hotfire = false;
 float button1Time = 0;
-float currentTime = 0;
 float currTime = 0;
 float loopTime = 0;
 int closedAngle1 = 0;//SET ANGLE
@@ -56,11 +59,6 @@ unsigned long t2;
 bool MatlabPlot = true;
 int state = 0;
 //
-
-void shutdownISR() {
-  state = 3;
-}
-
 
 //DAQ Breadboard {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC}
 //DAQ Protoboard {0x0C, 0xDC, 0x7E, 0xCB, 0x05, 0xC4}
@@ -138,6 +136,7 @@ void setup() {
   digitalWrite(servo2Open, LOW);
   digitalWrite(DAQIndicator, LOW);
   digitalWrite(COMIndicator, LOW);
+  digitalWrite(igniterPin, LOW);
 
   //set device as WiFi station
   WiFi.mode(WIFI_STA);
@@ -163,8 +162,6 @@ void setup() {
   }
   // Register for a callback function that will be called when data is received
   esp_now_register_recv_cb(OnDataRecv);
-
-  attachInterrupt(digitalPinToInterrupt(buttonpin3), shutdownISR, RISING);
 
 }
 
@@ -203,7 +200,11 @@ void loop() {
       pressed3 = digitalRead(buttonpin1);
       currTime = millis();
       if (pressed2) {
-        state = 2;
+        if (hotfire) {
+          state = 4;
+        } else {
+          state = 2;
+      }
         // Serial.println("State 2");
       }
       if (pressed3 && ((currTime - button1Time) > 1000)) {
@@ -270,9 +271,6 @@ void loop() {
             //Serial.print(incomingFM);  // Print the integer part of the variable
             //Serial.print("L/min");
             //Serial.print(" ");       // Print tab space
-
-
-
 
            //PT TEST
             //Serial.print("Output Pressures: ");
@@ -351,13 +349,13 @@ void loop() {
           Serial.println(readAngle2);
           Commands.S1 = readAngle1.toInt();
           Commands.S2 = readAngle2.toInt();
-          if (Commands.S1 == closedAngle1) {
+          if (Commands.S1 == servo1ClosedPosition) {
             digitalWrite(servo1Open, LOW);
           } else {
             digitalWrite(servo1Open, HIGH);
           }
 
-          if (Commands.S2 == closedAngle2) {
+          if (Commands.S2 == servo2ClosedPosition) {
             digitalWrite(servo2Open, LOW);
           } else {
             digitalWrite(servo2Open, HIGH);
@@ -376,13 +374,38 @@ void loop() {
       }
       break;
      case 3:
-      Commands.S1 = closedAngle1;
-      Commands.S2 = closedAngle2;
+      Commands.S1 = servo1ClosedPosition;
+      Commands.S2 = servo2ClosedPosition;
       digitalWrite(DAQIndicator, LOW);
       digitalWrite(COMIndicator, LOW);
       digitalWrite(servo1Open, LOW);
       digitalWrite(servo2Open, LOW);
       break;
+    case 4:
+      if (digitalRead(igniterIndicator)) {
+        digitalWrite(igniterPin, HIGH);
+        state = 5;
+      }
+      if (digitalRead(buttonpin1)) {
+        state = 0;
+      }
+      break;
+    case 5:
+      if (digitalRead(firePin)) {
+        Commands.I = true;
+        esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+        if (result != ESP_OK) {
+            break;
+          // Serial.println("Sent with success");
+          }
+        Commands.I = false;
+        Commands.S1 = servo1OpenPosition;
+        Commands.S2 = servo2OpenPosition;
+        state = 0;
+      }
+      if (digitalRead(buttonpin1)) {
+        state = 0;
+      }
   }
 
 
