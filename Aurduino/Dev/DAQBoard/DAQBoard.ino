@@ -26,7 +26,8 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 
 //RESOLDER GROUND ON PROTOBOARD
 
-
+#define servo1ClosedPosition = 90;//Copy over from COMBoard
+#define servo2ClosedPosition = 90;//Copy over from COMBoard
 
 //For breadboard
 //#define PT1DOUT 26
@@ -72,6 +73,7 @@ int ADC_Max = 4096;
 //OLD COM BOARD {0xC4, 0xDD, 0x57, 0x9E, 0x91, 0x6C}
 //COM BOARD {0x7C, 0x9E, 0xBD, 0xD7, 0x2B, 0xE8}
 //HEADERLESS BOARD {0x7C, 0x87, 0xCE, 0xF0 0x69, 0xAC}
+//NEWEST COM BOARD IN EVA {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC}
 uint8_t broadcastAddress[] = {0x7C, 0x87, 0xCE, 0xF0, 0x69, 0xAC};
 
 int count=3;
@@ -153,6 +155,26 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   S2 = Commands.S2;
   S1S2 = Commands.S1S2;
   I = Commands.I;
+  if (I) {
+    fireSequence();
+  }
+}
+
+void fireSequence() {
+  servo1.write(S1);
+  servo2.write(S2);
+  float beginTime = millis();
+  float currentTime = millis();
+  while ((currentTime - beginTime) <= 3000) {
+    currentTime = millis();
+  }
+  servo1.write(servo1ClosedPosition);
+  beginTime = millis();
+  currentTime = millis();
+  while ((currentTime - beginTime) <= 500) {
+    currentTime = millis();
+  }
+  servo2.write(servo2ClosedPosition);
 }
 
 void setup() {
