@@ -38,6 +38,7 @@ esp_now_peer_info_t peerInfo;
 bool pressed1 = false;
 bool pressed2 = false;
 bool pressed3 = false;
+bool hotfire = false;
 float button1Time = 0;
 float currTime = 0;
 float loopTime = 0;
@@ -58,11 +59,6 @@ unsigned long t2;
 bool MatlabPlot = true;
 int state = 0;
 //
-
-void shutdownISR() {
-  state = 3;
-}
-
 
 //DAQ Breadboard {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC}
 //DAQ Protoboard {0x0C, 0xDC, 0x7E, 0xCB, 0x05, 0xC4}
@@ -167,8 +163,6 @@ void setup() {
   // Register for a callback function that will be called when data is received
   esp_now_register_recv_cb(OnDataRecv);
 
-  attachInterrupt(digitalPinToInterrupt(buttonpin3), shutdownISR, RISING);
-
 }
 
 
@@ -206,7 +200,11 @@ void loop() {
       pressed3 = digitalRead(buttonpin1);
       currTime = millis();
       if (pressed2) {
-        state = 2;
+        if (hotfire) {
+          state = 4;
+        } else {
+          state = 2;
+      }
         // Serial.println("State 2");
       }
       if (pressed3 && ((currTime - button1Time) > 1000)) {
@@ -273,9 +271,6 @@ void loop() {
             //Serial.print(incomingFM);  // Print the integer part of the variable
             //Serial.print("L/min");
             //Serial.print(" ");       // Print tab space
-
-
-
 
            //PT TEST
             //Serial.print("Output Pressures: ");
