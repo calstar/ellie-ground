@@ -76,4 +76,5 @@ Black - E-
 Green - A-
 
 White - A+
+
 Other possible combination: Blue E+; Red E-; Green A-; Black A+
