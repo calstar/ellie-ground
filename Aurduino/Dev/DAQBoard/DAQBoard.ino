@@ -27,8 +27,8 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 
 //RESOLDER GROUND ON PROTOBOARD
 
-#define servo1ClosedPosition = 90;//Copy over from COMBoard
-#define servo2ClosedPosition = 90;//Copy over from COMBoard
+#define servo1ClosedPosition = 0;//Copy over from COMBoard
+#define servo2ClosedPosition = 0;//Copy over from COMBoard
 
 //For breadboard
 //#define PT1DOUT 26
