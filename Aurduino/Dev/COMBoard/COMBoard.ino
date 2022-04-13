@@ -13,11 +13,14 @@ const int buttonpin1 = 16;
 //const int buttonpin1 = 27;
 const int buttonpin2 = 19;
 const int igniterIndicator = 17;
-const int LEDpin = 32;
-const int servo1Open = 14;//SET PIN NUMBER BASED ON SOLDERING//
-const int servo2Open = 22;//SET PIN NUMBER BASED ON SOLDERING//
-const int DAQIndicator = 23;//SET PIN NUMBER BASED ON SOLDERING//
-const int COMIndicator = 25;//SET PIN NUMBER BASED ON SOLDERING//
+
+
+const int LEDpin = 4;
+const int servo1Open = 22;//SET PIN NUMBER BASED ON SOLDERING//
+const int servo2Open = 23;//SET PIN NUMBER BASED ON SOLDERING//
+const int DAQIndicator = 32;//SET PIN NUMBER BASED ON SOLDERING//
+const int COMIndicator = 14;//SET PIN NUMBER BASED ON SOLDERING//
+
 const int firePin = 21; //SET PIN NUMBER
 String success;
 int servo1_curr = 90;
@@ -36,7 +39,15 @@ esp_now_peer_info_t peerInfo;
 bool pressed1 = false;
 bool pressed2 = false;
 bool pressed3 = false;
-bool hotfire = false;
+
+// SET FOR ACTIVE MODE //
+bool hotfire = true;
+//SET IF PLOTTING WITH MATLAB OR NOT. SERVO MANUAL CONTROL AND
+//MATLAB PLOTTING ARE NOT COMPATIBLE DUE TO USING THE SAME SERIAL
+//INPUT. IF TRUE, PLOTTING ENABLED. IF FALSE, MANUAL CONTROL ENABLED
+bool MatlabPlot = true;
+
+
 float button1Time = 0;
 float currTime = 0;
 float loopTime = 0;
@@ -50,11 +61,6 @@ int x = 1;
 unsigned long t1;
 unsigned long t2;
 
-
-//SET IF PLOTTING WITH MATLAB OR NOT. SERVO MANUAL CONTROL AND
-//MATLAB PLOTTING ARE NOT COMPATIBLE DUE TO USING THE SAME SERIAL
-//INPUT. IF TRUE, PLOTTING ENABLED. IF FALSE, MANUAL CONTROL ENABLED
-bool MatlabPlot = true;
 int state = 0;
 //
 
@@ -117,6 +123,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   incomingS1 = incomingReadings.S1;
   digitalWrite(COMIndicator, HIGH);
   receiveTimeCOM = millis();
+  Serial.println("Data received");
 
 }
 
@@ -128,12 +135,18 @@ void setup() {
   pinMode(buttonpin1,INPUT);
   pinMode(buttonpin2, INPUT);
   pinMode(LEDpin, OUTPUT);
+  pinMode(servo1Open, OUTPUT);
+  pinMode(servo2Open, OUTPUT);
+  pinMode(DAQIndicator, OUTPUT);
+  pinMode(COMIndicator, OUTPUT);
+  pinMode(firePin, OUTPUT);
+
   digitalWrite(LEDpin,LOW);
   digitalWrite(servo1Open, LOW);
   digitalWrite(servo2Open, LOW);
   digitalWrite(DAQIndicator, LOW);
   digitalWrite(COMIndicator, LOW);
-  digitalWrite(igniterPin, LOW);
+  digitalWrite(firePin, LOW);
 
   //set device as WiFi station
   WiFi.mode(WIFI_STA);
@@ -173,6 +186,7 @@ void loop() {
 
   switch (state) {
     case 0:
+      Serial.println("State 0");
       //Serial.println("IN CASE 0");
       digitalWrite(LEDpin, LOW);
       pressed1 = digitalRead(buttonpin1);
@@ -191,6 +205,7 @@ void loop() {
       }
       break;
     case 1:
+      Serial.println("State 1");
       //Serial.println("IN CASE 1");
       digitalWrite(LEDpin, HIGH);
       pressed2 = digitalRead(buttonpin2);
@@ -217,6 +232,7 @@ void loop() {
       }
       break;
     case 2:
+      Serial.println("State 2");
       //Serial.println("IN CASE 2");
       if (MatlabPlot) {
         Commands.S1 = 90 - servo1_curr;
@@ -371,6 +387,7 @@ void loop() {
       }
       break;
      case 3:
+      Serial.println("State 3");
       Commands.S1 = servo1ClosedPosition;
       Commands.S2 = servo2ClosedPosition;
       digitalWrite(DAQIndicator, LOW);
@@ -386,14 +403,16 @@ void loop() {
 
       break;
     case 4:
+      Serial.println("State 4");
       if (digitalRead(igniterIndicator)) {
         Commands.S1S2 = 99;
+        Commands.S1 = servo1ClosedPosition;
+        Commands.S2 = servo2ClosedPosition;
         esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
         if (result != ESP_OK) {
             break;
           // Serial.println("Sent with success");
           }
-        Commands.S1S2 = 0;
         state = 5;
       }
       if (digitalRead(buttonpin1)) {
@@ -407,6 +426,7 @@ void loop() {
       }
       break;
     case 5:
+      Serial.println("State 5");
       if (digitalRead(firePin)) {
         Commands.I = true;
         esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));

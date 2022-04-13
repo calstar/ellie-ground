@@ -27,8 +27,11 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 
 //RESOLDER GROUND ON PROTOBOARD
 
-#define servo1ClosedPosition = 90;//Copy over from COMBoard
-#define servo2ClosedPosition = 90;//Copy over from COMBoard
+int servo1ClosedPosition = 0;
+int servo1OpenPosition = 90;
+int servo2ClosedPosition = 0;
+int servo2OpenPosition = 90;
+
 
 //For breadboard
 //#define PT1DOUT 26
@@ -44,10 +47,13 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 
 //Initialize flow meter variables for how it computes the flow amount
 float currentMillis = 0;
-float goalTime = 10;
+float goalTime = 50;
 float currReading1;
 float currReading2;
-float loopTime=100;
+float loopTime=10;
+
+float servo1curr =0;
+float servo2curr=0;
 
 //FM counter
 float fmcount;
@@ -75,7 +81,7 @@ int ADC_Max = 4096;
 //COM BOARD {0x7C, 0x9E, 0xBD, 0xD7, 0x2B, 0xE8}
 //HEADERLESS BOARD {0x7C, 0x87, 0xCE, 0xF0 0x69, 0xAC}
 //NEWEST COM BOARD IN EVA {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC}
-uint8_t broadcastAddress[] = {0x7C, 0x87, 0xCE, 0xF0, 0x69, 0xAC};
+uint8_t broadcastAddress[] = {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC};
 
 int count=3;
 
@@ -159,26 +165,57 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   if (I) {
     fireSequence();
   }
-  if (S1S2 == 100) {
-    digitalWrite(igniterPin, HIGH);
+  if (S1S2 == 99) {
+    digitalWrite(igniterPin, LOW);
   }
 }
 
 void fireSequence() {
-  servo1.write(S1);
-  servo2.write(S2);
+  
+  servo1curr=servo1OpenPosition;
+   servo2curr=servo2OpenPosition;
+  
+  servo1.write(servo1curr);
+  servo2.write(servo2curr);
   float beginTime = millis();
   float currentTime = millis();
   while ((currentTime - beginTime) <= 3000) {
     currentTime = millis();
+    servo1.write(servo1curr);
+    servo2.write(servo2curr);
+    S1=servo1curr;
+    S2=servo2curr;
+  
+
+    delay(5);
+
   }
-  servo1.write(servo1ClosedPosition);
   beginTime = millis();
   currentTime = millis();
+
+  servo1curr=servo1ClosedPosition;
+   servo2curr=servo2OpenPosition;
+ 
+  
   while ((currentTime - beginTime) <= 500) {
     currentTime = millis();
+    S1=servo1curr;
+    S2=servo2curr;
+
+  servo1.write(servo1curr);
+  servo2.write(servo2curr);
+
+
+     delay(5);
+    
   }
-  servo2.write(servo2ClosedPosition);
+  servo1curr=servo1ClosedPosition;
+  servo2curr=servo2ClosedPosition;
+  
+  servo1.write(servo1curr);
+  
+  servo2.write(servo2curr);
+ 
 }
 
 void setup() {
@@ -189,7 +226,7 @@ void setup() {
   // attach onboard LED
   pinMode(ONBOARD_LED,OUTPUT);
   pinMode(igniterPin, OUTPUT);
-  digitalWrite(igniterPin, LOW);
+  digitalWrite(igniterPin, HIGH);
 
 
 //attach flowmeter pin
@@ -257,8 +294,10 @@ void loop() {
         //servo1.write(135);
         //break;
   //}
-  servo1.write(S1);
-  servo2.write(S2);
+    servo1curr=S1;
+    servo2curr=S2;
+    servo1.write(servo1curr);
+    servo2.write(servo2curr);
 
   //Serial.print("loop");
 
@@ -292,7 +331,7 @@ void loop() {
 //    delay(timeDiff);
 //  }
 
-  delay(20);
+  delay(5);
 
 
 }
@@ -302,7 +341,11 @@ void getReadings(){
   fmcount = 0;
 
  while (millis() - currentMillis < goalTime) {
+    servo1.write(servo1curr);
+    servo2.write(servo2curr);
 
+ 
+    
     currentState = digitalRead(FM);
     if (!(currentState == lastState)) {
 
@@ -318,5 +361,6 @@ void getReadings(){
 
  pt2 = scale2.read();
       Serial.print("pt2");
-
+    servo1.write(servo1curr);
+    servo2.write(servo2curr);
 }
