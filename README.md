@@ -18,8 +18,8 @@
 
 ## ESP32 Pinouts (Updated 4/6)
 -DAQ Breadboard:
-  
-  
+
+
 
 
 
@@ -66,3 +66,15 @@ Pinout reference
 
 Pinout reference
 ![esp32 devkitC pinout](https://github.com/calstar/ellie-ground/blob/main/Misc_resources/esp32-huzzah-pinout.png?raw=true "ESP32 HUZZAH Pinout")
+
+
+### Pressure transducer color code
+Red - E+
+
+Black - E-
+
+Green - A-
+
+White - A+
+
+Other possible combinations: Blue E+; Red E-; Green A-; Black A+
