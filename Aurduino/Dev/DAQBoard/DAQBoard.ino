@@ -27,9 +27,10 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 
 //RESOLDER GROUND ON PROTOBOARD
 
-#define servo1ClosedPosition = 0;//Copy over from COMBoard
-#define servo2ClosedPosition = 0;//Copy over from COMBoard
-
+int servo1ClosedPosition = 0;
+int servo1OpenPosition = 90;
+int servo2ClosedPosition = 0;
+int servo2OpenPosition = 90;
 //For breadboard
 //#define PT1DOUT 26
 //#define PT2DOUT 16
@@ -159,14 +160,14 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   if (I) {
     fireSequence();
   }
-  if (S1S2 == 100) {
+  if (S1S2 == 99) {
     digitalWrite(igniterPin, HIGH);
   }
 }
 
 void fireSequence() {
-  servo1.write(S1);
-  servo2.write(S2);
+  servo1.write(servo1OpenPosition);
+  servo2.write(servo2OpenPosition);
   float beginTime = millis();
   float currentTime = millis();
   while ((currentTime - beginTime) <= 3000) {

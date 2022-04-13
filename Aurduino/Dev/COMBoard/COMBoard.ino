@@ -139,13 +139,14 @@ void setup() {
   pinMode(servo2Open, OUTPUT);
   pinMode(DAQIndicator, OUTPUT);
   pinMode(COMIndicator, OUTPUT);
+  pinMode(firePin, OUTPUT);
 
   digitalWrite(LEDpin,LOW);
   digitalWrite(servo1Open, LOW);
   digitalWrite(servo2Open, LOW);
   digitalWrite(DAQIndicator, LOW);
   digitalWrite(COMIndicator, LOW);
-  //digitalWrite(igniterPin, LOW);
+  digitalWrite(firePin, LOW);
 
   //set device as WiFi station
   WiFi.mode(WIFI_STA);
@@ -405,12 +406,13 @@ void loop() {
       Serial.println("State 4");
       if (digitalRead(igniterIndicator)) {
         Commands.S1S2 = 99;
+        Commands.S1 = servo1ClosedPosition;
+        Commands.S2 = servo2ClosedPosition;
         esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
         if (result != ESP_OK) {
             break;
           // Serial.println("Sent with success");
           }
-        Commands.S1S2 = 0;
         state = 5;
       }
       if (digitalRead(buttonpin1)) {
