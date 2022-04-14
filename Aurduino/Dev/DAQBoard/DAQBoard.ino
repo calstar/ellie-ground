@@ -12,7 +12,7 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 #include <Wire.h>
 #include <Arduino.h>
 #include "HX711.h"
-
+esp_err_t result;
 
 //define pins to use for the various sensors and connections. define takes up less space on the chip
 #define ONBOARD_LED  13
@@ -60,6 +60,7 @@ float fmcount;
 float flowRate;
 boolean currentState;
 boolean lastState = false;
+boolean fireActive = false;
 
 //Initialize the PT and LC sensor objects which use the HX711 breakout board
 HX711 scale1;
@@ -163,7 +164,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   S1S2 = Commands.S1S2;
   I = Commands.I;
   if (I) {
-    fireSequence();
+    fireActive = true;
   }
   if (S1S2 == 99) {
     digitalWrite(igniterPin, LOW);
@@ -300,6 +301,69 @@ void loop() {
     servo2.write(servo2curr);
 
   //Serial.print("loop");
+  if (fireActive) {
+    servo1curr=servo1OpenPosition;
+   servo2curr=servo2OpenPosition;
+  
+  servo1.write(servo1curr);
+  servo2.write(servo2curr);
+  float beginTime = millis();
+  float currentTime = millis();
+  while ((currentTime - beginTime) <= 3000) {
+    getReadings();
+    result = esp_now_send(broadcastAddress, (uint8_t *) &Readings, sizeof(Readings));
+
+  if (result == ESP_OK) {
+    Serial.println("Sent with success");
+  }
+  else {
+    Serial.println("Error sending the data");
+  }
+    currentTime = millis();
+    servo1.write(servo1curr);
+    servo2.write(servo2curr);
+    S1=servo1curr;
+    S2=servo2curr;
+  
+
+    delay(5);
+
+  }
+  beginTime = millis();
+  currentTime = millis();
+
+  servo1curr=servo1ClosedPosition;
+   servo2curr=servo2OpenPosition;
+ 
+  
+  while ((currentTime - beginTime) <= 500) {
+    getReadings();
+    result = esp_now_send(broadcastAddress, (uint8_t *) &Readings, sizeof(Readings));
+
+  if (result == ESP_OK) {
+    Serial.println("Sent with success");
+  }
+  else {
+    Serial.println("Error sending the data");
+  }
+    currentTime = millis();
+    S1=servo1curr;
+    S2=servo2curr;
+
+  servo1.write(servo1curr);
+  servo2.write(servo2curr);
+
+
+     delay(5);
+    
+  }
+  servo1curr=servo1ClosedPosition;
+  servo2curr=servo2ClosedPosition;
+  
+  servo1.write(servo1curr);
+  
+  servo2.write(servo2curr);
+  }
 
   getReadings();
   //Serial.print("loop2");
@@ -316,7 +380,7 @@ void loop() {
   Readings.fm  = fm;
 
   // Send message via ESP-NOW
-  esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Readings, sizeof(Readings));
+  result = esp_now_send(broadcastAddress, (uint8_t *) &Readings, sizeof(Readings));
 
   if (result == ESP_OK) {
     Serial.println("Sent with success");

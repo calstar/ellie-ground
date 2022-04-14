@@ -13,17 +13,33 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 #include <Arduino.h>
 #include "HX711.h"
 
+
 //define pins to use for the various sensors and connections. define takes up less space on the chip
 #define ONBOARD_LED  13
-#define PT1DOUT 26
-#define PT2DOUT 16
+#define PT1DOUT 33
+#define PT2DOUT 16 //update
+#define CLKPT1 27
+#define CLKPT2 25 //update
+#define FM 4 //update
+#define S1S 23
+#define S2S 22
+#define igniterPin 21
 
-#define CLK 19
-#define CLK2 25
+//RESOLDER GROUND ON PROTOBOARD
 
-#define FM 4
+int servo1ClosedPosition = 0;
+int servo1OpenPosition = 90;
+int servo2ClosedPosition = 0;
+int servo2OpenPosition = 90;
 
-#define S1S 21
+
+//For breadboard
+//#define PT1DOUT 26
+//#define PT2DOUT 16
+//#define CLKPT1 19
+//#define CLKPT2 25
+//#define FM 4
+//#define S1S 21
 
 //define servo min and max values
 #define SERVO_MIN_USEC (900)
@@ -31,10 +47,13 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 
 //Initialize flow meter variables for how it computes the flow amount
 float currentMillis = 0;
-float goalTime = 100;
+float goalTime = 50;
 float currReading1;
 float currReading2;
-float loopTime=100;
+float loopTime=10;
+
+float servo1curr =0;
+float servo2curr=0;
 
 //FM counter
 float fmcount;
@@ -57,7 +76,12 @@ int ADC_Max = 4096;
 //IMPORTANT
 //////////////
 // REPLACE WITH THE MAC Address of your receiver
-uint8_t broadcastAddress[] = {0xC4, 0xDD, 0x57, 0x9E, 0x91, 0x6C};
+
+//OLD COM BOARD {0xC4, 0xDD, 0x57, 0x9E, 0x91, 0x6C}
+//COM BOARD {0x7C, 0x9E, 0xBD, 0xD7, 0x2B, 0xE8}
+//HEADERLESS BOARD {0x7C, 0x87, 0xCE, 0xF0 0x69, 0xAC}
+//NEWEST COM BOARD IN EVA {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC}
+uint8_t broadcastAddress[] = {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC};
 
 int count=3;
 
@@ -133,27 +157,85 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&Commands, incomingData, sizeof(Commands));
   Serial.print("Bytes received: ");
   Serial.println(len);
+      digitalWrite(ONBOARD_LED,HIGH);
   S1 =Commands.S1;
   S2 = Commands.S2;
   S1S2 = Commands.S1S2;
   I = Commands.I;
+  if (I) {
+    fireSequence();
+  }
+  if (S1S2 == 99) {
+    digitalWrite(igniterPin, LOW);
+  }
+}
+
+void fireSequence() {
+  
+  servo1curr=servo1OpenPosition;
+   servo2curr=servo2OpenPosition;
+  
+  servo1.write(servo1curr);
+  servo2.write(servo2curr);
+  float beginTime = millis();
+  float currentTime = millis();
+  while ((currentTime - beginTime) <= 3000) {
+    currentTime = millis();
+    servo1.write(servo1curr);
+    servo2.write(servo2curr);
+    S1=servo1curr;
+    S2=servo2curr;
+  
+
+    delay(5);
+
+  }
+  beginTime = millis();
+  currentTime = millis();
+
+  servo1curr=servo1ClosedPosition;
+   servo2curr=servo2OpenPosition;
+ 
+  
+  while ((currentTime - beginTime) <= 500) {
+    currentTime = millis();
+    S1=servo1curr;
+    S2=servo2curr;
+
+  servo1.write(servo1curr);
+  servo2.write(servo2curr);
+
+
+     delay(5);
+    
+  }
+  servo1curr=servo1ClosedPosition;
+  servo2curr=servo2ClosedPosition;
+  
+  servo1.write(servo1curr);
+  
+  servo2.write(servo2curr);
+ 
 }
 
 void setup() {
   //attach servo pins
   servo1.attach(S1S,SERVO_MIN_USEC,SERVO_MAX_USEC );
+  servo2.attach(S2S,SERVO_MIN_USEC,SERVO_MAX_USEC );
 
   // attach onboard LED
   pinMode(ONBOARD_LED,OUTPUT);
+  pinMode(igniterPin, OUTPUT);
+  digitalWrite(igniterPin, HIGH);
 
 
 //attach flowmeter pin
   //pinMode(FM, INPUT_PULLUP);
 
 //set gains for pt pins
-  scale1.begin(PT1DOUT, CLK);
+  scale1.begin(PT1DOUT, CLKPT1);
   scale1.set_gain(64);
-  scale2.begin(PT2DOUT, CLK2);
+  scale2.begin(PT2DOUT, CLKPT2);
   scale2.set_gain(64);
 //Flowmeter untreupt
  pinMode(FM, INPUT);           //Sets the pin as an input
@@ -191,7 +273,7 @@ void setup() {
 void loop() {
   startTime=millis();
   //Set LED back to low
-    digitalWrite(ONBOARD_LED,LOW);
+  digitalWrite(ONBOARD_LED,LOW);
 
  //ADD PRINT STATEMENTS FOR DEBUGGING HERE IF NCESSARY
  // printSerial();
@@ -212,12 +294,15 @@ void loop() {
         //servo1.write(135);
         //break;
   //}
-  servo1.write(S1);
-  
-    Serial.print("loop");
+    servo1curr=S1;
+    servo2curr=S2;
+    servo1.write(servo1curr);
+    servo2.write(servo2curr);
+
+  //Serial.print("loop");
 
   getReadings();
-    Serial.print("loop2");
+  //Serial.print("loop2");
 
   // Set values to send
   Readings.pt1 = pt1;
@@ -235,7 +320,6 @@ void loop() {
 
   if (result == ESP_OK) {
     Serial.println("Sent with success");
-    digitalWrite(ONBOARD_LED,HIGH);
   }
   else {
     Serial.println("Error sending the data");
@@ -247,9 +331,9 @@ void loop() {
 //    delay(timeDiff);
 //  }
 
-  delay(50); 
+  delay(5);
 
-  
+
 }
 
 void getReadings(){
@@ -257,7 +341,11 @@ void getReadings(){
   fmcount = 0;
 
  while (millis() - currentMillis < goalTime) {
+    servo1.write(servo1curr);
+    servo2.write(servo2curr);
 
+ 
+    
     currentState = digitalRead(FM);
     if (!(currentState == lastState)) {
 
@@ -273,5 +361,6 @@ void getReadings(){
 
  pt2 = scale2.read();
       Serial.print("pt2");
-
+    servo1.write(servo1curr);
+    servo2.write(servo2curr);
 }
