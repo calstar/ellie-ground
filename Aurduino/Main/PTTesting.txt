@@ -1,0 +1,9 @@
+PT TESTING:
+Breakout boards
+1: Working
+2: Fix ground with an extra wire
+3: Doesn't work, possibly issue on PT side as the board connects but only reads noise wires soldered to vertical strip instead of horizotal on board side
+4: Doesn't connect to board, wires soldered to vertical strip instead of horizotal on PT side
+5: Bad readings, proably issue on PT side. A-, A+, and Vcc pins fail connectivity check 
+6: Doesn't connect to board. not finished on board side
+7: Doesn't connect to board. Data pin fails connectivity s
