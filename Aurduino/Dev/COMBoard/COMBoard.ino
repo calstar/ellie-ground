@@ -438,6 +438,11 @@ void loop() {
         Commands.S1 = servo1OpenPosition;
         Commands.S2 = servo2OpenPosition;
         state = 0;
+        esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+        if (result != ESP_OK) {
+            break;
+          // Serial.println("Sent with success");
+          }
         float now = millis();
         float runningTime = millis();
         digitalWrite(servo1Open, HIGH);
@@ -446,11 +451,23 @@ void loop() {
           runningTime = millis();
         }
         digitalWrite(servo1Open, LOW);
+        Commands.S1 = servo1ClosedPosition;
+        esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+        if (result != ESP_OK) {
+            break;
+          // Serial.println("Sent with success");
+          }
         now = millis();
         runningTime = millis();
         while ((runningTime - now) <= 500) {
           runningTime = millis();
         }
+        Commands.S2 = servo2ClosedPosition;
+        esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+        if (result != ESP_OK) {
+            break;
+          // Serial.println("Sent with success");
+          }
         digitalWrite(servo2Open, LOW);
       }
       if (digitalRead(buttonpin1)) {
@@ -463,7 +480,7 @@ void loop() {
         digitalWrite(COMIndicator, LOW);
       }
 
-
+    delay(5);
   }
 
 
