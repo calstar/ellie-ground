@@ -5,10 +5,10 @@ const int LEDPIN3 = 22;
 const int LEDPIN4 = 23;
 const int LEDPIN5 = 25;
 const int LEDPIN6 = 5;
-const int LEDPIN7 = 26;
-const int LEDPIN8 = 4;
+const int LEDPIN7 = 4;
+const int LEDPIN8 = 26;
 
-// this will assign the name PushButton to pin numer 15
+// this will assign the name PushB22222222222222222222222222222222222222utton to pin numer 15
 const int PushButton =16;
 const int PushButton2 =19;
 const int PushButton3 =17;
