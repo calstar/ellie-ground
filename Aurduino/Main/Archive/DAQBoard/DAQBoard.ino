@@ -27,10 +27,10 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 
 //RESOLDER GROUND ON PROTOBOARD
 
-int servo1ClosedPosition = 0;
-int servo1OpenPosition = 90;
-int servo2ClosedPosition = 0;
-int servo2OpenPosition = 90;
+int servo1ClosedPosition = 90;
+int servo1OpenPosition = 180;
+int servo2ClosedPosition = 155;
+int servo2OpenPosition = 20;
 
 
 //For breadboard
@@ -197,7 +197,7 @@ void fireSequence() {
    servo2curr=servo2OpenPosition;
  
   
-  while ((currentTime - beginTime) <= 500) {
+  while ((currentTime - beginTime) <= 10) {
     currentTime = millis();
     S1=servo1curr;
     S2=servo2curr;

@@ -4,10 +4,12 @@
 #include <Wire.h>
 #include <Arduino.h>
 #include "HX711.h"
-int servo1ClosedPosition = 0;
-int servo1OpenPosition = 90;
-int servo2ClosedPosition = 0;
-int servo2OpenPosition = 90;
+int servo1ClosedPosition = 90;
+int servo1OpenPosition = 180;
+int servo2ClosedPosition = 155;
+int servo2OpenPosition = 20;
+
+
 float pressTime = 0;
 const int buttonpin1 = 16;
 //const int buttonpin1 = 27;
@@ -51,8 +53,7 @@ bool MatlabPlot = true;
 float button1Time = 0;
 float currTime = 0;
 float loopTime = 0;
-int closedAngle1 = 0;//SET ANGLE
-int closedAngle2 = 0; //Set ANGLE
+
 float receiveTimeDAQ = 0;
 float receiveTimeCOM = 0;
 
@@ -66,7 +67,8 @@ int state = 0;
 
 //DAQ Breadboard {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC}
 //DAQ Protoboard {0x0C, 0xDC, 0x7E, 0xCB, 0x05, 0xC4}
-uint8_t broadcastAddress[] = {0x0C, 0xDC, 0x7E, 0xCB, 0x05, 0xC4}; //change to new Mac Address
+//NON BUSTED DAQ {0x7C, 0x9E, 0xBD, 0xD8, 0xFC, 0x14}
+uint8_t broadcastAddress[] = {0x7C, 0x9E, 0xBD, 0xD8, 0xFC, 0x14}; //change to new Mac Address
 
 //Structure example to send data
 //Must match the receiver structure
@@ -128,8 +130,8 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 }
 
 void setup() {
-  Commands.S1 = 90;
-  Commands.S2 = 90;
+  Commands.S1 = servo1ClosedPosition;
+  Commands.S2 = servo2ClosedPosition;
   // put your setup code here, to run once:
   Serial.begin(115200);
   pinMode(buttonpin1,INPUT);
@@ -438,7 +440,7 @@ void loop() {
         Commands.S1 = servo1OpenPosition;
         Commands.S2 = servo2OpenPosition;
         state = 0;
-        esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+         result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
         if (result != ESP_OK) {
             break;
           // Serial.println("Sent with success");
@@ -452,7 +454,7 @@ void loop() {
         }
         digitalWrite(servo1Open, LOW);
         Commands.S1 = servo1ClosedPosition;
-        esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+         result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
         if (result != ESP_OK) {
             break;
           // Serial.println("Sent with success");
@@ -463,7 +465,7 @@ void loop() {
           runningTime = millis();
         }
         Commands.S2 = servo2ClosedPosition;
-        esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+         result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
         if (result != ESP_OK) {
             break;
           // Serial.println("Sent with success");
