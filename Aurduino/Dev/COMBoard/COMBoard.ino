@@ -15,11 +15,11 @@ const int buttonpin2 = 19;
 const int igniterIndicator = 17;
 
 
-const int LEDpin = 4;
-const int servo1Open = 22;//SET PIN NUMBER BASED ON SOLDERING//
-const int servo2Open = 23;//SET PIN NUMBER BASED ON SOLDERING//
-const int DAQIndicator = 32;//SET PIN NUMBER BASED ON SOLDERING//
-const int COMIndicator = 14;//SET PIN NUMBER BASED ON SOLDERING//
+const int LEDpin = 22; //4;
+const int servo1Open = 23; //22;//SET PIN NUMBER BASED ON SOLDERING//
+const int servo2Open = 25; //23;//SET PIN NUMBER BASED ON SOLDERING//
+const int DAQIndicator = 5; //32;//SET PIN NUMBER BASED ON SOLDERING//
+const int COMIndicator = 4; //14;//SET PIN NUMBER BASED ON SOLDERING//
 
 const int firePin = 21; //SET PIN NUMBER
 String success;
@@ -438,7 +438,7 @@ void loop() {
         Commands.S1 = servo1OpenPosition;
         Commands.S2 = servo2OpenPosition;
         state = 0;
-        esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+        result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
         if (result != ESP_OK) {
             break;
           // Serial.println("Sent with success");
@@ -452,7 +452,7 @@ void loop() {
         }
         digitalWrite(servo1Open, LOW);
         Commands.S1 = servo1ClosedPosition;
-        esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+        result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
         if (result != ESP_OK) {
             break;
           // Serial.println("Sent with success");
@@ -463,7 +463,7 @@ void loop() {
           runningTime = millis();
         }
         Commands.S2 = servo2ClosedPosition;
-        esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+        result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
         if (result != ESP_OK) {
             break;
           // Serial.println("Sent with success");
