@@ -75,6 +75,7 @@ float timeDiff;
 float refTime;
 float currTime;
 
+float flowReading;
 
 
 
@@ -85,7 +86,7 @@ void setup() {
   
   // attach onboard LED
   pinMode(ONBOARD_LED,OUTPUT);
-  pinMode(flowmeter, OUTPUT);
+  pinMode(flowmeter, INPUT);
 
 
  Serial.begin(115200);
@@ -106,15 +107,17 @@ void loop() {
      servo1.write(servoangle);
      servo2.write(servoangle);
      refTime = millis();
+     servoangle = 90 - servoangle;
   }
 
-  analogWrite(flowmeter, value);
-  if (value >= 255) {
-    value = 0;
-  } else {
-    value += 1;
-    delay(5);
-  }
+  flowReading = analogRead(flowmeter);
+  Serial.println(flowReading);
+  //if (value >= 255) {
+    //value = 0;
+  //} else {
+    //value += 1;
+    //delay(5);
+  //}
 
   if (currTime - LEDtime >= 500) {
     LEDtime = millis();
