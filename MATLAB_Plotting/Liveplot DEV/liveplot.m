@@ -46,7 +46,7 @@ fopen(s);
 % set up plot
 f = figure;
 f.Position = [300 -100 800 650];
-t = tiledlayout(8,1);
+t = tiledlayout(13,1);
 
 % First tile
 ax1 = nexttile;
