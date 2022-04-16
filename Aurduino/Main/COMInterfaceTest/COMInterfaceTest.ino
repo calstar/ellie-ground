@@ -1,17 +1,17 @@
 // We assigned a name LED pin to pin number 22
-const int LEDPIN = 32;
-const int LEDPIN2 = 14;
-const int LEDPIN3 = 22;
-const int LEDPIN4 = 23;
-const int LEDPIN5 = 25;
-const int LEDPIN6 = 5;
-const int LEDPIN7 = 4;
-const int LEDPIN8 = 26;
+const int LEDPIN = 23;
+const int LEDPIN2 = 22;
+const int LEDPIN3 = 14;
+const int LEDPIN4 = 25;
+const int LEDPIN5 = 5;
+const int LEDPIN6 = 4;
+const int LEDPIN7 = -1;
+const int LEDPIN8 = -1;
 
-// this will assign the name PushB22222222222222222222222222222222222222utton to pin numer 15
-const int PushButton =16;
-const int PushButton2 =19;
-const int PushButton3 =17;
+// this will assign the name PushButton to pin numer 15
+const int PushButton =19;
+const int PushButton2 =17;
+const int PushButton3 =16;
 const int PushButton4 =21;
 
 // This Setup function is used to initialize everything 
@@ -94,14 +94,14 @@ digitalWrite(LEDPIN6, LOW);
 
 if ( Push_button_state4 == HIGH )
 { 
-digitalWrite(LEDPIN7, HIGH); 
-digitalWrite(LEDPIN8, HIGH); 
+digitalWrite(LEDPIN, HIGH); 
+digitalWrite(LEDPIN3, HIGH); 
 Serial.println("button4");
 }
 else 
 {
-digitalWrite(LEDPIN7, LOW); 
-digitalWrite(LEDPIN8, LOW); 
+digitalWrite(LEDPIN, LOW); 
+digitalWrite(LEDPIN3, LOW); 
 
 }
 

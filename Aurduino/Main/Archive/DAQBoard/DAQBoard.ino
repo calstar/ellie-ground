@@ -21,17 +21,19 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 #define CLKPT1 27
 #define CLKPT2 25 //update
 #define FM 4 //update
-#define S1S 23
-#define S2S 22
-#define igniterPin 21
+#define S1S 26
+#define S2S 25
+#define igniterPin 27
+#define igniterPin2 18
+
 
 //RESOLDER GROUND ON PROTOBOARD
 
-int servo1ClosedPosition = 90;
-int servo1OpenPosition = 180;
+int servo1ClosedPosition = 100;
+int servo1OpenPosition = 0;
 int servo2ClosedPosition = 155;
 int servo2OpenPosition = 20;
-
+//EH VENT SEFRVO 1 =180
 
 //For breadboard
 //#define PT1DOUT 26
@@ -167,6 +169,8 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   }
   if (S1S2 == 99) {
     digitalWrite(igniterPin, LOW);
+    digitalWrite(igniterPin2, LOW);
+
   }
 }
 
@@ -226,7 +230,10 @@ void setup() {
   // attach onboard LED
   pinMode(ONBOARD_LED,OUTPUT);
   pinMode(igniterPin, OUTPUT);
+    pinMode(igniterPin2, OUTPUT);
+
   digitalWrite(igniterPin, HIGH);
+  digitalWrite(igniterPin2, HIGH);
 
 
 //attach flowmeter pin
@@ -331,8 +338,10 @@ void loop() {
 //    delay(timeDiff);
 //  }
 
-  delay(5);
+  delay(29);
 
+Serial.println(servo1curr);
+Serial.println(servo2curr);
 
 }
 
