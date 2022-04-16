@@ -452,9 +452,9 @@ void loop() {
             break;
           // Serial.println("Sent with success");
           }
-        Commands.I = false;
-       // Commands.S1 = servo1OpenPosition;
-       // Commands.S2 = servo2OpenPosition;
+        //Commands.I = false;
+       Commands.S1 = servo1OpenPosition;
+       Commands.S2 = servo2OpenPosition;
         state = 0;
         result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
         if (result != ESP_OK) {
@@ -467,6 +467,31 @@ void loop() {
         digitalWrite(servo2Open, HIGH);
         while ((runningTime - now) <= 3000) {
           runningTime = millis();
+          Serial.print(millis());
+  Serial.print(" ");
+  Serial.print(incomingPT1);
+  Serial.print(" ");
+  Serial.print(incomingPT2);
+  Serial.print(" ");
+  Serial.print(incomingPT3);
+  Serial.print(" ");
+  Serial.print(incomingPT4);
+  Serial.print(" ");
+  Serial.print(incomingLC1);
+  Serial.print(" ");
+  Serial.print(incomingLC2);
+  Serial.print(" ");
+  Serial.print(incomingLC3);
+  Serial.print(" ");
+  Serial.print(incomingFM);
+  Serial.print(" ");
+  Serial.print(Commands.S1);
+  Serial.print(" ");
+  Serial.print(Commands.S2);
+  Serial.print(" ");
+  Serial.print(Commands.I);
+  Serial.print(" ");
+  Serial.println(Commands.S1S2);
         }
         digitalWrite(servo1Open, LOW);
         Commands.S1 = servo1ClosedPosition;
@@ -479,6 +504,31 @@ void loop() {
         runningTime = millis();
         while ((runningTime - now) <= 500) {
           runningTime = millis();
+          Serial.print(millis());
+  Serial.print(" ");
+  Serial.print(incomingPT1);
+  Serial.print(" ");
+  Serial.print(incomingPT2);
+  Serial.print(" ");
+  Serial.print(incomingPT3);
+  Serial.print(" ");
+  Serial.print(incomingPT4);
+  Serial.print(" ");
+  Serial.print(incomingLC1);
+  Serial.print(" ");
+  Serial.print(incomingLC2);
+  Serial.print(" ");
+  Serial.print(incomingLC3);
+  Serial.print(" ");
+  Serial.print(incomingFM);
+  Serial.print(" ");
+  Serial.print(Commands.S1);
+  Serial.print(" ");
+  Serial.print(Commands.S2);
+  Serial.print(" ");
+  Serial.print(Commands.I);
+  Serial.print(" ");
+  Serial.println(Commands.S1S2);
         }
         Commands.S2 = servo2ClosedPosition;
          result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));

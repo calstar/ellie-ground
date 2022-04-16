@@ -177,9 +177,9 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   S2 = Commands.S2;
   S1S2 = Commands.S1S2;
   I = Commands.I;
-  if (I) {
-    fireSequence();
-  }
+  //if (I) {
+    //fireSequence();
+  //}
   if (S1S2 == 99) {
     digitalWrite(igniterPin, LOW);
     digitalWrite(igniterPin2, LOW);
