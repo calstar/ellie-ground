@@ -175,7 +175,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 }
 
 void fireSequence() {
-  
+    Serial.println( "In Fire Sequence");
   servo1curr=servo1OpenPosition;
    servo2curr=servo2OpenPosition;
   
@@ -279,6 +279,7 @@ void setup() {
 
 void loop() {
   startTime=millis();
+  Serial.println("In Main Loop");
   //Set LED back to low
   digitalWrite(ONBOARD_LED,LOW);
 

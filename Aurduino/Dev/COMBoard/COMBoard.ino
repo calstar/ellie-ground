@@ -16,9 +16,9 @@ const int igniterIndicator = 16;
 const int firePin = 21; //SET PIN NUMBER
 
 
-const int LEDpin = 14;//22; //4;
+const int LEDpin = 23;//22; //4;
 const int servo1Open = 22; //22;//SET PIN NUMBER BASED ON SOLDERING//
-const int servo2Open = 23; //23;//SET PIN NUMBER BASED ON SOLDERING//
+const int servo2Open = 14; //23;//SET PIN NUMBER BASED ON SOLDERING//
 const int DAQIndicator = 25; //32;//SET PIN NUMBER BASED ON SOLDERING//
 const int COMIndicator = 5; //14;//SET PIN NUMBER BASED ON SOLDERING//
 

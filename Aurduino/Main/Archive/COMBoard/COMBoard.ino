@@ -195,8 +195,11 @@ void loop() {
       //Serial.println("IN CASE 0");
       Commands.S1 = servo1ClosedPosition;
       Commands.S2 = servo2ClosedPosition;
+      Serial.println("State 0");
       
       digitalWrite(LEDpin, LOW);
+      //digitalWrite(servo1Open, HIGH);
+      //digitalWrite(servo2Open, HIGH);
       pressed1 = digitalRead(buttonpin1);
       currTime = millis();
       if (pressed1 && ((currTime - button1Time) > 1000)) {
@@ -216,12 +219,14 @@ void loop() {
     //  Serial.println("State 1");
       //Serial.println("IN CASE 1");
       digitalWrite(LEDpin, HIGH);
+      Serial.println("State 1");
       pressed2 = digitalRead(buttonpin2);
       pressed3 = digitalRead(buttonpin1);
       currTime = millis();
       if (pressed2) {
         if (hotfire) {
           state = 4;
+          digitalWrite(LEDpin, LOW);
         } else {
           state = 2;
       }
@@ -434,6 +439,7 @@ void loop() {
       }
       break;
     case 5:
+    Serial.println("State 5");
     //  Serial.println("State 5");
       if (digitalRead(firePin)) {
         Commands.I = true;
@@ -446,7 +452,7 @@ void loop() {
        // Commands.S1 = servo1OpenPosition;
        // Commands.S2 = servo2OpenPosition;
         state = 0;
-         result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+        result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
         if (result != ESP_OK) {
             break;
           // Serial.println("Sent with success");
@@ -460,14 +466,14 @@ void loop() {
         }
         digitalWrite(servo1Open, LOW);
         Commands.S1 = servo1ClosedPosition;
-         result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+        result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
         if (result != ESP_OK) {
             break;
           // Serial.println("Sent with success");
           }
         now = millis();
         runningTime = millis();
-        while ((runningTime - now) <= 50) {
+        while ((runningTime - now) <= 500) {
           runningTime = millis();
         }
         Commands.S2 = servo2ClosedPosition;
