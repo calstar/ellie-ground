@@ -26,14 +26,14 @@ const int DAQIndicator = 25;//SET PIN NUMBER BASED ON SOLDERING//
 const int COMIndicator = 5;//SET PIN NUMBER BASED ON SOLDERING//
 
 String success;
-int servo1_curr = 90;
-int servo2_curr = 90;
-int incomingS1 = 0;
+int servo1_curr = servo1Closed;
+int servo2_curr = servo2Closed;
+float incomingS1 = 0;
+float incomingS2 = 0;
 float incomingPT1 = 0;
 float incomingPT2 = 0;
 float incomingPT3 = 0;
 float incomingPT4 = 0;
-float incomingPT5 = 0;
 float incomingFM = 0;
 float incomingLC1 = 0;
 float incomingLC2 = 0;
@@ -78,9 +78,6 @@ typedef struct struct_message {
     float pt2;
     float pt3;
     float pt4;
-    float pt5;
-    float pt6;
-    float pt7;
     float lc1;
     float lc2;
     float lc3;
@@ -121,15 +118,15 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   incomingPT2 = incomingReadings.pt2;
   incomingPT3 = incomingReadings.pt3;
   incomingPT4 = incomingReadings.pt4;
-  incomingPT5 = incomingReadings.pt5;
   incomingFM = incomingReadings.fm;
   incomingLC1 = incomingReadings.lc1;
   incomingLC2 = incomingReadings.lc2;
   incomingLC3 = incomingReadings.lc3;
   incomingS1 = incomingReadings.S1;
+  incomingS2 = incomingReadings.S2;
   digitalWrite(COMIndicator, HIGH);
   receiveTimeCOM = millis();
-  Serial.println("Data received");
+  //Serial.println("Data received");
 
 }
 
@@ -197,7 +194,7 @@ void loop() {
       //Serial.println("IN CASE 0");
       Commands.S1 = servo1ClosedPosition;
       Commands.S2 = servo2ClosedPosition;
-      Serial.println("State 0");
+      //Serial.println("State 0");
       
       digitalWrite(LEDpin, LOW);
       //digitalWrite(servo1Open, HIGH);
@@ -221,7 +218,7 @@ void loop() {
     //  Serial.println("State 1");
       //Serial.println("IN CASE 1");
       digitalWrite(LEDpin, HIGH);
-      Serial.println("State 1");
+      //Serial.println("State 1");
       pressed2 = digitalRead(buttonpin2);
       pressed3 = digitalRead(buttonpin1);
       currTime = millis();
@@ -418,7 +415,7 @@ void loop() {
 
       break;
     case 4:
-      Serial.println("State 4");
+      //Serial.println("State 4");
       if (digitalRead(igniterIndicator)) {
         Commands.S1S2 = 99;
         Commands.S1 = servo1ClosedPosition;
@@ -433,10 +430,10 @@ void loop() {
       if (digitalRead(buttonpin1)) {
         state = 0;
       }
-      if ((millis() - receiveTimeDAQ) > 50) {
+      if ((millis() - receiveTimeDAQ) > 100) {
         digitalWrite(DAQIndicator, LOW);
       }
-      if ((millis() - receiveTimeCOM) > 50) {
+      if ((millis() - receiveTimeCOM) > 100) {
         digitalWrite(COMIndicator, LOW);
       }
       break;
@@ -507,13 +504,13 @@ void loop() {
   Serial.print(" ");
   Serial.print(incomingPT4);
   Serial.print(" ");
-  Serial.print(incomingPT5);
+  Serial.print(incomingLC1);
   Serial.print(" ");
-  Serial.print(incomingFM = incomingReadings.fm;
-  incomingLC1 = incomingReadings.lc1;
-  incomingLC2 = incomingReadings.lc2;
-  incomingLC3 = incomingReadings.lc3;
-  incomingS1 = incomingReadings.S1;
+  Serial.print(incomingLC2);
+  Serial.print(" ");
+  Serial.print(incomingLC3);
+  Serial.print(" ");
+  Serial.println(incomingFM);
   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
 
 
