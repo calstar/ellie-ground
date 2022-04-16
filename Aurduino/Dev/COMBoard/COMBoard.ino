@@ -19,6 +19,7 @@ const int buttonpin2 = 17;
 const int igniterIndicator = 16;
 const int firePin = 21; //SET PIN NUMBER BUTTON 
 
+const int pin6 = 4;
 const int LEDpin = 23;
 const int servo1Open = 22;//SET PIN NUMBER BASED ON SOLDERING//
 const int servo2Open = 14;//SET PIN NUMBER BASED ON SOLDERING//
@@ -26,8 +27,8 @@ const int DAQIndicator = 25;//SET PIN NUMBER BASED ON SOLDERING//
 const int COMIndicator = 5;//SET PIN NUMBER BASED ON SOLDERING//
 
 String success;
-int servo1_curr = servo1Closed;
-int servo2_curr = servo2Closed;
+int servo1_curr = servo1ClosedPosition;
+int servo2_curr = servo2ClosedPosition;
 float incomingS1 = 0;
 float incomingS2 = 0;
 float incomingPT1 = 0;
@@ -145,12 +146,15 @@ void setup() {
   pinMode(servo2Open, OUTPUT);
   pinMode(DAQIndicator, OUTPUT);
   pinMode(COMIndicator, OUTPUT);
-
+  pinMode(pin6, OUTPUT);
+  
   digitalWrite(LEDpin,LOW);
   digitalWrite(servo1Open, LOW);
   digitalWrite(servo2Open, LOW);
   digitalWrite(DAQIndicator, LOW);
   digitalWrite(COMIndicator, LOW);
+  digitalWrite(pin6, LOW);
+  
 
   //set device as WiFi station
   WiFi.mode(WIFI_STA);
@@ -190,13 +194,14 @@ void loop() {
 
   switch (state) {
     case 0:
-    //  Serial.println("State 0");
+//      Serial.println("State 0");
       //Serial.println("IN CASE 0");
       Commands.S1 = servo1ClosedPosition;
       Commands.S2 = servo2ClosedPosition;
       //Serial.println("State 0");
       
       digitalWrite(LEDpin, LOW);
+      digitalWrite(pin6, LOW);
       //digitalWrite(servo1Open, HIGH);
       //digitalWrite(servo2Open, HIGH);
       pressed1 = digitalRead(buttonpin1);
@@ -215,7 +220,7 @@ void loop() {
       }
       break;
     case 1:
-    //  Serial.println("State 1");
+      //Serial.println("State 1");
       //Serial.println("IN CASE 1");
       digitalWrite(LEDpin, HIGH);
       //Serial.println("State 1");
@@ -225,7 +230,6 @@ void loop() {
       if (pressed2) {
         if (hotfire) {
           state = 4;
-          digitalWrite(LEDpin, LOW);
         } else {
           state = 2;
       }
@@ -252,7 +256,7 @@ void loop() {
         servo1_curr = 90 - servo1_curr;
         servo2_curr = 90 - servo2_curr;
         pressTime = millis();
-
+        digitalWrite(pin6, HIGH);
 
         while (millis() - pressTime <= 5000) {
 
@@ -289,8 +293,8 @@ void loop() {
               //Serial.println("Error sending the data");
             //}
             loopTime = millis();
-            Serial.print(loopTime);
-            Serial.print(" ");
+           // Serial.print(loopTime);
+           // Serial.print(" ");
             // Print the flow rate for this second in litres / minute
             // Serial.print("Flow rate: ");
             //Serial.print(incomingFM);  // Print the integer part of the variable
@@ -307,7 +311,7 @@ void loop() {
             Serial.print(" ");
             Serial.print(incomingPT4);
             Serial.print(" ");
-            Serial.print(incomingPT5);
+            Serial.print(incomingLC1);
             Serial.print(" ");
             //Serial.println("psi / ");
 
@@ -416,6 +420,7 @@ void loop() {
       break;
     case 4:
       //Serial.println("State 4");
+      digitalWrite(pin6, HIGH);
       if (digitalRead(igniterIndicator)) {
         Commands.S1S2 = 99;
         Commands.S1 = servo1ClosedPosition;
@@ -438,8 +443,8 @@ void loop() {
       }
       break;
     case 5:
-    Serial.println("State 5");
-    //  Serial.println("State 5");
+    //Serial.println("State 5");
+    //Serial.println("State 5");
       if (digitalRead(firePin)) {
         Commands.I = true;
         esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
@@ -495,7 +500,9 @@ void loop() {
 
     delay(30);
   }
-
+  
+  Serial.print(millis());
+  Serial.print(" ");
   Serial.print(incomingPT1);
   Serial.print(" ");
   Serial.print(incomingPT2);
@@ -510,7 +517,16 @@ void loop() {
   Serial.print(" ");
   Serial.print(incomingLC3);
   Serial.print(" ");
-  Serial.println(incomingFM);
+  Serial.print(incomingFM);
+  Serial.print(" ");
+  Serial.print(Commands.S1);
+  Serial.print(" ");
+  Serial.print(Commands.S2);
+  Serial.print(" ");
+  Serial.print(Commands.I);
+  Serial.print(" ");
+  Serial.println(Commands.S1S2);
+  
   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
 
 
