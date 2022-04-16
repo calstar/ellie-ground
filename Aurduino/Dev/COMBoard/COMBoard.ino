@@ -523,7 +523,8 @@ void loop() {
   Serial.print(" ");
   Serial.print(Commands.S2);
   Serial.print(" ");
-  Serial.print(Commands.I);
+  Serial.print
+  (Commands.I);
   Serial.print(" ");
   Serial.println(Commands.S1S2);
   
