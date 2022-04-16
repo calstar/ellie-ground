@@ -162,20 +162,20 @@ while(1)
     % data7 receives LC3
     data7(i) = str2double(str{8});
     
+    data9(i) = str2double(str(9));
+    
+    data10(i) = str2double(str(10));
+    
+    data11(i) = str2double(str(11);
+    
+    data12(i) = str2double(str(12));
     % data8 receives flowrate in samples/50ms, multiplies by calibration
     % coefficent [g/cycle] and 20 to convert samples per 50 ms to samples per second
     % (20 observation intervals of 50ms in 1 s)
     data8(i) = str2double(str{9})*.0763*20;
 
-    data9(i) = str2double(str(9));
-    
-    data10(i) = str2double(str(10));
-    
-    data11(i) = str2double(str(11));
-    
-    data12(i) = str2double(str(12));
-    
-    testDataTable(i, :) = {timeInterval(i),data1(i),data2(i),data3(i),data4(i),data5(i),data6(i), data7(i), data8(i), data9(i), data10(i), data11(i), data12(i)};
+
+    testDataTable(i, :) = {timeInterval(i),data1(i),data2(i),data3(i),data4(i),data5(i),data6(i), data7(i), data8(i)};
 
 
 
