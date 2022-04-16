@@ -4,24 +4,27 @@
 #include <Wire.h>
 #include <Arduino.h>
 #include "HX711.h"
-int servo1ClosedPosition = 0;
-int servo1OpenPosition = 90;
-int servo2ClosedPosition = 0;
-int servo2OpenPosition = 90;
+
+
+int servo1ClosedPosition = 100;
+int servo1OpenPosition = 0;
+int servo2ClosedPosition = 155;
+int servo2OpenPosition = 20;
+//EH VENT SEFRVO 1 =180
+
 float pressTime = 0;
-const int buttonpin1 = 16;
+const int buttonpin1 = 19;
 //const int buttonpin1 = 27;
-const int buttonpin2 = 19;
-const int igniterIndicator = 17;
+const int buttonpin2 = 17;
+const int igniterIndicator = 16;
+const int firePin = 21; //SET PIN NUMBER BUTTON 
 
-
-const int LEDpin = 4;
+const int LEDpin = 23;
 const int servo1Open = 22;//SET PIN NUMBER BASED ON SOLDERING//
-const int servo2Open = 23;//SET PIN NUMBER BASED ON SOLDERING//
-const int DAQIndicator = 32;//SET PIN NUMBER BASED ON SOLDERING//
-const int COMIndicator = 14;//SET PIN NUMBER BASED ON SOLDERING//
+const int servo2Open = 14;//SET PIN NUMBER BASED ON SOLDERING//
+const int DAQIndicator = 25;//SET PIN NUMBER BASED ON SOLDERING//
+const int COMIndicator = 5;//SET PIN NUMBER BASED ON SOLDERING//
 
-const int firePin = 21; //SET PIN NUMBER
 String success;
 int servo1_curr = 90;
 int servo2_curr = 90;
@@ -45,14 +48,13 @@ bool hotfire = true;
 //SET IF PLOTTING WITH MATLAB OR NOT. SERVO MANUAL CONTROL AND
 //MATLAB PLOTTING ARE NOT COMPATIBLE DUE TO USING THE SAME SERIAL
 //INPUT. IF TRUE, PLOTTING ENABLED. IF FALSE, MANUAL CONTROL ENABLED
-bool MatlabPlot = true;
+bool MatlabPlot = false;
 
 
 float button1Time = 0;
 float currTime = 0;
 float loopTime = 0;
-int closedAngle1 = 0;//SET ANGLE
-int closedAngle2 = 0; //Set ANGLE
+
 float receiveTimeDAQ = 0;
 float receiveTimeCOM = 0;
 
@@ -66,7 +68,8 @@ int state = 0;
 
 //DAQ Breadboard {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC}
 //DAQ Protoboard {0x0C, 0xDC, 0x7E, 0xCB, 0x05, 0xC4}
-uint8_t broadcastAddress[] = {0x0C, 0xDC, 0x7E, 0xCB, 0x05, 0xC4}; //change to new Mac Address
+//NON BUSTED DAQ {0x7C, 0x9E, 0xBD, 0xD8, 0xFC, 0x14}
+uint8_t broadcastAddress[] = {0x7C, 0x9E, 0xBD, 0xD8, 0xFC, 0x14}; //change to new Mac Address
 
 //Structure example to send data
 //Must match the receiver structure
@@ -105,6 +108,7 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
     success = "Delivery Fail :(";
     digitalWrite(DAQIndicator, LOW);
   }
+  
 }
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
@@ -128,25 +132,26 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 }
 
 void setup() {
-  Commands.S1 = 90;
-  Commands.S2 = 90;
+  Commands.S1 = servo1ClosedPosition;
+  Commands.S2 = servo2ClosedPosition;
   // put your setup code here, to run once:
   Serial.begin(115200);
   pinMode(buttonpin1,INPUT);
   pinMode(buttonpin2, INPUT);
+  pinMode(igniterIndicator,INPUT);
+  pinMode(firePin, INPUT);
+  
   pinMode(LEDpin, OUTPUT);
   pinMode(servo1Open, OUTPUT);
   pinMode(servo2Open, OUTPUT);
   pinMode(DAQIndicator, OUTPUT);
   pinMode(COMIndicator, OUTPUT);
-  pinMode(firePin, OUTPUT);
 
   digitalWrite(LEDpin,LOW);
   digitalWrite(servo1Open, LOW);
   digitalWrite(servo2Open, LOW);
   digitalWrite(DAQIndicator, LOW);
   digitalWrite(COMIndicator, LOW);
-  digitalWrite(firePin, LOW);
 
   //set device as WiFi station
   WiFi.mode(WIFI_STA);
@@ -186,8 +191,11 @@ void loop() {
 
   switch (state) {
     case 0:
-      Serial.println("State 0");
+    //  Serial.println("State 0");
       //Serial.println("IN CASE 0");
+      Commands.S1 = servo1ClosedPosition;
+      Commands.S2 = servo2ClosedPosition;
+      
       digitalWrite(LEDpin, LOW);
       pressed1 = digitalRead(buttonpin1);
       currTime = millis();
@@ -197,15 +205,15 @@ void loop() {
         // Serial.println("State 1");
         // Serial.println("BUTTON 1 GOOD");
       }
-      if ((millis() - receiveTimeDAQ) > 500) {
+      if ((millis() - receiveTimeDAQ) > 50) {
         digitalWrite(DAQIndicator, LOW);
       }
-      if ((millis() - receiveTimeCOM) > 500) {
+      if ((millis() - receiveTimeCOM) > 50) {
         digitalWrite(COMIndicator, LOW);
       }
       break;
     case 1:
-      Serial.println("State 1");
+    //  Serial.println("State 1");
       //Serial.println("IN CASE 1");
       digitalWrite(LEDpin, HIGH);
       pressed2 = digitalRead(buttonpin2);
@@ -224,15 +232,15 @@ void loop() {
         state = 0;
         // Serial.println("State 0");
       }
-      if ((millis() - receiveTimeDAQ) > 500) {
+      if ((millis() - receiveTimeDAQ) > 50) {
         digitalWrite(DAQIndicator, LOW);
       }
-      if ((millis() - receiveTimeCOM) > 500) {
+      if ((millis() - receiveTimeCOM) > 50) {
         digitalWrite(COMIndicator, LOW);
       }
       break;
     case 2:
-      Serial.println("State 2");
+    //  Serial.println("State 2");
       //Serial.println("IN CASE 2");
       if (MatlabPlot) {
         Commands.S1 = 90 - servo1_curr;
@@ -260,10 +268,10 @@ void loop() {
           if (state == 3) {
             break;
           }
-          if ((millis() - receiveTimeDAQ) > 500) {
+          if ((millis() - receiveTimeDAQ) > 50) {
             digitalWrite(DAQIndicator, LOW);
           }
-          if ((millis() - receiveTimeCOM) > 500) {
+          if ((millis() - receiveTimeCOM) > 50) {
             digitalWrite(COMIndicator, LOW);
           }
 
@@ -334,10 +342,10 @@ void loop() {
           pressed3 = digitalRead(buttonpin1);
           Serial.print(pressed3);
           delay(5);
-          if ((millis() - receiveTimeDAQ) > 500) {
+          if ((millis() - receiveTimeDAQ) > 50) {
             digitalWrite(DAQIndicator, LOW);
           }
-          if ((millis() - receiveTimeCOM) > 500) {
+          if ((millis() - receiveTimeCOM) > 50) {
             digitalWrite(COMIndicator, LOW);
           }
           esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
@@ -387,17 +395,17 @@ void loop() {
       }
       break;
      case 3:
-      Serial.println("State 3");
+    //  Serial.println("State 3");
       Commands.S1 = servo1ClosedPosition;
       Commands.S2 = servo2ClosedPosition;
       digitalWrite(DAQIndicator, LOW);
       digitalWrite(COMIndicator, LOW);
       digitalWrite(servo1Open, LOW);
       digitalWrite(servo2Open, LOW);
-      if ((millis() - receiveTimeDAQ) > 500) {
+      if ((millis() - receiveTimeDAQ) > 50) {
         digitalWrite(DAQIndicator, LOW);
       }
-      if ((millis() - receiveTimeCOM) > 500) {
+      if ((millis() - receiveTimeCOM) > 50) {
         digitalWrite(COMIndicator, LOW);
       }
 
@@ -418,15 +426,15 @@ void loop() {
       if (digitalRead(buttonpin1)) {
         state = 0;
       }
-      if ((millis() - receiveTimeDAQ) > 500) {
+      if ((millis() - receiveTimeDAQ) > 50) {
         digitalWrite(DAQIndicator, LOW);
       }
-      if ((millis() - receiveTimeCOM) > 500) {
+      if ((millis() - receiveTimeCOM) > 50) {
         digitalWrite(COMIndicator, LOW);
       }
       break;
     case 5:
-      Serial.println("State 5");
+    //  Serial.println("State 5");
       if (digitalRead(firePin)) {
         Commands.I = true;
         esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
@@ -435,10 +443,10 @@ void loop() {
           // Serial.println("Sent with success");
           }
         Commands.I = false;
-        Commands.S1 = servo1OpenPosition;
-        Commands.S2 = servo2OpenPosition;
+       // Commands.S1 = servo1OpenPosition;
+       // Commands.S2 = servo2OpenPosition;
         state = 0;
-        esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+         result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
         if (result != ESP_OK) {
             break;
           // Serial.println("Sent with success");
@@ -452,18 +460,18 @@ void loop() {
         }
         digitalWrite(servo1Open, LOW);
         Commands.S1 = servo1ClosedPosition;
-        esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+         result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
         if (result != ESP_OK) {
             break;
           // Serial.println("Sent with success");
           }
         now = millis();
         runningTime = millis();
-        while ((runningTime - now) <= 500) {
+        while ((runningTime - now) <= 50) {
           runningTime = millis();
         }
         Commands.S2 = servo2ClosedPosition;
-        esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+         result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
         if (result != ESP_OK) {
             break;
           // Serial.println("Sent with success");
@@ -473,15 +481,18 @@ void loop() {
       if (digitalRead(buttonpin1)) {
         state = 0;
       }
-      if ((millis() - receiveTimeDAQ) > 500) {
+      if ((millis() - receiveTimeDAQ) > 50) {
         digitalWrite(DAQIndicator, LOW);
       }
-      if ((millis() - receiveTimeCOM) > 500) {
+      if ((millis() - receiveTimeCOM) > 50) {
         digitalWrite(COMIndicator, LOW);
       }
 
-    delay(5);
+    delay(30);
   }
+
+  
+            esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
 
 
 }

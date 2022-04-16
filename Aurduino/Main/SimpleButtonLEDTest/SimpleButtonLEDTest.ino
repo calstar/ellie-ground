@@ -43,67 +43,57 @@ int Push_button_state4 = digitalRead(PushButton4);
 
 // if condition checks if push button is pressed
 // if pressed LED will turn on otherwise remain off 
+
 if ( Push_button_state == HIGH )
 { 
-digitalWrite(LEDPIN, HIGH); 
-digitalWrite(LEDPIN2, HIGH); 
-Serial.println("button1");
-
+  Serial.println("button1");
 }
-else 
-{
-digitalWrite(LEDPIN, LOW); 
-digitalWrite(LEDPIN2, LOW); 
-
-}
-
 
 if ( Push_button_state2 == HIGH )
 { 
-digitalWrite(LEDPIN3, HIGH); 
-digitalWrite(LEDPIN4, HIGH); 
-Serial.println("button2");
-
+  Serial.println("button2");
 }
-else 
-{
-digitalWrite(LEDPIN3, LOW); 
-digitalWrite(LEDPIN4, LOW); 
-
-}
-
-
-
 
 if ( Push_button_state3 == HIGH )
 { 
-digitalWrite(LEDPIN5, HIGH); 
-digitalWrite(LEDPIN6, HIGH); 
-Serial.println("button3");
-
+  Serial.println("button3");
 }
-else 
-{
-digitalWrite(LEDPIN5, LOW); 
-digitalWrite(LEDPIN6, LOW); 
-
-}
-
-
-
 
 if ( Push_button_state4 == HIGH )
 { 
+  Serial.println("button4");
+}
+
+
 digitalWrite(LEDPIN, HIGH); 
-digitalWrite(LEDPIN3, HIGH); 
-Serial.println("button4");
-}
-else 
-{
+digitalWrite(LEDPIN2, HIGH); 
+delay(200);
+
 digitalWrite(LEDPIN, LOW); 
+digitalWrite(LEDPIN2, LOW); 
+
+
+digitalWrite(LEDPIN3, HIGH); 
+digitalWrite(LEDPIN4, HIGH); 
+delay(200);
+
 digitalWrite(LEDPIN3, LOW); 
+digitalWrite(LEDPIN4, LOW); 
 
-}
+
+digitalWrite(LEDPIN5, HIGH); 
+digitalWrite(LEDPIN6, HIGH); 
+delay(200);
+
+digitalWrite(LEDPIN5, LOW); 
+digitalWrite(LEDPIN6, LOW); 
 
 
-}
+digitalWrite(LEDPIN7, HIGH); 
+digitalWrite(LEDPIN8, HIGH); 
+
+delay(200);
+digitalWrite(LEDPIN7, LOW); 
+digitalWrite(LEDPIN8, LOW); 
+
+} 
