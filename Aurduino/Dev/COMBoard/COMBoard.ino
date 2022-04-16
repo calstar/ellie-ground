@@ -9,19 +9,20 @@ int servo1OpenPosition = 90;
 int servo2ClosedPosition = 0;
 int servo2OpenPosition = 90;
 float pressTime = 0;
-const int buttonpin1 = 16;
+const int buttonpin1 = 19;
 //const int buttonpin1 = 27;
-const int buttonpin2 = 19;
-const int igniterIndicator = 17;
-
-
-const int LEDpin = 22; //4;
-const int servo1Open = 23; //22;//SET PIN NUMBER BASED ON SOLDERING//
-const int servo2Open = 25; //23;//SET PIN NUMBER BASED ON SOLDERING//
-const int DAQIndicator = 5; //32;//SET PIN NUMBER BASED ON SOLDERING//
-const int COMIndicator = 4; //14;//SET PIN NUMBER BASED ON SOLDERING//
-
+const int buttonpin2 = 17;
+const int igniterIndicator = 16;
 const int firePin = 21; //SET PIN NUMBER
+
+
+const int LEDpin = 14;//22; //4;
+const int servo1Open = 22; //22;//SET PIN NUMBER BASED ON SOLDERING//
+const int servo2Open = 23; //23;//SET PIN NUMBER BASED ON SOLDERING//
+const int DAQIndicator = 25; //32;//SET PIN NUMBER BASED ON SOLDERING//
+const int COMIndicator = 5; //14;//SET PIN NUMBER BASED ON SOLDERING//
+
+
 String success;
 int servo1_curr = 90;
 int servo2_curr = 90;
@@ -128,8 +129,8 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 }
 
 void setup() {
-  Commands.S1 = 90;
-  Commands.S2 = 90;
+  Commands.S1 = servo1ClosedPosition;
+  Commands.S2 = servo2ClosedPosition;
   // put your setup code here, to run once:
   Serial.begin(115200);
   pinMode(buttonpin1,INPUT);
@@ -139,14 +140,15 @@ void setup() {
   pinMode(servo2Open, OUTPUT);
   pinMode(DAQIndicator, OUTPUT);
   pinMode(COMIndicator, OUTPUT);
-  pinMode(firePin, OUTPUT);
+  pinMode(firePin, INPUT);
+  pinMode(igniterIndicator, INPUT);
 
   digitalWrite(LEDpin,LOW);
   digitalWrite(servo1Open, LOW);
   digitalWrite(servo2Open, LOW);
   digitalWrite(DAQIndicator, LOW);
   digitalWrite(COMIndicator, LOW);
-  digitalWrite(firePin, LOW);
+  //digitalWrite(firePin, LOW);
 
   //set device as WiFi station
   WiFi.mode(WIFI_STA);
@@ -214,6 +216,7 @@ void loop() {
       if (pressed2) {
         if (hotfire) {
           state = 4;
+          digitalWrite(LEDpin, LOW);
         } else {
           state = 2;
       }
@@ -404,6 +407,7 @@ void loop() {
       break;
     case 4:
       Serial.println("State 4");
+      
       if (digitalRead(igniterIndicator)) {
         Commands.S1S2 = 99;
         Commands.S1 = servo1ClosedPosition;
@@ -428,6 +432,7 @@ void loop() {
     case 5:
       Serial.println("State 5");
       if (digitalRead(firePin)) {
+        Serial.println("Fire");
         Commands.I = true;
         esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
         if (result != ESP_OK) {

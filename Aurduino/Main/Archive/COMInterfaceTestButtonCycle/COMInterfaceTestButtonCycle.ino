@@ -47,39 +47,49 @@ int Push_button_state4 = digitalRead(PushButton4);
 
 
 
-digitalWrite(LEDPIN, HIGH); 
+digitalWrite(LEDPIN, HIGH);
+delay(5000); 
 digitalWrite(LEDPIN2, HIGH); 
-delay(50);
+//delay(50);
+delay(5000);
 
 digitalWrite(LEDPIN, LOW); 
 digitalWrite(LEDPIN2, LOW); 
 
-delay(50);
+//delay(50);
+//delay(5000);
 
-digitalWrite(LEDPIN3, HIGH); 
+digitalWrite(LEDPIN3, HIGH);
+delay(5000); 
 digitalWrite(LEDPIN4, HIGH); 
-delay(50);
+//delay(50);
+delay(5000);
 
 digitalWrite(LEDPIN3, LOW); 
 digitalWrite(LEDPIN4, LOW); 
-delay(50);
+//delay(50);
+//delay(5000);
 
 
-digitalWrite(LEDPIN5, HIGH); 
+digitalWrite(LEDPIN5, HIGH);
+delay(5000); 
 digitalWrite(LEDPIN6, HIGH); 
-delay(50);
+delay(5000);
 
 digitalWrite(LEDPIN5, LOW); 
 digitalWrite(LEDPIN6, LOW); 
 
-delay(50);
+//delay(50);
+delay(5000);
 
 digitalWrite(LEDPIN7, HIGH); 
 digitalWrite(LEDPIN8, HIGH); 
 
-delay(50);
+//delay(50);
+delay(5000);
 digitalWrite(LEDPIN7, LOW); 
 digitalWrite(LEDPIN8, LOW); 
-delay(50);
+//delay(50);
+delay(5000);
 
 }
