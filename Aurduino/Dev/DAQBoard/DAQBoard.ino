@@ -12,7 +12,7 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 #include <Wire.h>
 #include <Arduino.h>
 #include "HX711.h"
-esp_err_t result;
+
 
 //define pins to use for the various sensors and connections. define takes up less space on the chip
 #define ONBOARD_LED  13
@@ -21,24 +21,36 @@ esp_err_t result;
 #define CLKPT1 27
 #define CLKPT2 25 //update
 #define FM 4 //update
-#define S1S 23
-#define S2S 22
-#define igniterPin 21
+#define S1S 26
+#define S2S 25
+#define igniterPin 27
+#define igniterPin2 18
+
 
 //RESOLDER GROUND ON PROTOBOARD
 
-int servo1ClosedPosition = 0;
-int servo1OpenPosition = 90;
-int servo2ClosedPosition = 0;
-int servo2OpenPosition = 90;
-
+int servo1ClosedPosition = 100;
+int servo1OpenPosition = 0;
+int servo2ClosedPosition = 155;
+int servo2OpenPosition = 20;
+//EH VENT SEFRVO 1 =180
 
 //For breadboard
-//#define PT1DOUT 26
-//#define PT2DOUT 16
-//#define CLKPT1 19
-//#define CLKPT2 25
-//#define FM 4
+#define PT1DOUT 21
+#define PT2DOUT 14
+#define PT3DOUT 23
+#define PT4DOUT 15
+#define CLKPT1 17
+#define CLKPT2 32
+#define CLKPT3 22
+#define CLKPT4 33
+#define LC1DOUT 16
+#define LC1CLK 19
+#define LC2DOUT 36
+#define LC2CLK 5
+#define LC3DOUT 39
+#define LC3CLK 4
+#define FM 34
 //#define S1S 21
 
 //define servo min and max values
@@ -60,11 +72,15 @@ float fmcount;
 float flowRate;
 boolean currentState;
 boolean lastState = false;
-boolean fireActive = false;
 
 //Initialize the PT and LC sensor objects which use the HX711 breakout board
 HX711 scale1;
 HX711 scale2;
+HX711 scale3;
+HX711 scale4;
+HX711 scale5;
+HX711 scale6;
+HX711 scale7;
 
 //Initialize the servo objects
 Servo servo1;
@@ -91,9 +107,6 @@ float pt1=1;
 float pt2=1;
 float pt3=1;
 float pt4=1;
-float pt5=1;
-float pt6=1;
-float pt7=1;
 float lc1=1;
 float lc2=1;
 float lc3=1;
@@ -122,7 +135,6 @@ typedef struct struct_message {
     float pt2;
     float pt3;
     float pt4;
-    float pt5;
     float lc1;
     float lc2;
     float lc3;
@@ -145,8 +157,8 @@ esp_now_peer_info_t peerInfo;
 
 // Callback when data is sent
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
-  Serial.print("\r\nLast Packet Send Status:\t");
-  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+  //Serial.print("\r\nLast Packet Send Status:\t");
+  //Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
   if (status ==0){
     success = "Delivery Success :)";
   }
@@ -158,23 +170,25 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 // Callback when data is received
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&Commands, incomingData, sizeof(Commands));
-  Serial.print("Bytes received: ");
-  Serial.println(len);
+  //Serial.print("Bytes received: ");
+  //Serial.println(len);
       digitalWrite(ONBOARD_LED,HIGH);
   S1 =Commands.S1;
   S2 = Commands.S2;
   S1S2 = Commands.S1S2;
   I = Commands.I;
   if (I) {
-    fireActive = true;
+    fireSequence();
   }
   if (S1S2 == 99) {
     digitalWrite(igniterPin, LOW);
+    digitalWrite(igniterPin2, LOW);
+
   }
 }
 
 void fireSequence() {
-  
+    //Serial.println( "In Fire Sequence");
   servo1curr=servo1OpenPosition;
    servo2curr=servo2OpenPosition;
   
@@ -200,7 +214,7 @@ void fireSequence() {
    servo2curr=servo2OpenPosition;
  
   
-  while ((currentTime - beginTime) <= 500) {
+  while ((currentTime - beginTime) <= 10) {
     currentTime = millis();
     S1=servo1curr;
     S2=servo2curr;
@@ -229,7 +243,10 @@ void setup() {
   // attach onboard LED
   pinMode(ONBOARD_LED,OUTPUT);
   pinMode(igniterPin, OUTPUT);
+    pinMode(igniterPin2, OUTPUT);
+
   digitalWrite(igniterPin, HIGH);
+  digitalWrite(igniterPin2, HIGH);
 
 
 //attach flowmeter pin
@@ -240,6 +257,16 @@ void setup() {
   scale1.set_gain(64);
   scale2.begin(PT2DOUT, CLKPT2);
   scale2.set_gain(64);
+  scale3.begin(PT3DOUT, CLKPT3);
+  scale3.set_gain(64);
+  scale4.begin(PT4DOUT, CLKPT4);
+  scale4.set_gain(64);
+  scale5.begin(LC1DOUT, LC1CLK);
+  scale5.set_gain(64);
+  scale6.begin(LC2DOUT, LC2CLK);
+  scale6.set_gain(64);
+  scale7.begin(LC3DOUT, LC3CLK);
+  scale7.set_gain(64);
 //Flowmeter untreupt
  pinMode(FM, INPUT);           //Sets the pin as an input
 
@@ -275,6 +302,7 @@ void setup() {
 
 void loop() {
   startTime=millis();
+  Serial.println("In Main Loop");
   //Set LED back to low
   digitalWrite(ONBOARD_LED,LOW);
 
@@ -303,69 +331,6 @@ void loop() {
     servo2.write(servo2curr);
 
   //Serial.print("loop");
-  if (fireActive) {
-    servo1curr=servo1OpenPosition;
-   servo2curr=servo2OpenPosition;
-  
-  servo1.write(servo1curr);
-  servo2.write(servo2curr);
-  float beginTime = millis();
-  float currentTime = millis();
-  while ((currentTime - beginTime) <= 3000) {
-    getReadings();
-    result = esp_now_send(broadcastAddress, (uint8_t *) &Readings, sizeof(Readings));
-
-  if (result == ESP_OK) {
-    Serial.println("Sent with success");
-  }
-  else {
-    Serial.println("Error sending the data");
-  }
-    currentTime = millis();
-    servo1.write(servo1curr);
-    servo2.write(servo2curr);
-    S1=servo1curr;
-    S2=servo2curr;
-  
-
-    delay(5);
-
-  }
-  beginTime = millis();
-  currentTime = millis();
-
-  servo1curr=servo1ClosedPosition;
-   servo2curr=servo2OpenPosition;
- 
-  
-  while ((currentTime - beginTime) <= 500) {
-    getReadings();
-    result = esp_now_send(broadcastAddress, (uint8_t *) &Readings, sizeof(Readings));
-
-  if (result == ESP_OK) {
-    Serial.println("Sent with success");
-  }
-  else {
-    Serial.println("Error sending the data");
-  }
-    currentTime = millis();
-    S1=servo1curr;
-    S2=servo2curr;
-
-  servo1.write(servo1curr);
-  servo2.write(servo2curr);
-
-
-     delay(5);
-    
-  }
-  servo1curr=servo1ClosedPosition;
-  servo2curr=servo2ClosedPosition;
-  
-  servo1.write(servo1curr);
-  
-  servo2.write(servo2curr);
-  }
 
   getReadings();
   //Serial.print("loop2");
@@ -375,14 +340,13 @@ void loop() {
   Readings.pt2 = pt2;
   Readings.pt3 = pt3;
   Readings.pt4 = pt4;
-  Readings.pt5 = pt5;
   Readings.lc1 = lc1;
   Readings.lc2 = lc2;
   Readings.lc3 = lc3;
   Readings.fm  = fm;
 
   // Send message via ESP-NOW
-  result = esp_now_send(broadcastAddress, (uint8_t *) &Readings, sizeof(Readings));
+  esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Readings, sizeof(Readings));
 
   if (result == ESP_OK) {
     Serial.println("Sent with success");
@@ -397,8 +361,10 @@ void loop() {
 //    delay(timeDiff);
 //  }
 
-  delay(5);
+  delay(29);
 
+Serial.println(servo1curr);
+Serial.println(servo2curr);
 
 }
 
@@ -423,10 +389,24 @@ void getReadings(){
   fm =int(flowRate+1);  // Print the integer part of the variable
 
  pt1 = scale1.read();
-      Serial.print("pt1");
+      //Serial.print("pt1");
+      //Serial.print(" ");
 
  pt2 = scale2.read();
-      Serial.print("pt2");
+      //Serial.print("pt2");
+      //Serial.print(" ");
+
+ pt3 = scale3.read();
+ //Serial.print("pt3");
+ //Serial.print(" ");
+
+ pt4 = scale4.read();
+
+ lc1 = scale5.read();
+ lc2 = scale6.read();
+ lc3 = scale7.read();
+
+ 
     servo1.write(servo1curr);
     servo2.write(servo2curr);
 }
