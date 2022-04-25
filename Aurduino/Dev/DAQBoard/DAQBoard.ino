@@ -186,6 +186,9 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   if (S1S2 == 99) {
     digitalWrite(igniterPin, LOW);
     digitalWrite(igniterPin2, LOW);
+    delay(750);
+    digitalWrite(igniterPin, HIGH);
+    digitalWrite(igniterPin2, HIGH);
 
   }
 }
