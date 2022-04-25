@@ -33,6 +33,9 @@ int servo1ClosedPosition = 100;
 int servo1OpenPosition = 0;
 int servo2ClosedPosition = 155;
 int servo2OpenPosition = 20;
+
+float currentPosition1 = float('inf');
+float currentPosition2 = float('inf');
 //EH VENT SEFRVO 1 =180
 
 //For breadboard
@@ -190,8 +193,8 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 void fireSequence() {
     //Serial.println( "In Fire Sequence");
   servo1curr=servo1OpenPosition;
-   servo2curr=servo2OpenPosition;
-  
+  servo2curr=servo2OpenPosition;
+
   servo1.write(servo1curr);
   servo2.write(servo2curr);
   float beginTime = millis();
@@ -202,7 +205,7 @@ void fireSequence() {
     servo2.write(servo2curr);
     S1=servo1curr;
     S2=servo2curr;
-  
+
 
     delay(5);
 
@@ -212,8 +215,8 @@ void fireSequence() {
 
   servo1curr=servo1ClosedPosition;
    servo2curr=servo2OpenPosition;
- 
-  
+
+
   while ((currentTime - beginTime) <= 10) {
     currentTime = millis();
     S1=servo1curr;
@@ -224,15 +227,15 @@ void fireSequence() {
 
 
      delay(5);
-    
+
   }
   servo1curr=servo1ClosedPosition;
   servo2curr=servo2ClosedPosition;
-  
+
   servo1.write(servo1curr);
-  
+
   servo2.write(servo2curr);
- 
+
 }
 
 void setup() {
@@ -243,7 +246,7 @@ void setup() {
   // attach onboard LED
   pinMode(ONBOARD_LED,OUTPUT);
   pinMode(igniterPin, OUTPUT);
-    pinMode(igniterPin2, OUTPUT);
+  pinMode(igniterPin2, OUTPUT);
 
   digitalWrite(igniterPin, HIGH);
   digitalWrite(igniterPin2, HIGH);
@@ -268,7 +271,7 @@ void setup() {
   scale7.begin(LC3DOUT, LC3CLK);
   scale7.set_gain(64);
 //Flowmeter untreupt
- pinMode(FM, INPUT);           //Sets the pin as an input
+  pinMode(FM, INPUT);           //Sets the pin as an input
 
   Serial.begin(115200);
 
@@ -327,8 +330,16 @@ void loop() {
   //}
     servo1curr=S1;
     servo2curr=S2;
-    servo1.write(servo1curr);
-    servo2.write(servo2curr);
+    if (abs((currentPosition1 - servo1curr)) >= 2) {
+      currentPosition1 = servo1curr;
+      servo1.write(servo1curr);
+    }
+    if (abs((currentPosition2 - servo2curr)) >= 2) {
+      currentPosition2 = servo2curr;
+      servo2.write(servo2curr);
+    }
+    //servo1.write(servo1curr);
+    //servo2.write(servo2curr);
 
   //Serial.print("loop");
 
@@ -376,8 +387,8 @@ void getReadings(){
     servo1.write(servo1curr);
     servo2.write(servo2curr);
 
- 
-    
+
+
     currentState = digitalRead(FM);
     if (!(currentState == lastState)) {
 
@@ -405,8 +416,4 @@ void getReadings(){
  lc1 = scale5.read();
  lc2 = scale6.read();
  lc3 = scale7.read();
-
- 
-    servo1.write(servo1curr);
-    servo2.write(servo2curr);
 }
