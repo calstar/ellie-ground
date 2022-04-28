@@ -54,6 +54,7 @@ float currentPosition2 = float('inf');
 #define LC3DOUT 39
 #define LC3CLK 4
 #define FM 34
+#define VOLTAGEIN 12
 //#define S1S 21
 
 //define servo min and max values
@@ -75,6 +76,10 @@ float fmcount;
 float flowRate;
 boolean currentState;
 boolean lastState = false;
+
+//Measuring output from voltage divider
+int readVoltage;
+float convertedVoltage;
 
 //Initialize the PT and LC sensor objects which use the HX711 breakout board
 HX711 scale1;
@@ -307,6 +312,12 @@ void setup() {
 }
 
 void loop() {
+  //reading voltage
+  readVoltage = analogRead(VOLTAGEIN);
+  convertedVoltage = readVoltage * (3.3/4032) * ((22 + 68) / 22);
+  Serial.print("Voltage is: ");
+  Serial.print(convertedVoltage);
+  
   startTime=millis();
   Serial.println("In Main Loop");
   //Set LED back to low
