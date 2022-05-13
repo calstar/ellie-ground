@@ -11,11 +11,11 @@ cleanupObj = onCleanup(@cleanMeUp);
 % The code will read from the previous data, or establish a new file if no
 % data present. 
 % MUST CHANGE NAME OR DELETE PREVIOUS FILE IF DIFFERENT NUMBER OF DATA POINTS PASSED IN EACH TIME
-fileName = 'test1';
+fileName = 'load_cell_calibration_1';
 % NAME THE FOLDER YOU WANT THE TEST TO BE IN
 folderName = 'Test_Data_1';
 % Name the sensors
-testDevice = 'PT'
+testDevice = 'Load Cell '
 
 dataFileExist = 0;
 prevArray = [];
@@ -23,14 +23,16 @@ if exist([fileName,'.xls'])
    dataFileExist = 1;
    prevTable = readtable([fileName,'.xls']);
    prevArray = table2array(prevTable);
-   prevArray = prevArray(2:end,:)
+   prevArray = prevArray(3:end,:)
 end
 
 
 
 % set up table to collect data (CHANGE)
 
-dataLabels = ["PT1","PT2","PT3","PT4","PT5","PT6","PT7","PT_Reading"];
+% dataLabels = ["PT1","PT2","PT3","PT4","PT5","PT6","PT7","PT_Reading"];
+dataLabels = ["LC5","LC6","LC7","PT_Reading"];
+% dataLabels = ["PT2","PT_Reading"];
 % sz = [1,7];
 
 finalArray = 0;
@@ -73,27 +75,27 @@ while(1)
     % data1(i) = str2double(str{2})/10000;
     if i == 1
         % data1 receives PT1
-        data1 = str2double(str{1});
+%         data1 = str2double(str{1});
         % data2 receives PT2
-        data2 = str2double(str{2});
-        data3 = str2double(str{3});
-        data4 = str2double(str{4});
+%         data2 = str2double(str{2});
+%         data3 = str2double(str{3});
+%         data4 = str2double(str{4});
         data5 = str2double(str{5});
         data6 = str2double(str{6});
         data7 = str2double(str{7});
     elseif i <= 5
-        data1 = [data1;str2double(str{1})];
-        data2 = [data2;str2double(str{2})];
-        data3 = [data3;str2double(str{3})];
-        data4 = [data4;str2double(str{4})];
+%         data1 = [data1;str2double(str{1})];
+%         data2 = [data2;str2double(str{2})];
+%         data3 = [data3;str2double(str{3})];
+%         data4 = [data4;str2double(str{4})];
         data5 = [data5;str2double(str{5})];
         data6 = [data6;str2double(str{6})];
         data7 = [data7;str2double(str{7})];
     else
-        data1 = [data1(2:end);str2double(str{1})];
-        data2 = [data2(2:end);str2double(str{2})];
-        data3 = [data3(2:end);str2double(str{3})];
-        data4 = [data4(2:end);str2double(str{4})];
+%         data1 = [data1(2:end);str2double(str{1})];
+%         data2 = [data2(2:end);str2double(str{2})];
+%         data3 = [data3(2:end);str2double(str{3})];
+%         data4 = [data4(2:end);str2double(str{4})];
         data5 = [data5(2:end);str2double(str{5})];
         data6 = [data6(2:end);str2double(str{6})];
         data7 = [data7(2:end);str2double(str{7})];
@@ -123,44 +125,43 @@ end
 
 
         % calculate values
-        data1 = rmoutliers(data1)
-        data2 = rmoutliers(data2)
-        data3 = rmoutliers(data3)
-        data4 = rmoutliers(data4)
+%         data1 = rmoutliers(data1);
+%         data2 = rmoutliers(data2);
+%         data3 = rmoutliers(data3);
+%         data4 = rmoutliers(data4);
         data5 = rmoutliers(data5)
         data6 = rmoutliers(data6)
         data7 = rmoutliers(data7)
 
-        processArray = [mean([data1,data2,data3,data4,data5,data6,data7]),reading];
-        prevArray
-
-        processArray
-
+%         processArray = [mean([data1,data2,data3,data4,data5,data6,data7]),reading];
+  processArray = [mean([data5,data6,data7]),reading];
+% processArray = [mean(data2),reading];
         processArray = [prevArray;processArray];
 
+
         a = [];
+        b = [];
         endsol = [];
-        l = length(processArray(:,1));
-     
-   
+%         l = length(processArray(:,1));
         for j = 1:length(dataLabels)-1
-            X = [processArray(:,j),ones(l,1)];
-            Y = processArray(end);
-            X_T = transpose(X);
-            [sol] = mldivide(X_T*X,X_T*Y);
-            a = [a;sol(1)];
-            endsol = [endsol,sol];
+            %             X = [processArray(:,j),ones(l,1)]
+            X = processArray(:,j);
+            Y = processArray(:,end);
+            coefficients = polyfit(X,Y,1)';
+            a = [a;coefficients(1)]
+            b = [b;coefficients(2)]
+            endsol = [endsol,coefficients];
+
+
         end
-        [processArray]
+  
 %         [a;zeros(l-length(a),1)]
 % zeros(length(processArray(1)),1)
 
 
 
-a
-endsol
        
-    finalArray = [[a',0];processArray];
+    finalArray = [[a',NaN];[b',NaN];processArray];
 %         finalArray = [[prevArray;processArray],[a;zeros(l-j+1,1)]];
 
 
@@ -184,6 +185,7 @@ endsol
 
     function dataProcessingGraphing(array,solution)
         figure;
+        set(gcf, 'PaperSize', [10 10]);
         plotNumber = length(array(1,:))-1;
        
         for k = 1:plotNumber
@@ -196,8 +198,15 @@ endsol
             title(titleString);
             hold on
             y = solution(1,k)*x+solution(2,k);
-            plot(x,y,'-r')
+
+            plot(x,y)
             hold off
+
+%             if k == 2
+%                 sortedArray
+%                 y
+%                 solution(:,k)
+%             end
            
 
         end

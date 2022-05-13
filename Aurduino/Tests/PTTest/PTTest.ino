@@ -18,13 +18,13 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 #define ONBOARD_LED  13
 #define PTDOUT1 21
 #define CLKPT1 17
-#define PTDOUT2 14
-#define CLKPT2 32
+#define PTDOUT2 15
+#define CLKPT2 2
 #define PTDOUT3 23
 #define CLKPT3 22
 #define PTDOUT4 15
-#define CLKPT4 33
-#define PTDOUT5 16
+#define CLKPT4 34
+#define PTDOUT5 26
 #define CLKPT5 19
 #define PTDOUT6 36
 #define CLKPT6 5
@@ -95,7 +95,7 @@ void setup() {
 
 //set gains for pt pins
   scale7.begin(PTDOUT7, CLKPT7);
-  scale7.set_gain(64);  
+  scale7.set_gain(64);
 
 
   Serial.begin(115200);
