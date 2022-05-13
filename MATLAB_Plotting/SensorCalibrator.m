@@ -1,4 +1,4 @@
-function liveplot4fmCalibrate
+function SensorCalibrator
 % Clear everything
 close all; clear all;
 % reset all ports; otherwise might be unable to connect to port
