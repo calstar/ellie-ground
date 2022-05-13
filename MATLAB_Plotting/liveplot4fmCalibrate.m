@@ -1,4 +1,4 @@
-function liveplot4Calibrate
+function liveplot4fmCalibrate
 % Clear everything
 close all; clear all;
 % reset all ports; otherwise might be unable to connect to port
