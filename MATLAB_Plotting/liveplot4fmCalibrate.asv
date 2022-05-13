@@ -106,13 +106,6 @@ end
 
         prompt = "What is the pressure gage reading?"
         reading = input(prompt);
-        reading
-%         str2double(reading);
-%         while (isnumeric(reading) == false)
-%             prompt = "What is the pressure gage reading?"
-%             reading = input(prompt);
-%         end
-%         reading = str2double(reading);
         if ~exist(folderName, 'dir')
             mkdir(folderName);
             addpath(folderName);
@@ -123,13 +116,13 @@ end
 
 
         % calculate values
-        data1 = rmoutliers(data1)
-        data2 = rmoutliers(data2)
-        data3 = rmoutliers(data3)
-        data4 = rmoutliers(data4)
-        data5 = rmoutliers(data5)
-        data6 = rmoutliers(data6)
-        data7 = rmoutliers(data7)
+        data1 = rmoutliers(data1);
+        data2 = rmoutliers(data2);
+        data3 = rmoutliers(data3);
+        data4 = rmoutliers(data4);
+        data5 = rmoutliers(data5);
+        data6 = rmoutliers(data6);
+        data7 = rmoutliers(data7);
 
         processArray = [mean([data1,data2,data3,data4,data5,data6,data7]),reading];
         prevArray
@@ -149,16 +142,14 @@ end
             X_T = transpose(X);
             [sol] = mldivide(X_T*X,X_T*Y);
             a = [a;sol(1)];
-            endsol = [endsol,sol];
+            endsol = [endsol]
         end
-        [processArray]
+        [processArray];
 %         [a;zeros(l-length(a),1)]
 % zeros(length(processArray(1)),1)
 
-
-
 a
-endsol
+
        
     finalArray = [[a',0];processArray];
 %         finalArray = [[prevArray;processArray],[a;zeros(l-j+1,1)]];
@@ -178,27 +169,27 @@ endsol
         end
         fclose(s);
         instrreset;
-        dataProcessingGraphing(processArray,endsol)
+        dataProcessingGraphing(processArray,sol)
 
     end
 
     function dataProcessingGraphing(array,solution)
-        figure;
+        figure
         plotNumber = length(array(1,:))-1;
        
         for k = 1:plotNumber
             nexttile
-            sortedArray = sort(array(:,k));
+            sortedArray = sort(array(:,k))
 
-            x = linspace(sortedArray(1),sortedArray(end),100);
+            x = linspace(sortedArray(1),sortedArray(end),100)
             titleString = [testDevice,num2str(k)];
-            plot(array(:,k),array(:,end),'o')
+            plot(array(:,k),array(:,end))
             title(titleString);
             hold on
-            y = solution(1,k)*x+solution(2,k);
-            plot(x,y,'-r')
-            hold off
-           
+            y = solution
+            plot(x,)
+  
+
 
         end
             
