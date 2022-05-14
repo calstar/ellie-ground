@@ -20,8 +20,10 @@
   by Tom Igoe
 */
 // include the SD library:
+#include <Ethernet.h>
 #include <SPI.h>
 #include <SD.h>
+#include <SdFat.h>
 
 #define MISO   14
 #define MOSI   22
@@ -30,7 +32,7 @@
 
 // set up variables using the SD utility library functions:
 Sd2Card card;
-SdVolume volume;
+// SdVolume volume;
 SdFile root;
 
 // change this to match your SD shield or module;
@@ -38,14 +40,14 @@ SdFile root;
 // Adafruit SD shields and modules: pin 10
 // Sparkfun SD shield: pin 8
 // MKRZero SD: SDCARD_SS_PIN
-const int chipSelect = 23;
+const int chipSelect = 17;
 
 void setup() {
     SPIClass spi = SPIClass(VSPI);
   spi.begin(SCK, MISO, MOSI, CS);
 
 
-  
+
   // Open serial communications and wait for port to open:
   Serial.begin(9600);
   while (!Serial) {
