@@ -22,7 +22,7 @@ fileName = 'load_cell_calibration_1';
 folderName = 'Test_Data_1';
 
 % Name the sensors (will be used in data logging and graph titles)
-testDevice = 'Load Cell ';
+testDevice = 'PT ';
 
 % How many sensors are you reporting each time? (match with Arduino output)
 dataLength = 7;
@@ -92,7 +92,11 @@ catch
     [~,numOfPorts] = size(availablePorts);
     portNames = [];
     for n = 1:numOfPorts;
-        portNames = [portNames, ', ',availablePorts{n}];
+        if n == 1
+            portNames = availablePorts{n};
+        else
+            portNames = [portNames, ', ',availablePorts{n}];
+        end
     end
 
     ME = MException('MyComponent:fopenFailed',['Failed to fopen the serial ' ...
@@ -120,9 +124,9 @@ end
         if arrayMatch == 1 && serialPortOpened == 1
 
             % saves data to file (or could save to workspace)
-            fprintf('saving test data as %s.xls\n',fileName);
+            fprintf('saving test data as %s.xls\n',fileName)
 
-            prompt = "What is the pressure gage reading?"
+            prompt = "What is the pressure gage reading? \n";
             reading = input(prompt);
             %         str2double(reading);
             %         while (isnumeric(reading) == false)
@@ -136,14 +140,14 @@ end
                 fprintf("test data folder created\n");
             else
                 fprintf("folder already exists\n")
+                addpath(folderName);
             end
 
 
             % calculate mean values
 
             for n = 1:dataLength
-                meanArray(1,n) = rmoutliers(rawData(:,n));
-
+                meanArray(1,n) = mean(rmoutliers(rawData(:,n)));
             end
             processArray = [meanArray,reading];
             processArray = [prevArray;processArray];
