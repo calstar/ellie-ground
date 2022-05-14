@@ -1,7 +1,8 @@
 function SensorCalibrator
 %% Initial Reset
 % Clear everything
-close all; clear all;
+close all; clear;
+% clear all
 % reset all ports; otherwise might be unable to connect to port
 instrreset;
 
