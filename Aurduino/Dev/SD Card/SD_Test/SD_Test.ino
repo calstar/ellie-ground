@@ -187,12 +187,18 @@ void setup(){
         Serial.println("Card Mount Failed");
         return;
     }
+
+    Serial.println("yay1");
+
+
     uint8_t cardType = SD.cardType();
 
     if(cardType == CARD_NONE){
         Serial.println("No SD card attached");
         return;
     }
+
+    Serial.println("yay2");
 
     Serial.print("SD Card Type: ");
     if(cardType == CARD_MMC){
@@ -204,6 +210,8 @@ void setup(){
     } else {
         Serial.println("UNKNOWN");
     }
+
+Serial.println("yay3");
 
     uint64_t cardSize = SD.cardSize() / (1024 * 1024);
     Serial.printf("SD Card Size: %lluMB\n", cardSize);
