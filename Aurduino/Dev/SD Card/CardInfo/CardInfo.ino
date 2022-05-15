@@ -25,10 +25,13 @@
 #include <SD.h>
 #include <SdFat.h>
 
-#define MISO   14
-#define MOSI   22
-#define SCK   32
-#define CS     23
+
+// MISO (Master In Slave Out -- output pin)
+// MOSI (Master Out Slave In-- SPI input to the Micro SD)
+#define MISO   3
+#define MOSI   0
+#define SCK   1
+#define CS     17
 
 // set up variables using the SD utility library functions:
 Sd2Card card;
