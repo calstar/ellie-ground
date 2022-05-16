@@ -34,6 +34,7 @@ dataPointNum = 5;
 
 
 %% Automated Process Starts here
+
 dataFileExist = 0;
 arrayMatch = 1;
 prevArray = [];
@@ -126,7 +127,7 @@ end
             % saves data to file (or could save to workspace)
             fprintf('saving test data as %s.xls\n',fileName)
 
-            prompt = "What is the pressure gage reading? \n";
+            prompt = "What is the pressure gage reading? (Numbers only) \n";
             reading = input(prompt);
             %         str2double(reading);
             %         while (isnumeric(reading) == false)
