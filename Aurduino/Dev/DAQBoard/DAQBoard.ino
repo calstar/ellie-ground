@@ -39,7 +39,7 @@ float currentPosition2 = float('inf');
 //EH VENT SEFRVO 1 =180
 
 //For breadboard
-#define ONBOARD_LED  13
+// #define ONBOARD_LED  13
 #define PTDOUT1 32
 #define CLKPT1 5
 #define PTDOUT2 15
@@ -56,7 +56,7 @@ float currentPosition2 = float('inf');
 #define CLKPT7 33
 
 #define FM 34
-#define VOLTAGEIN 12
+// #define VOLTAGEIN 12
 //#define S1S 21
 
 //define servo min and max values
@@ -187,11 +187,14 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&Commands, incomingData, sizeof(Commands));
   //Serial.print("Bytes received: ");
   //Serial.println(len);
-      digitalWrite(ONBOARD_LED,HIGH);
+      // digitalWrite(ONBOARD_LED,HIGH);
   S1 =Commands.S1;
   S2 = Commands.S2;
   S1S2 = Commands.S1S2;
   I = Commands.I;
+
+  Serial.println(S1);
+  Serial.println(S2);
   //if (I) {
     //fireSequence();
   //}
@@ -259,7 +262,7 @@ void setup() {
   servo2.attach(S2S,SERVO_MIN_USEC,SERVO_MAX_USEC );
 
   // attach onboard LED
-  pinMode(ONBOARD_LED,OUTPUT);
+  // pinMode(ONBOARD_LED,OUTPUT);
   pinMode(igniterPin, OUTPUT);
   pinMode(igniterPin2, OUTPUT);
 
@@ -470,7 +473,7 @@ void getReadings(){
  serialMessage.concat(lc6);
  serialMessage.concat(" ");
  serialMessage.concat(lc7);
- Serial.println(serialMessage);
+ // Serial.println(serialMessage);
 
 
 

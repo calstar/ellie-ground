@@ -49,7 +49,7 @@ bool hotfire = true;
 //SET IF PLOTTING WITH MATLAB OR NOT. SERVO MANUAL CONTROL AND
 //MATLAB PLOTTING ARE NOT COMPATIBLE DUE TO USING THE SAME SERIAL
 //INPUT. IF TRUE, PLOTTING ENABLED. IF FALSE, MANUAL CONTROL ENABLED
-bool MatlabPlot = false;
+bool MatlabPlot = true;
 
 
 float button1Time = 0;
@@ -99,7 +99,7 @@ struct_message Commands;
 //
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
  // Serial.print("\r\nLast Packet Send Status:\t");
- Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+ // Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
   if (status == 0){
     success = "Delivery Success :)";
     digitalWrite(DAQIndicator, HIGH);
@@ -114,7 +114,7 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&incomingReadings, incomingData, sizeof(incomingReadings));
- Serial.print("Bytes received: ");
+ // Serial.print("Bytes received: ");
   Serial.println(len);
   incomingPT1 = incomingReadings.pt1;
   incomingPT2 = incomingReadings.pt2;
@@ -128,7 +128,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   incomingS2 = incomingReadings.S2;
   digitalWrite(COMIndicator, HIGH);
   receiveTimeCOM = millis();
-  Serial.println("Data received");
+  // Serial.println("Data received");
 
 }
 
