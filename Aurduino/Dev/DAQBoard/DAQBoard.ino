@@ -16,15 +16,15 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 
 //define pins to use for the various sensors and connections. define takes up less space on the chip
 #define ONBOARD_LED  13
-#define PT1DOUT 33
-#define PT2DOUT 16 //update
-#define CLKPT1 27
-#define CLKPT2 25 //update
+//#define PT1DOUT 33
+//#define PT2DOUT 16 //update
+//#define CLKPT1 27
+//#define CLKPT2 25 //update
 #define FM 4 //update
 #define S1S 26
 #define S2S 25
-#define igniterPin 27
-#define igniterPin2 18
+#define igniterPin 14
+#define igniterPin2 27
 
 
 //RESOLDER GROUND ON PROTOBOARD
@@ -39,20 +39,22 @@ float currentPosition2 = float('inf');
 //EH VENT SEFRVO 1 =180
 
 //For breadboard
-#define PT1DOUT 21
-#define PT2DOUT 14
-#define PT3DOUT 23
-#define PT4DOUT 15
-#define CLKPT1 17
-#define CLKPT2 32
-#define CLKPT3 22
-#define CLKPT4 33
-#define LC1DOUT 16
-#define LC1CLK 19
-#define LC2DOUT 36
-#define LC2CLK 5
-#define LC3DOUT 39
-#define LC3CLK 4
+#define ONBOARD_LED  13
+#define PTDOUT1 32
+#define CLKPT1 5
+#define PTDOUT2 15
+#define CLKPT2 2
+#define PTDOUT3 22
+#define CLKPT3 23
+#define PTDOUT4 19
+#define CLKPT4 21
+#define PTDOUT5 35
+#define CLKPT5 25
+#define PTDOUT6 34
+#define CLKPT6 26
+#define PTDOUT7 39
+#define CLKPT7 33
+
 #define FM 34
 #define VOLTAGEIN 12
 //#define S1S 21
@@ -267,20 +269,35 @@ void setup() {
   //pinMode(FM, INPUT_PULLUP);
 
 //set gains for pt pins
-  scale1.begin(PT1DOUT, CLKPT1);
+//set gains for pt pins
+  scale1.begin(PTDOUT1, CLKPT1);
   scale1.set_gain(64);
-  scale2.begin(PT2DOUT, CLKPT2);
+     //Sets the pin as an input
+
+//set gains for pt pins
+  scale2.begin(PTDOUT2, CLKPT2);
   scale2.set_gain(64);
-  scale3.begin(PT3DOUT, CLKPT3);
+
+  //set gains for pt pins
+  scale3.begin(PTDOUT3, CLKPT3);
   scale3.set_gain(64);
-  scale4.begin(PT4DOUT, CLKPT4);
+
+  //set gains for pt pins
+  scale4.begin(PTDOUT4, CLKPT4);
   scale4.set_gain(64);
-  scale5.begin(LC1DOUT, LC1CLK);
+
+  //set gains for pt pins
+  scale5.begin(PTDOUT5, CLKPT5);
   scale5.set_gain(64);
-  scale6.begin(LC2DOUT, LC2CLK);
+
+  //set gains for pt pins
+  scale6.begin(PTDOUT6, CLKPT6);
   scale6.set_gain(64);
-  scale7.begin(LC3DOUT, LC3CLK);
+
+//set gains for pt pins
+  scale7.begin(PTDOUT7, CLKPT7);
   scale7.set_gain(64);
+
 //Flowmeter untreupt
   pinMode(FM, INPUT);           //Sets the pin as an input
 

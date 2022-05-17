@@ -34,7 +34,7 @@ int servo1_curr = 0;
 int servo2_curr = 0;
 int S1=0;
 const int RELAYPIN = 27; 
-const int RELAYPIN2 = 18; 
+const int RELAYPIN2 = 14; 
 
 
 
@@ -90,8 +90,9 @@ void loop() {
   digitalWrite(RELAYPIN, HIGH); 
   delay(200);
   digitalWrite(RELAYPIN2, HIGH); 
+Serial.print("loop");
 
-  delay(5000);
+  delay(2000);
   
   servo1.write(0);
   servo2.write(0);
@@ -101,7 +102,7 @@ void loop() {
 
   delay(50);
   digitalWrite(RELAYPIN2, LOW); 
-
-  delay(5000);
+Serial.print("loop");
+  delay(2000);
 
 }
