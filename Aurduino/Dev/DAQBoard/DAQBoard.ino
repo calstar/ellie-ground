@@ -15,14 +15,14 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 
 
 //define pins to use for the various sensors and connections. define takes up less space on the chip
-#define ONBOARD_LED  13
+// #define ONBOARD_LED  13
 //#define PT1DOUT 33
 //#define PT2DOUT 16 //update
 //#define CLKPT1 27
 //#define CLKPT2 25 //update
 #define FM 4 //update
-#define S1S 26
-#define S2S 25
+#define S1S 13
+#define S2S 12
 #define igniterPin 14
 #define igniterPin2 27
 
@@ -111,7 +111,9 @@ int ADC_Max = 4096;
 //COM BOARD {0x7C, 0x9E, 0xBD, 0xD7, 0x2B, 0xE8}
 //HEADERLESS BOARD {0x7C, 0x87, 0xCE, 0xF0 0x69, 0xAC}
 //NEWEST COM BOARD IN EVA {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC}
-uint8_t broadcastAddress[] = {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC};
+// uint8_t broadcastAddress[] = {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC};
+uint8_t broadcastAddress[] = {0x7C, 0x9E, 0xBD, 0xD7, 0x2B, 0xE8};
+
 
 int count=3;
 

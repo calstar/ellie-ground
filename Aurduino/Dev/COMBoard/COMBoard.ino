@@ -17,7 +17,7 @@ const int buttonpin1 = 19;
 //const int buttonpin1 = 27;
 const int buttonpin2 = 17;
 const int igniterIndicator = 16;
-const int firePin = 21; //SET PIN NUMBER BUTTON 
+const int firePin = 21; //SET PIN NUMBER BUTTON
 
 const int pin6 = 4;
 const int LEDpin = 23;
@@ -70,8 +70,9 @@ int state = 0;
 //DAQ Breadboard {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC}
 //DAQ Protoboard {0x0C, 0xDC, 0x7E, 0xCB, 0x05, 0xC4}
 //NON BUSTED DAQ {0x7C, 0x9E, 0xBD, 0xD8, 0xFC, 0x14}
-uint8_t broadcastAddress[] = {0x7C, 0x9E, 0xBD, 0xD8, 0xFC, 0x14}; //change to new Mac Address
+// uint8_t broadcastAddress[] = {0x7C, 0x9E, 0xBD, 0xD8, 0xFC, 0x14}; //change to new Mac Address
 
+uint8_t broadcastAddress[] = {0x30, 0xC6, 0xF7, 0x2A, 0x28, 0x04};
 //Structure example to send data
 //Must match the receiver structure
 typedef struct struct_message {
@@ -108,7 +109,7 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
     success = "Delivery Fail :(";
     digitalWrite(DAQIndicator, LOW);
   }
-  
+
 }
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
@@ -140,21 +141,21 @@ void setup() {
   pinMode(buttonpin2, INPUT);
   pinMode(igniterIndicator,INPUT);
   pinMode(firePin, INPUT);
-  
+
   pinMode(LEDpin, OUTPUT);
   pinMode(servo1Open, OUTPUT);
   pinMode(servo2Open, OUTPUT);
   pinMode(DAQIndicator, OUTPUT);
   pinMode(COMIndicator, OUTPUT);
   pinMode(pin6, OUTPUT);
-  
+
   digitalWrite(LEDpin,LOW);
   digitalWrite(servo1Open, LOW);
   digitalWrite(servo2Open, LOW);
   digitalWrite(DAQIndicator, LOW);
   digitalWrite(COMIndicator, LOW);
   digitalWrite(pin6, LOW);
-  
+
 
   //set device as WiFi station
   WiFi.mode(WIFI_STA);
@@ -199,7 +200,7 @@ void loop() {
       Commands.S1 = servo1ClosedPosition;
       Commands.S2 = servo2ClosedPosition;
       //Serial.println("State 0");
-      
+
       digitalWrite(LEDpin, LOW);
       digitalWrite(pin6, LOW);
       //digitalWrite(servo1Open, HIGH);
@@ -550,7 +551,7 @@ void loop() {
 
     delay(30);
   }
-  
+
   Serial.print(millis());
   Serial.print(" ");
   Serial.print(incomingPT1);
@@ -576,7 +577,7 @@ void loop() {
   Serial.print(Commands.I);
   Serial.print(" ");
   Serial.println(Commands.S1S2);
-  
+
   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
 
 
