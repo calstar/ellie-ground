@@ -114,8 +114,8 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&incomingReadings, incomingData, sizeof(incomingReadings));
- // Serial.print("Bytes received: ");
-  //Serial.println(len);
+ Serial.print("Bytes received: ");
+  Serial.println(len);
   incomingPT1 = incomingReadings.pt1;
   incomingPT2 = incomingReadings.pt2;
   incomingPT3 = incomingReadings.pt3;
@@ -128,7 +128,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   incomingS2 = incomingReadings.S2;
   digitalWrite(COMIndicator, HIGH);
   receiveTimeCOM = millis();
-  //Serial.println("Data received");
+  Serial.println("Data received");
 
 }
 
