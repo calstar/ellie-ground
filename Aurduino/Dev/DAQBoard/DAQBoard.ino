@@ -185,19 +185,19 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 // Callback when data is received
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&Commands, incomingData, sizeof(Commands));
-  //Serial.print("Bytes received: ");
-  //Serial.println(len);
+  // Serial.print("Bytes received: ");
+  // Serial.println(len);
       // digitalWrite(ONBOARD_LED,HIGH);
   S1 =Commands.S1;
   S2 = Commands.S2;
   S1S2 = Commands.S1S2;
   I = Commands.I;
+  Serial.println(I);
 
-  Serial.println(S1);
-  Serial.println(S2);
-  //if (I) {
-    //fireSequence();
-  //}
+
+  // if (I) {
+  //   fireSequence();
+  // }
   if (S1S2 == 99) {
     digitalWrite(igniterPin, LOW);
     digitalWrite(igniterPin2, LOW);
@@ -209,9 +209,13 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 }
 
 void fireSequence() {
-    //Serial.println( "In Fire Sequence");
+    Serial.println( "In Fire Sequence");
   servo1curr=servo1OpenPosition;
   servo2curr=servo2OpenPosition;
+  Serial.print(servo1OpenPosition);
+  Serial.print(" ");
+  Serial.println(servo2OpenPosition);
+  Serial.println(S1);
 
   servo1.write(servo1curr);
   servo2.write(servo2curr);
@@ -369,12 +373,17 @@ void loop() {
   //}
     servo1curr=S1;
     servo2curr=S2;
+      // Serial.println(S1);
+      Serial.println(currentPosition1 - servo1curr);
     if (abs((currentPosition1 - servo1curr)) >= 2) {
       currentPosition1 = servo1curr;
+      Serial.println(S1);
+
       servo1.write(servo1curr);
     }
     if (abs((currentPosition2 - servo2curr)) >= 2) {
       currentPosition2 = servo2curr;
+            Serial.println(S2);
       servo2.write(servo2curr);
     }
     //servo1.write(servo1curr);

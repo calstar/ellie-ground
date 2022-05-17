@@ -27,6 +27,7 @@ const int DAQIndicator = 25;//SET PIN NUMBER BASED ON SOLDERING//
 const int COMIndicator = 5;//SET PIN NUMBER BASED ON SOLDERING//
 
 String success;
+String message;
 int servo1_curr = servo1ClosedPosition;
 int servo2_curr = servo2ClosedPosition;
 float incomingS1 = 0;
@@ -115,7 +116,7 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&incomingReadings, incomingData, sizeof(incomingReadings));
  // Serial.print("Bytes received: ");
-  Serial.println(len);
+  // Serial.println(len);
   incomingPT1 = incomingReadings.pt1;
   incomingPT2 = incomingReadings.pt2;
   incomingPT3 = incomingReadings.pt3;
@@ -130,6 +131,11 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   receiveTimeCOM = millis();
   // Serial.println("Data received");
 
+}
+
+void printLine(String string) {
+  // a = 10;
+  // Serial.println(string);
 }
 
 void setup() {
@@ -186,6 +192,7 @@ void setup() {
 
 
 void loop() {
+  message = "";
   // put your main code here, to run repeatedly:
   // STATES:
   // 0 = RESTING LED dark
@@ -193,6 +200,7 @@ void loop() {
   // 2 = ACTUATE VALVES ON PRE_SET PARAMETERS (IF USING MATLAB) LED Blinking
   //     READY FOR SERVO VALVE ANGLE INPUTS (IN FORM angle1,angle2)
 
+Serial.println(state);
   switch (state) {
     case 0:
 //      Serial.println("State 0");
@@ -304,23 +312,28 @@ void loop() {
 
            //PT TEST
             //Serial.print("Output Pressures: ");
-            Serial.print(incomingPT1);
-            Serial.print(" ");
-            Serial.print(incomingPT2);
-            Serial.print(" ");
-            Serial.print(incomingPT3);
-            Serial.print(" ");
-            Serial.print(incomingPT4);
-            Serial.print(" ");
-            Serial.print(incomingLC1);
-            Serial.print(" ");
+            message = "";
+            message.concat(incomingPT1);
+            message.concat(" ");
+            message.concat(incomingPT2);
+            message.concat(" ");
+            message.concat(incomingPT3);
+            message.concat(" ");
+            message.concat(incomingPT4);
+            message.concat(" ");
+            message.concat(incomingLC1);
+            message.concat(" ");
+            message.concat(incomingFM);
+
+            printLine(message);
+
             //Serial.println("psi / ");
 
           //  Serial.print(" ");       // Print tab space
 
           // FM Test
 
-            Serial.println(incomingFM);
+
             // Serial.print(" ");
 
             //Serial.println("Commands Follow");
@@ -446,14 +459,20 @@ void loop() {
     case 5:
     //Serial.println("State 5");
     //Serial.println("State 5");
+    // Serial.println(digitalRead(firePin));
       if (digitalRead(firePin)) {
         Commands.I = true;
+        Commands.S1 = servo1OpenPosition;
+        Commands.S2 = servo2OpenPosition;
+        // Serial.println(Commands.I);
         esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+        Serial.print("We are here");
         if (result != ESP_OK) {
-            break;
-          // Serial.println("Sent with success");
+
+          Serial.println("Sent with success");
+          // break;
           }
-        //Commands.I = false;
+        // Commands.I = false;
        Commands.S1 = servo1OpenPosition;
        Commands.S2 = servo2OpenPosition;
         state = 0;
@@ -468,68 +487,76 @@ void loop() {
         digitalWrite(servo2Open, HIGH);
         while ((runningTime - now) <= 3000) {
           runningTime = millis();
-          Serial.print(millis());
-  Serial.print(" ");
-  Serial.print(incomingPT1);
-  Serial.print(" ");
-  Serial.print(incomingPT2);
-  Serial.print(" ");
-  Serial.print(incomingPT3);
-  Serial.print(" ");
-  Serial.print(incomingPT4);
-  Serial.print(" ");
-  Serial.print(incomingLC1);
-  Serial.print(" ");
-  Serial.print(incomingLC2);
-  Serial.print(" ");
-  Serial.print(incomingLC3);
-  Serial.print(" ");
-  Serial.print(incomingFM);
-  Serial.print(" ");
-  Serial.print(Commands.S1);
-  Serial.print(" ");
-  Serial.print(Commands.S2);
-  Serial.print(" ");
-  Serial.print(Commands.I);
-  Serial.print(" ");
-  Serial.println(Commands.S1S2);
+  message = "";
+  message.concat(millis());
+  message.concat(" ");
+  message.concat(incomingPT1);
+  message.concat(" ");
+  message.concat(incomingPT2);
+  message.concat(" ");
+  message.concat(incomingPT3);
+  message.concat(" ");
+  message.concat(incomingPT4);
+  message.concat(" ");
+  message.concat(incomingLC1);
+  message.concat(" ");
+  message.concat(incomingLC2);
+  message.concat(" ");
+  message.concat(incomingLC3);
+  message.concat(" ");
+  message.concat(incomingFM);
+  message.concat(" ");
+  message.concat(Commands.S1);
+  message.concat(" ");
+  message.concat(Commands.S2);
+  message.concat(" ");
+  message.concat(Commands.I);
+  message.concat(" ");
+  message.concat(Commands.S1S2);
+  printLine(message);
+  result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+
         }
         digitalWrite(servo1Open, LOW);
         Commands.S1 = servo1ClosedPosition;
         result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
         if (result != ESP_OK) {
             break;
-          // Serial.println("Sent with success");
+          Serial.println("Sent with success");
           }
         now = millis();
         runningTime = millis();
-        while ((runningTime - now) <= 500) {
+        while ((now- runningTime) <= 500) {
           runningTime = millis();
-          Serial.print(millis());
-  Serial.print(" ");
-  Serial.print(incomingPT1);
-  Serial.print(" ");
-  Serial.print(incomingPT2);
-  Serial.print(" ");
-  Serial.print(incomingPT3);
-  Serial.print(" ");
-  Serial.print(incomingPT4);
-  Serial.print(" ");
-  Serial.print(incomingLC1);
-  Serial.print(" ");
-  Serial.print(incomingLC2);
-  Serial.print(" ");
-  Serial.print(incomingLC3);
-  Serial.print(" ");
-  Serial.print(incomingFM);
-  Serial.print(" ");
-  Serial.print(Commands.S1);
-  Serial.print(" ");
-  Serial.print(Commands.S2);
-  Serial.print(" ");
-  Serial.print(Commands.I);
-  Serial.print(" ");
-  Serial.println(Commands.S1S2);
+          message = "";
+          message.concat(millis());
+          message.concat(" ");
+          message.concat(incomingPT1);
+          message.concat(" ");
+          message.concat(incomingPT2);
+          message.concat(" ");
+          message.concat(incomingPT3);
+          message.concat(" ");
+          message.concat(incomingPT4);
+          message.concat(" ");
+          message.concat(incomingLC1);
+          message.concat(" ");
+          message.concat(incomingLC2);
+          message.concat(" ");
+          message.concat(incomingLC3);
+          message.concat(" ");
+          message.concat(incomingFM);
+          message.concat(" ");
+          message.concat(Commands.S1);
+          message.concat(" ");
+          message.concat(Commands.S2);
+          message.concat(" ");
+          message.concat(Commands.I);
+          message.concat(" ");
+          message.concat(Commands.S1S2);
+
+          printLine(message);
+          now = millis();
         }
         Commands.S2 = servo2ClosedPosition;
          result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
@@ -552,31 +579,34 @@ void loop() {
     delay(30);
   }
 
-  Serial.print(millis());
-  Serial.print(" ");
-  Serial.print(incomingPT1);
-  Serial.print(" ");
-  Serial.print(incomingPT2);
-  Serial.print(" ");
-  Serial.print(incomingPT3);
-  Serial.print(" ");
-  Serial.print(incomingPT4);
-  Serial.print(" ");
-  Serial.print(incomingLC1);
-  Serial.print(" ");
-  Serial.print(incomingLC2);
-  Serial.print(" ");
-  Serial.print(incomingLC3);
-  Serial.print(" ");
-  Serial.print(incomingFM);
-  Serial.print(" ");
-  Serial.print(Commands.S1);
-  Serial.print(" ");
-  Serial.print(Commands.S2);
-  Serial.print(" ");
-  Serial.print(Commands.I);
-  Serial.print(" ");
-  Serial.println(Commands.S1S2);
+  message = "";
+  message.concat(millis());
+  message.concat(" ");
+  message.concat(incomingPT1);
+  message.concat(" ");
+  message.concat(incomingPT2);
+  message.concat(" ");
+  message.concat(incomingPT3);
+  message.concat(" ");
+  message.concat(incomingPT4);
+  message.concat(" ");
+  message.concat(incomingLC1);
+  message.concat(" ");
+  message.concat(incomingLC2);
+  message.concat(" ");
+  message.concat(incomingLC3);
+  message.concat(" ");
+  message.concat(incomingFM);
+  message.concat(" ");
+  message.concat(Commands.S1);
+  message.concat(" ");
+  message.concat(Commands.S2);
+  message.concat(" ");
+  message.concat(Commands.I);
+  message.concat(" ");
+  message.concat(Commands.S1S2);
+
+  printLine(message);
 
   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
 
