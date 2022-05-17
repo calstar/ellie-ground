@@ -163,7 +163,7 @@ while(1)
 
 
     if (now() - timeControl) * 24 * 60 * 60 >= plotTime % plot every x seconds
-        if timeInterval(end)-timeInterval(1) < observationInterval
+        if timeInterval(end)-timeInterval(1) <= observationInterval
 
 
             axes(ax1);
@@ -208,16 +208,16 @@ while(1)
             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
 
         else % plot only the latest 5 seconds of data
-            if timeInterval == observationInterval
-             idx =  floor(length(timeInterval));
+            if timeInterval == 5
+             idx =  floor(length(timeInterval)/observationalInterval);
 
-%             idxDumpTime = 1/(floor(length(timeInterval)/observationalInterval))
+            idxDumpTime = 1/(floor(length(timeInterval)/observationalInterval))
             end
 
-%             if (now() - timeControlContinuous) * 24 * 60 * 60 >= idxDumpTime
+            if (now() - timeControlContinuous) * 24 * 60 * 60 >= idxDumpTime
 
             axes(ax1);
-            plot(timeInterval(end-idx:end),data1(end-idx:end));
+            plot(timeInterval(end-idx:end),data1(end-observationInterval/pauseTime:end));
             % set the x limits so that only the last 5 seconds of data is
             % plotted
             title('Pressure Transducer 1')
@@ -226,7 +226,7 @@ while(1)
 
             axes(ax2);
             % change the number e.g "-6" according to trials.
-            plot(timeInterval(end-idx:end),data2(end-idx:end));
+            plot(timeInterval(end-observationInterval/pauseTime:end),data2(end-observationInterval/pauseTime:end));
             title('Pressure Transducer 2')
 
             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
@@ -234,7 +234,7 @@ while(1)
 
             axes(ax3);
             % change the number e.g "-6" according to trials.
-            plot(timeInterval(end-idx:end),data3(end-idx:end));
+            plot(timeInterval(end-observationInterval/pauseTime:end),data3(end-observationInterval/pauseTime:end));
             title('Pressure Transducer 3')
 
             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
@@ -242,33 +242,33 @@ while(1)
 
             axes(ax4);
             % change the number e.g "-6" according to trials.
-            plot(timeInterval(end-idx:end),data4(end-idx:end));
+            plot(timeInterval(end-observationInterval/pauseTime:end),data4(end-observationInterval/pauseTime:end));
             title('Pressure Transducer 4')
 
             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
 
             axes(ax5);
             % change the number e.g "-6" according to trials.
-            plot(timeInterval(end-idx:end),data5(end-idx:end));
+            plot(timeInterval(end-observationInterval/pauseTime:end),data5(end-observationInterval/pauseTime:end));
             title('Load Cell 5')
 
             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
 
             axes(ax6);
-            plot(timeInterval(end-idx:end),data6(end-idx:end));
+            plot(timeInterval(end-observationInterval/pauseTime:end),data6(end-observationInterval/pauseTime:end));
             % set the x limits so that only the last 5 seconds of data is
             % plotted
             title('Load Cell 6')
 
             axes(ax7);
-            plot(timeInterval(end-idx:end),data7(end-idx:end));
+            plot(timeInterval(end-observationInterval/pauseTime:end),data7(end-observationInterval/pauseTime:end));
             % set the x limits so that only the last 5 seconds of data is
             % plotted
             title('Load Cell 7')
 
             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
             timeControlContinuous = now();
-%             end
+            end
         end
         timeControl = now();
     end
@@ -276,9 +276,9 @@ while(1)
     endTime=endTime(21:23);
 
     timeDifference=str2double(endTime)-str2double(startTime);
-    if timeDifference<pauseTime
-        pause(timeDifference);
-    end
+%     if timeDifference<pauseTime
+%         pause(timeDifference);
+%     end
     i = i+1;
 end
     function cleanMeUp()

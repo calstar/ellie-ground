@@ -42,7 +42,8 @@ float pt4=-1;
 float pt5=-1;
 float pt6=-1;
 float pt7=-1;
-
+// String serialMessage = "";
+String serialMessage = "";
 
 //define servo min and max values
 #define SERVO_MIN_USEC (900)
@@ -116,43 +117,58 @@ void getReadings(){
  pt1 = scale1.read();
        // Serial.print("pt1: ");
 
- Serial.print(pt1);
- Serial.print(" ");
-
   pt2 = scale2.read();
        // Serial.print(" p2: ");
 
- Serial.print(pt2);
-  Serial.print(" ");
 
   pt3 = scale3.read();
        // Serial.print(" pt3: ");
 
- Serial.print(pt3);
-  Serial.print(" ");
 
   pt4 = scale4.read();
        // Serial.print(" pt4: ");
 
- Serial.print(pt4);
-  Serial.print(" ");
-
   pt5 = scale5.read();
        // Serial.print(" pt5: ");
-
- Serial.print(pt5);
-  Serial.print(" ");
 
   pt6 = scale6.read();
        // Serial.print(" pt6: ");
 
- Serial.print(pt6);
-  Serial.print(" ");
-
   pt7 = scale7.read();
        // Serial.print(" pt7: ");
 
- Serial.println(pt7);
+  serialMessage = "";
+  //
+  serialMessage.concat(pt1);
+  serialMessage.concat(" ");
+  serialMessage.concat(pt2);
+  serialMessage.concat(" ");
+  serialMessage.concat(pt3);
+  serialMessage.concat(" ");
+  serialMessage.concat(pt4);
+  serialMessage.concat(" ");
+  serialMessage.concat(pt5);
+  serialMessage.concat(" ");
+  serialMessage.concat(pt6);
+  serialMessage.concat(" ");
+  serialMessage.concat(pt7);
+  // serialMessage = (pt1+" "+pt2+" "+pt3+" "+pt4+" "+pt5+" "+pt6+" "+pt7);
+  // Serial.print(pt1);
+  // Serial.print(" ");
+  // Serial.print(pt2);
+  // Serial.print(" ");
+  // Serial.print(pt3);
+  // Serial.print(" ");
+  // Serial.print(pt4);
+  // Serial.print(" ");
+  // Serial.print(pt1);
+  // Serial.print(" ");
+  // Serial.print(pt1);
+  // Serial.print(" ");
+  // Serial.println(pt1);
+  // Serial.println(" ");
+  Serial.println(serialMessage);
+
 
 
 }

@@ -77,6 +77,9 @@ float flowRate;
 boolean currentState;
 boolean lastState = false;
 
+// Serial Message setup
+String serialMessage = "";
+
 //Measuring output from voltage divider
 int readVoltage;
 float convertedVoltage;
@@ -115,9 +118,9 @@ float pt1=1;
 float pt2=1;
 float pt3=1;
 float pt4=1;
-float lc1=1;
-float lc2=1;
-float lc3=1;
+float lc5=1;
+float lc6=1;
+float lc7=1;
 float fm=2;
 //the following are only used in the oposite direction, they are included because it may be necessary for the structure to be the same in both directions
 int S1; int S2; int S1S2; int I;
@@ -167,12 +170,12 @@ esp_now_peer_info_t peerInfo;
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
   //Serial.print("\r\nLast Packet Send Status:\t");
   //Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
-  if (status ==0){
-    success = "Delivery Success :)";
-  }
-  else{
-    success = "Delivery Fail :(";
-  }
+//   if (status ==0){
+//     success = "Delivery Success :)";
+//   }
+//   else{
+//     success = "Delivery Fail :(";
+//   }
 }
 
 // Callback when data is received
@@ -313,15 +316,15 @@ void setup() {
 
 void loop() {
   //reading voltage
-  readVoltage = analogRead(VOLTAGEIN);
-  convertedVoltage = readVoltage * (3.3/4032) * ((22 + 68) / 22);
-  Serial.print("Voltage is: ");
-  Serial.print(convertedVoltage);
-  
-  startTime=millis();
-  Serial.println("In Main Loop");
-  //Set LED back to low
-  digitalWrite(ONBOARD_LED,LOW);
+  // readVoltage = analogRead(VOLTAGEIN);
+  // convertedVoltage = readVoltage * (3.3/4032) * ((22 + 68) / 22);
+  // Serial.print("Voltage is: ");
+  // Serial.print(convertedVoltage);
+  //
+  // startTime=millis();
+  // Serial.println("In Main Loop");
+  // //Set LED back to low
+  // digitalWrite(ONBOARD_LED,LOW);
 
  //ADD PRINT STATEMENTS FOR DEBUGGING HERE IF NCESSARY
  // printSerial();
@@ -365,20 +368,20 @@ void loop() {
   Readings.pt2 = pt2;
   Readings.pt3 = pt3;
   Readings.pt4 = pt4;
-  Readings.lc1 = lc1;
-  Readings.lc2 = lc2;
-  Readings.lc3 = lc3;
+  Readings.lc1 = lc5;
+  Readings.lc2 = lc6;
+  Readings.lc3 = lc7;
   Readings.fm  = fm;
 
   // Send message via ESP-NOW
   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Readings, sizeof(Readings));
 
-  if (result == ESP_OK) {
-    Serial.println("Sent with success");
-  }
-  else {
-    Serial.println("Error sending the data");
-  }
+  // if (result == ESP_OK) {
+  //   Serial.println("Sent with success");
+  // }
+  // else {
+  //   Serial.println("Error sending the data");
+  // }
 
   endTime=millis();
   timeDiff=endTime-startTime;
@@ -388,8 +391,8 @@ void loop() {
 
   delay(29);
 
-Serial.println(servo1curr);
-Serial.println(servo2curr);
+// Serial.println(servo1curr);
+// Serial.println(servo2curr);
 
 }
 
@@ -427,7 +430,29 @@ void getReadings(){
 
  pt4 = scale4.read();
 
- lc1 = scale5.read();
- lc2 = scale6.read();
- lc3 = scale7.read();
+ lc5 = scale5.read();
+ lc6 = scale6.read();
+ lc7 = scale7.read();
+
+ serialMessage = "";
+ //
+ serialMessage.concat(millis());
+ serialMessage.concat(" ");
+ serialMessage.concat(pt1);
+ serialMessage.concat(" ");
+ serialMessage.concat(pt2);
+ serialMessage.concat(" ");
+ serialMessage.concat(pt3);
+ serialMessage.concat(" ");
+ serialMessage.concat(pt4);
+ serialMessage.concat(" ");
+ serialMessage.concat(lc5);
+ serialMessage.concat(" ");
+ serialMessage.concat(lc6);
+ serialMessage.concat(" ");
+ serialMessage.concat(lc7);
+ Serial.println(serialMessage);
+
+
+
 }

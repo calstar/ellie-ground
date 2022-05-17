@@ -16,16 +16,16 @@ cleanupObj = onCleanup(@cleanMeUp);
 % The code will read from the previous data, or establish a new file if no
 % data present.
 % MUST CHANGE NAME OR DELETE PREVIOUS FILE IF DIFFERENT NUMBER OF SENSORS REPORT DATA
-fileName = 'Load_Cell_calibration_LC6';
+fileName = 'PT_calibration_1';
 
 % NAME THE FOLDER YOU WANT THE TEST TO BE IN
-folderName = 'Test_Data_May_16_LC';
+folderName = 'Test_Data_May_16_PT';
 
 % Name the sensors (will be used in data logging and graph titles)
-testDevice = 'LC ';
+testDevice = 'PT ';
 
 % How many sensors are you reporting each time? (match with Arduino output)
-dataLength = 7;
+dataLength = 4;
 
 % How many data points do you want to use to calculate (if use 5,only the last 5 data points will be kept upon stopping the
 % program)
