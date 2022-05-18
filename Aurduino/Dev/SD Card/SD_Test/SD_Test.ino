@@ -1,3 +1,7 @@
+#include <sd_defines.h>
+#include <sd_diskio.h>
+#include <SD.h>
+
 /*
  * Connect the SD card to the following pins:
  *
@@ -21,7 +25,7 @@
 #define SCK   1
 #define CS   17
 
-SPIClass sdSPI(VSPI);
+// SPIClass sdSPI(VSPI);
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
     Serial.printf("Listing directory: %s\n", dirname);
@@ -181,11 +185,15 @@ void testFileIO(fs::FS &fs, const char * path){
 }
 
 void setup(){
+  Serial.println("yay1111111");
     Serial.begin(115200);
       Serial.println("yay2");
-   sdSPI.begin(SCK, MISO, MOSI, CS);
+      // SPIClass sdSPI(VSPI);
+   // sdSPI.begin(SCK, MISO, MOSI, CS);
      Serial.println("yay10");
-    if(!SD.begin(CS, sdSPI)){
+    // if(!SD.begin(CS, sdSPI)){
+    // SD.begin(CS);
+        if(!SD.begin()){
         Serial.println("Card Mount Failed");
         return;
     } else {
@@ -237,5 +245,6 @@ Serial.println("yay3");
 }
 
 void loop(){
+  // Serial.println("sdsdsdsd ");
 
 }
