@@ -182,12 +182,14 @@ void testFileIO(fs::FS &fs, const char * path){
 
 void setup(){
     Serial.begin(115200);
+      Serial.println("yay2");
    sdSPI.begin(SCK, MISO, MOSI, CS);
+     Serial.println("yay10");
     if(!SD.begin(CS, sdSPI)){
         Serial.println("Card Mount Failed");
         return;
     } else {
-      Serial.println("yay10");
+      Serial.println("yay11");
     }
 
     Serial.println("yay1");

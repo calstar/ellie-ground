@@ -70,6 +70,9 @@ float currReading1;
 float currReading2;
 float loopTime=10;
 
+float igniteTimeControl = 0;
+float igniteTime = 750;
+
 float servo1curr =0;
 float servo2curr=0;
 
@@ -127,7 +130,7 @@ float lc6=1;
 float lc7=1;
 float fm=2;
 //the following are only used in the oposite direction, they are included because it may be necessary for the structure to be the same in both directions
-int S1; int S2; int S1S2; int I;
+int S1; int S2; int S1S2; int I; int prev_S1S2 = 0; bool ignite = 0;
 
 // Define variables to store incoming commands, servos and igniter
 int incomingS1;
@@ -190,22 +193,32 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
       // digitalWrite(ONBOARD_LED,HIGH);
   S1 =Commands.S1;
   S2 = Commands.S2;
+  // Serial.print(Commands.S1);
+  // Serial.print(" ");
+  // Serial.println(Commands.S2);
   S1S2 = Commands.S1S2;
+  if (S1S2 == 99 & prev_S1S2 != 99) {
+    ignite = 1;
+    prev_S1S2 = S1S2;
+    Serial.println("yayayayayayayayayayay");
+  }
+  else if (S1S2 == 99 & prev_S1S2 == 99) {
+
+Serial.println("middle");
+  }
+  else {
+    ignite = 0;
+    Serial.println("nonononononononooon");
+    prev_S1S2 = S1S2;
+  }
   I = Commands.I;
-  Serial.println(I);
+  // Serial.println(I);
 
 
   // if (I) {
   //   fireSequence();
   // }
-  if (S1S2 == 99) {
-    digitalWrite(igniterPin, LOW);
-    digitalWrite(igniterPin2, LOW);
-    delay(750);
-    digitalWrite(igniterPin, HIGH);
-    digitalWrite(igniterPin2, HIGH);
 
-  }
 }
 
 void fireSequence() {
@@ -373,17 +386,49 @@ void loop() {
   //}
     servo1curr=S1;
     servo2curr=S2;
+
+// This portion of the code is written so that when the COM Board is in state 4, S1S2 is outputting 99, so the following if block will always run. Once the valves turn on, S1S2 will return to 0.
+// Since we are igniting before turning on servo valves there should not be any conflict.
+    if (S1S2 == 99) {
+      if (ignite == 1) {
+        igniteTimeControl = millis();
+        Serial.println("ignite =================================== 1");
+        ignite = 0;
+      }
+
+      if (millis() - igniteTimeControl <= igniteTime){
+        digitalWrite(igniterPin, LOW);
+        digitalWrite(igniterPin2, LOW);
+        Serial.println("ignite!");
+      } else {
+        Serial.println(millis() - igniteTimeControl);
+        digitalWrite(igniterPin, HIGH);
+        digitalWrite(igniterPin2, HIGH);
+        Serial.println("Not ignite!");
+
+      }
+    }
+    // else {
+    //   // Serial.print("im on high");
+    //   // Serial.print(" ");
+    //   // Serial.println(S1S2);
+    //   // if (millis()-igniteTimeControl)
+    //   digitalWrite(igniterPin, HIGH);
+    //   digitalWrite(igniterPin2, HIGH);
+    //   // digitalWrite(igniterPin, LOW);
+    //   // digitalWrite(igniterPin2, LOW);
+    // }
       // Serial.println(S1);
-      Serial.println(currentPosition1 - servo1curr);
+      // Serial.println(currentPosition1 - servo1curr);
     if (abs((currentPosition1 - servo1curr)) >= 2) {
       currentPosition1 = servo1curr;
-      Serial.println(S1);
+      // Serial.println(S1);
 
       servo1.write(servo1curr);
     }
     if (abs((currentPosition2 - servo2curr)) >= 2) {
       currentPosition2 = servo2curr;
-            Serial.println(S2);
+            // Serial.println(S2);
       servo2.write(servo2curr);
     }
     //servo1.write(servo1curr);

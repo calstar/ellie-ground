@@ -135,7 +135,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 
 void printLine(String string) {
   // a = 10;
-  // Serial.println(string);
+  Serial.println(string);
 }
 
 void setup() {
@@ -200,13 +200,14 @@ void loop() {
   // 2 = ACTUATE VALVES ON PRE_SET PARAMETERS (IF USING MATLAB) LED Blinking
   //     READY FOR SERVO VALVE ANGLE INPUTS (IN FORM angle1,angle2)
 
-Serial.println(state);
+// Serial.println(state);
   switch (state) {
     case 0:
 //      Serial.println("State 0");
       //Serial.println("IN CASE 0");
       Commands.S1 = servo1ClosedPosition;
       Commands.S2 = servo2ClosedPosition;
+      Commands.S1S2 = 0;
       //Serial.println("State 0");
 
       digitalWrite(LEDpin, LOW);
@@ -461,20 +462,21 @@ Serial.println(state);
     //Serial.println("State 5");
     // Serial.println(digitalRead(firePin));
       if (digitalRead(firePin)) {
-        Commands.I = true;
+        // Commands.I = true;
         Commands.S1 = servo1OpenPosition;
         Commands.S2 = servo2OpenPosition;
         // Serial.println(Commands.I);
         esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
-        Serial.print("We are here");
+        // Serial.print("We are here");
         if (result != ESP_OK) {
 
-          Serial.println("Sent with success");
-          // break;
+          // Serial.println("Sent with success");
+          break;
           }
         // Commands.I = false;
        Commands.S1 = servo1OpenPosition;
        Commands.S2 = servo2OpenPosition;
+
         state = 0;
         result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
         if (result != ESP_OK) {
@@ -485,8 +487,8 @@ Serial.println(state);
         float runningTime = millis();
         digitalWrite(servo1Open, HIGH);
         digitalWrite(servo2Open, HIGH);
-        while ((runningTime - now) <= 3000) {
-          runningTime = millis();
+        while ((now - runningTime) <= 3000) {
+          now = millis();
   message = "";
   message.concat(millis());
   message.concat(" ");
@@ -514,11 +516,12 @@ Serial.println(state);
   message.concat(" ");
   message.concat(Commands.S1S2);
   printLine(message);
-  result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+  // result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
 
         }
         digitalWrite(servo1Open, LOW);
         Commands.S1 = servo1ClosedPosition;
+
         result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
         if (result != ESP_OK) {
             break;
@@ -527,7 +530,7 @@ Serial.println(state);
         now = millis();
         runningTime = millis();
         while ((now- runningTime) <= 500) {
-          runningTime = millis();
+          now = millis();
           message = "";
           message.concat(millis());
           message.concat(" ");
