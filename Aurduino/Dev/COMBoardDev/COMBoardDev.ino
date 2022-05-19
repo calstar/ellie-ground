@@ -8,7 +8,7 @@
 
 int servo1ClosedPosition = 100;
 int servo1OpenPosition = 0;
-int servo2ClosedPosition = 130;
+int servo2ClosedPosition = 155;
 int servo2OpenPosition = 20;
 //EH VENT SEFRVO 1 =180
 
@@ -26,9 +26,9 @@ const int servo2Open = 14;//SET PIN NUMBER BASED ON SOLDERING//
 const int DAQIndicator = 25;//SET PIN NUMBER BASED ON SOLDERING//
 const int COMIndicator = 5;//SET PIN NUMBER BASED ON SOLDERING//
 
-
 String success;
 String message;
+int incomingMessageTime;
 int servo1_curr = servo1ClosedPosition;
 int servo2_curr = servo2ClosedPosition;
 float incomingS1 = 0;
@@ -62,10 +62,6 @@ float loopTime = 0;
 float receiveTimeDAQ = 0;
 float receiveTimeCOM = 0;
 
-const int delayOpenServoTime = 250;
-const int servoOnTime = 1500;
-const int delayCloseServoTime = 0;
-
 //for blinking LED during Data Collection
 int x = 1;
 unsigned long t1;
@@ -83,6 +79,7 @@ uint8_t broadcastAddress[] = {0x30, 0xC6, 0xF7, 0x2A, 0x53, 0x14};
 //Structure example to send data
 //Must match the receiver structure
 typedef struct struct_message {
+    int messageTime;
     short int pt1;
     short int pt2;
     short int pt3;
@@ -127,6 +124,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   incomingPT1 = incomingReadings.pt1;
      Serial.print(incomingPT1);
 
+  incomingMessageTime= incomingReadings.messageTime;
   incomingPT2 = incomingReadings.pt2;
   incomingPT3 = incomingReadings.pt3;
   incomingPT4 = incomingReadings.pt4;
@@ -138,6 +136,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   incomingS2 = incomingReadings.S2;
   IncomingqueueSize= incomingReadings.queueSize;
   digitalWrite(COMIndicator, HIGH);
+
   
   receiveTimeCOM = millis();
   // Serial.println("Data received");
@@ -479,17 +478,10 @@ void loop() {
     // Serial.println(digitalRead(firePin));
       if (digitalRead(firePin)) {
         // Commands.I = true;
+        Commands.S1 = servo1OpenPosition;
         Commands.S2 = servo2OpenPosition;
         // Serial.println(Commands.I);
         esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
-        float now = millis();
-        float runningTime = millis();
-        while (now - runningTime < delayOpenServoTime) {
-          now = millis();
-        }
-
-//            Commands.S1 = servo1OpenPosition;
-            
         // Serial.print("We are here");
         if (result != ESP_OK) {
 
@@ -498,7 +490,7 @@ void loop() {
           }
         // Commands.I = false;
        Commands.S1 = servo1OpenPosition;
-//       Commands.S2 = servo2OpenPosition;
+       Commands.S2 = servo2OpenPosition;
 
         state = 0;
         result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
@@ -506,11 +498,11 @@ void loop() {
             break;
           // Serial.println("Sent with success");
           }
-        now = millis();
-        runningTime = millis();
+        float now = millis();
+        float runningTime = millis();
         digitalWrite(servo1Open, HIGH);
         digitalWrite(servo2Open, HIGH);
-        while ((now - runningTime) <= servoOnTime) {
+        while ((now - runningTime) <= 3000) {
           now = millis();
   message = "";
   message.concat(millis());
@@ -541,25 +533,24 @@ void loop() {
   message.concat(" ");
   message.concat(IncomingqueueSize);
 
-  printLine(message);
+  //printLine(message);
   // result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
 
         }
-                digitalWrite(servo2Open, LOW);
-        Commands.S2 = servo2ClosedPosition;
-         result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
-        
-       
+        digitalWrite(servo1Open, LOW);
+        Commands.S1 = servo1ClosedPosition;
+
+        result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
         if (result != ESP_OK) {
             break;
-//          Serial.println("Sent with success");
+          Serial.println("Sent with success");
           }
         now = millis();
         runningTime = millis();
-        while ((now- runningTime) <= delayCloseServoTime) {
+        while ((now- runningTime) <= 500) {
           now = millis();
           message = "";
-          message.concat(millis());
+          message.concat(incomingMessageTime);
           message.concat(" ");
           message.concat(incomingPT1);
           message.concat(" ");
@@ -587,20 +578,16 @@ void loop() {
           message.concat(" ");
           message.concat(IncomingqueueSize);
 
-          printLine(message);
+         // printLine(message);
           now = millis();
         }
-
-         digitalWrite(servo1Open, LOW);
-        Commands.S1 = servo1ClosedPosition;
-
-        result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
-   
+        Commands.S2 = servo2ClosedPosition;
+         result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
         if (result != ESP_OK) {
             break;
           // Serial.println("Sent with success");
           }
-//        digitalWrite(servo2Open, LOW);
+        digitalWrite(servo2Open, LOW);
       }
       if (digitalRead(buttonpin1)) {
         state = 0;
@@ -615,8 +602,18 @@ void loop() {
     delay(30);
   }
 
-  message = "";
-  message.concat(millis());
+
+
+  esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+
+  RecieveDataPrint();
+
+
+}
+
+void RecieveDataPrint() {
+    message = "";
+  message.concat(incomingMessageTime);
   message.concat(" ");
   message.concat(incomingPT1);
   message.concat(" ");
@@ -645,9 +642,4 @@ void loop() {
   message.concat(IncomingqueueSize);
 
   printLine(message);
-
-  esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
-
-  
-
 }

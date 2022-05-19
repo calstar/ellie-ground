@@ -112,7 +112,7 @@ int loopStartTime=0;
 int MeasurementDelay=1000; //Delay between data measurment periods in the idle loop state in m
 int idleMeasurementDelay=1000;
 int pollingMeasurementDelay=200;
-int hotfireMeasurementDelay=50;
+int hotfireMeasurementDelay=2;
 
 int lastMeasurementTime=-1;
 short int queueLength=0;
@@ -150,6 +150,7 @@ float timeDiff;
 String success;
 
 // Define variables to store readings to be sent
+int messageTime=10;
 short int pt1val=1; 
 short int pt2val=1; 
 short int pt3val=1; 
@@ -163,6 +164,7 @@ short int fmval=2;
 //Structure example to send data
 //Must match the receiver structure
 typedef struct struct_message {
+    int messageTime;
     short int pt1val; short int pt2val; short int pt3val; short int pt4val; short int pt5val; short int pt6val; short int pt7val;
     short int fmval; 
 
@@ -198,15 +200,17 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 // Callback when data is received
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&Commands, incomingData, sizeof(Commands));
-   Serial.print("Bytes received: ");
-   Serial.print(len);
+ //  Serial.print("Bytes received: ");
+ //  Serial.print(len);
       // digitalWrite(ONBOARD_LED,HIGH);
   S1 =Commands.S1;
   S2 = Commands.S2;
   // Serial.print(Commands.S1);
   // Serial.print(" ");
   // Serial.println(Commands.S2);
-  commandedState = Commands.commandedState;
+
+ //UNCOMMENT THIS LATER!!!!!!!!!!!!!!!! 
+ // commandedState = Commands.commandedState;
 
 }
 
@@ -409,7 +413,6 @@ void ignition() {
   dataCheck();
   
         igniteTimeControl = millis();
-        Serial.println("ignite =================================== 1");
         ignite = 0;
  
 
@@ -472,7 +475,7 @@ void hotfire4() {
 void addReadingsToQueue() {
   getReadings();
   queueLength+=1;
-
+  ReadingsQueue[queueLength].messageTime=loopStartTime; 
   ReadingsQueue[queueLength].pt1val=pt1val; 
   ReadingsQueue[queueLength].pt2val=pt2val;
   ReadingsQueue[queueLength].pt3val=pt3val;
@@ -545,8 +548,10 @@ void printSensorReadings() {
  serialMessage.concat(pt6val);
  serialMessage.concat(" ");
  serialMessage.concat(pt7val);
- serialMessage.concat(" ");
+ serialMessage.concat(" Queue Length: ");
  serialMessage.concat(queueLength);
+  serialMessage.concat(" Current State: ");
+ serialMessage.concat(state);
  Serial.println(serialMessage);
 
 }
@@ -560,6 +565,7 @@ void checkQueue() {
 
 void dataSend() {
    // Set values to send
+  Readings.messageTime=ReadingsQueue[queueLength].messageTime;
   Readings.pt1val = ReadingsQueue[queueLength].pt1val; 
   Readings.pt2val = ReadingsQueue[queueLength].pt2val;
   Readings.pt3val = ReadingsQueue[queueLength].pt3val;
