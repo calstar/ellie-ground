@@ -32,14 +32,15 @@ int servo1_curr = servo1ClosedPosition;
 int servo2_curr = servo2ClosedPosition;
 float incomingS1 = 0;
 float incomingS2 = 0;
-float incomingPT1 = 0;
-float incomingPT2 = 0;
-float incomingPT3 = 0;
-float incomingPT4 = 0;
-float incomingFM = 0;
-float incomingLC1 = 0;
-float incomingLC2 = 0;
-float incomingLC3 = 0;
+short int incomingPT1 = 4;
+short int incomingPT2 = 4;
+short int incomingPT3 = 4;
+short int incomingPT4 = 4;
+short int incomingFM = 0;
+short int incomingLC1 = 0;
+short int incomingLC2 = 0;
+short int incomingLC3 = 0;
+short int IncomingqueueSize=0;
 esp_now_peer_info_t peerInfo;
 bool pressed1 = false;
 bool pressed2 = false;
@@ -73,22 +74,23 @@ int state = 0;
 //NON BUSTED DAQ {0x7C, 0x9E, 0xBD, 0xD8, 0xFC, 0x14}
 // uint8_t broadcastAddress[] = {0x7C, 0x9E, 0xBD, 0xD8, 0xFC, 0x14}; //change to new Mac Address
 
-uint8_t broadcastAddress[] = {0x30, 0xC6, 0xF7, 0x2A, 0x28, 0x04};
+uint8_t broadcastAddress[] = {0x30, 0xC6, 0xF7, 0x2A, 0x53, 0x14};
 //Structure example to send data
 //Must match the receiver structure
 typedef struct struct_message {
-    float pt1;
-    float pt2;
-    float pt3;
-    float pt4;
-    float lc1;
-    float lc2;
-    float lc3;
-    float fm;
-    int S1;
-    int S2;
-    int S1S2;
-    boolean I;
+    short int pt1;
+    short int pt2;
+    short int pt3;
+    short int pt4;
+    short int lc1;
+    short int lc2;
+    short int lc3;
+    short int fm;
+    unsigned char S1;
+    unsigned char S2;
+    char S1S2;
+    unsigned char I;
+    short int queueSize;
 } struct_message;
 
 // Create a struct_message called Readings to recieve sensor readings remotely
@@ -115,9 +117,11 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&incomingReadings, incomingData, sizeof(incomingReadings));
- // Serial.print("Bytes received: ");
-  // Serial.println(len);
+ Serial.print("Bytes received: ");
+   Serial.println(len);
   incomingPT1 = incomingReadings.pt1;
+     Serial.print(incomingPT1);
+
   incomingPT2 = incomingReadings.pt2;
   incomingPT3 = incomingReadings.pt3;
   incomingPT4 = incomingReadings.pt4;
@@ -127,7 +131,9 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   incomingLC3 = incomingReadings.lc3;
   incomingS1 = incomingReadings.S1;
   incomingS2 = incomingReadings.S2;
+  IncomingqueueSize= incomingReadings.queueSize;
   digitalWrite(COMIndicator, HIGH);
+  
   receiveTimeCOM = millis();
   // Serial.println("Data received");
 
@@ -187,6 +193,9 @@ void setup() {
   }
   // Register for a callback function that will be called when data is received
   esp_now_register_recv_cb(OnDataRecv);
+
+    Serial.println(WiFi.macAddress());
+
 
 }
 
@@ -325,7 +334,9 @@ void loop() {
             message.concat(incomingLC1);
             message.concat(" ");
             message.concat(incomingFM);
-
+  message.concat(" ");
+  message.concat(IncomingqueueSize);
+  
             printLine(message);
 
             //Serial.println("psi / ");
@@ -515,6 +526,9 @@ void loop() {
   message.concat(Commands.I);
   message.concat(" ");
   message.concat(Commands.S1S2);
+  message.concat(" ");
+  message.concat(IncomingqueueSize);
+
   printLine(message);
   // result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
 
@@ -557,6 +571,8 @@ void loop() {
           message.concat(Commands.I);
           message.concat(" ");
           message.concat(Commands.S1S2);
+          message.concat(" ");
+          message.concat(IncomingqueueSize);
 
           printLine(message);
           now = millis();
@@ -608,10 +624,13 @@ void loop() {
   message.concat(Commands.I);
   message.concat(" ");
   message.concat(Commands.S1S2);
+  message.concat(" ");
+  message.concat(IncomingqueueSize);
 
   printLine(message);
 
   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
 
+  
 
 }
