@@ -31,7 +31,7 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 
 int servo1ClosedPosition = 100;
 int servo1OpenPosition = 0;
-int servo2ClosedPosition = 155;
+int servo2ClosedPosition = 130;
 int servo2OpenPosition = 20;
 
 float currentPosition1 = float('inf');
@@ -200,15 +200,15 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   if (S1S2 == 99 & prev_S1S2 != 99) {
     ignite = 1;
     prev_S1S2 = S1S2;
-    Serial.println("yayayayayayayayayayay");
+//    Serial.println("yayayayayayayayayayay");
   }
   else if (S1S2 == 99 & prev_S1S2 == 99) {
 
-Serial.println("middle");
+//Serial.println("middle");
   }
   else {
     ignite = 0;
-    Serial.println("nonononononononooon");
+//    Serial.println("nonononononononooon");
     prev_S1S2 = S1S2;
   }
   I = Commands.I;
@@ -422,13 +422,13 @@ void loop() {
       // Serial.println(currentPosition1 - servo1curr);
     if (abs((currentPosition1 - servo1curr)) >= 2) {
       currentPosition1 = servo1curr;
-      // Serial.println(S1);
+       Serial.println(S1);
 
       servo1.write(servo1curr);
     }
     if (abs((currentPosition2 - servo2curr)) >= 2) {
       currentPosition2 = servo2curr;
-            // Serial.println(S2);
+             Serial.println(S2);
       servo2.write(servo2curr);
     }
     //servo1.write(servo1curr);
@@ -528,7 +528,3 @@ void getReadings(){
  serialMessage.concat(" ");
  serialMessage.concat(lc7);
  // Serial.println(serialMessage);
-
-
-
-}
