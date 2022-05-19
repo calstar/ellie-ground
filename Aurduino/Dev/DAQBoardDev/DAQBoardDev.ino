@@ -6,38 +6,38 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 4. Send PWM signals to servos
 */
 
-#include <esp_now.h> 
-#include <WiFi.h> 
-#include <ESP32Servo.h> 
-#include <Wire.h> 
-#include <Arduino.h> 
+#include <esp_now.h>
+#include <WiFi.h>
+#include <ESP32Servo.h>
+#include <Wire.h>
+#include <Arduino.h>
 #include "HX711.h"
 
 
-#define FMPIN 4 //Flowmeter pin 
-#define PTDOUT1 32 
+#define FMPIN 4 //Flowmeter pin
+#define PTDOUT1 32
 #define CLKPT1 5
-#define PTDOUT2 15 
+#define PTDOUT2 15
 #define CLKPT2 2
-#define PTDOUT3 22 
+#define PTDOUT3 22
 #define CLKPT3 23
-#define PTDOUT4 19 
+#define PTDOUT4 19
 #define CLKPT4 21
-#define PTDOUT5 35 
+#define PTDOUT5 35
 #define CLKPT5 25
-#define PTDOUT6 34 
+#define PTDOUT6 34
 #define CLKPT6 26
-#define PTDOUT7 39 
+#define PTDOUT7 39
 #define CLKPT7 33
 
-#define SERVOPIN1 13 
+#define SERVOPIN1 13
 #define SERVOPIN2 12
 #define RELAYPIN1 14
 #define RELAYPIN2 27
 
 #define servo1ClosedPosition 100
 #define servo1OpenPosition 0
-#define servo2ClosedPosition 155
+#define servo2ClosedPosition 130
 #define servo2OpenPosition 20
 
 float currentPosition1 = float('inf');
@@ -59,7 +59,7 @@ short loopTime=10;
 
 
 unsigned long igniteTimeControl = 0;
-unsigned long igniteTime =  10;
+unsigned long igniteTime =  250;
 
 float servo1curr =0;
 float servo2curr=0;
@@ -78,16 +78,16 @@ int readVoltage;
 float convertedVoltage;
 
 //Initialize the PT and LC sensor objects which use the HX711 breakout board
-HX711 scale1; 
-HX711 scale2; 
-HX711 scale3; 
-HX711 scale4; 
-HX711 scale5; 
-HX711 scale6; 
+HX711 scale1;
+HX711 scale2;
+HX711 scale3;
+HX711 scale4;
+HX711 scale5;
+HX711 scale6;
 HX711 scale7;
 
 //Initialize the servo objects
-Servo servo1; 
+Servo servo1;
 Servo servo2;
 
 ///////////////
@@ -96,11 +96,12 @@ Servo servo2;
 // REPLACE WITH THE MAC Address of your receiver
 
 //OLD COM BOARD {0xC4, 0xDD, 0x57, 0x9E, 0x91, 0x6C}
-//COM BOARD {0x7C, 0x9E, 0xBD, 0xD7, 0x2B, 0xE8}
+// COM BOARD {0x7C, 0x9E, 0xBD, 0xD7, 0x2B, 0xE8}
 //HEADERLESS BOARD {0x7C, 0x87, 0xCE, 0xF0 0x69, 0xAC}
 //NEWEST COM BOARD IN EVA {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC}
 // uint8_t broadcastAddress[] = {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC};
-uint8_t broadcastAddress[] = {0x7C, 0x87, 0xCE, 0xF0, 0x69, 0xAC};
+uint8_t broadcastAddress[] = {0x7C, 0x9E, 0xBD, 0xD7, 0x2B, 0xE8};
+// {0x7C, 0x87, 0xCE, 0xF0, 0x69, 0xAC};
 
 
 int count=3;
@@ -116,7 +117,7 @@ int hotfireMeasurementDelay=2;
 
 int lastMeasurementTime=-1;
 short int queueLength=0;
-int commandedState=0;
+int commandedState;
 
 int hotfireStage1Time=500;
 int hotfireStage2Time=1000;
@@ -128,17 +129,19 @@ int hotfireTimer=0;
 
 
 //the following are only used in the oposite direction, they are included because it may be necessary for the structure to be the same in both directions
-int S1; 
-int S2; 
-int S1S2; 
-int I; 
-int prev_S1S2 = 0; 
+int S1;
+int S2;
+// int S1S2;
+int I;
+
+// int commandedState;
+// int prev_S1S2 = 0;
 bool ignite = 0;
 
 // Define variables to store incoming commands, servos and igniter
 int incomingS1;
 int incomingS2;
-int incomingS1S2;
+// int incomingS1S2;
 bool incomingI;
 
 
@@ -151,13 +154,13 @@ String success;
 
 // Define variables to store readings to be sent
 int messageTime=10;
-short int pt1val=1; 
-short int pt2val=1; 
-short int pt3val=1; 
-short int pt4val=1; 
-short int pt5val=1; 
-short int pt6val=1; 
-short int pt7val=1; 
+short int pt1val=1;
+short int pt2val=1;
+short int pt3val=1;
+short int pt4val=1;
+short int pt5val=1;
+short int pt6val=1;
+short int pt7val=1;
 short int fmval=2;
 
 
@@ -166,7 +169,7 @@ short int fmval=2;
 typedef struct struct_message {
     int messageTime;
     short int pt1val; short int pt2val; short int pt3val; short int pt4val; short int pt5val; short int pt6val; short int pt7val;
-    short int fmval; 
+    short int fmval;
 
     unsigned char S1; unsigned char S2; int commandedState=1; unsigned char I; short int queueSize;
 } struct_message;
@@ -203,14 +206,16 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
  //  Serial.print("Bytes received: ");
  //  Serial.print(len);
       // digitalWrite(ONBOARD_LED,HIGH);
+
   S1 =Commands.S1;
   S2 = Commands.S2;
-  // Serial.print(Commands.S1);
-  // Serial.print(" ");
-  // Serial.println(Commands.S2);
+  Serial.print(Commands.S1);
+  Serial.print(" ");
+  Serial.println(Commands.S2);
 
- //UNCOMMENT THIS LATER!!!!!!!!!!!!!!!! 
- // commandedState = Commands.commandedState;
+ // UNCOMMENT THIS LATER!!!!!!!!!!!!!!!!
+ commandedState = Commands.commandedState;
+ // Serial.println(commandedState);
 
 }
 
@@ -298,87 +303,87 @@ loopStartTime=millis();
 SerialRead();
 // State selector
 switch (state) {
-  
+
   case (-1): //start signle loop
 
   state=0;
   break;
-  
+
   case (0): //Default/idle
       idle();
-      
+
       if (commandedState==1) state=1; MeasurementDelay=pollingMeasurementDelay;
-      if (commandedState==2) state=2; MeasurementDelay=pollingMeasurementDelay;  
-      if (commandedState==3) state=3; MeasurementDelay=pollingMeasurementDelay;  
+      if (commandedState==2) state=2; MeasurementDelay=pollingMeasurementDelay;
+      if (commandedState==3) state=3; MeasurementDelay=pollingMeasurementDelay;
     break;
-    
-  case (1): //Polling 
+
+  case (1): //Polling
       polling();
 
 
 
       if (commandedState==0) state=0; MeasurementDelay=idleMeasurementDelay;
-      if (commandedState==2) state=2; MeasurementDelay=pollingMeasurementDelay;  
-      if (commandedState==3) state=3; MeasurementDelay=pollingMeasurementDelay;  
-    
+      if (commandedState==2) state=2; MeasurementDelay=pollingMeasurementDelay;
+      if (commandedState==3) state=3; MeasurementDelay=pollingMeasurementDelay;
+
     break;
 
-  case (2): //Manual Servo Control 
+  case (2): //Manual Servo Control
 
 
  manualControl();
       if (commandedState==0) state=0; MeasurementDelay=idleMeasurementDelay;
       if (commandedState==1) state=1; MeasurementDelay=pollingMeasurementDelay;
-      if (commandedState==3) state=3; MeasurementDelay=pollingMeasurementDelay;  
+      if (commandedState==3) state=3; MeasurementDelay=pollingMeasurementDelay;
     break;
-    
-  case (3): //Armed 
+
+  case (3): //Armed
 
 armed();
 
       if (commandedState==0) state=0; MeasurementDelay=idleMeasurementDelay;
-      if (commandedState==4) state=4; 
+      if (commandedState==4) state=4;
     break;
 
 
   case (4): //Ignition
 
     ignition();
-
+    if (commandedState==0) state=0; MeasurementDelay=idleMeasurementDelay;
     if (commandedState==5) state=5; hotfireTimer=millis(); MeasurementDelay=hotfireMeasurementDelay;
 
-  
+
     break;
-  case (5): //Hotfire stage 1 
+  case (5): //Hotfire stage 1
 
     hotfire1();
 
     if ((loopStartTime-hotfireTimer) > hotfireStage1Time) state=6;
 
-      
+
     break;
 
 
-  case (6): //Hotfire stage 2 
+  case (6): //Hotfire stage 2
 
     hotfire2();
   if ((loopStartTime-hotfireTimer) > hotfireStage2Time) state=7;
-  
+
     break;
 
 
-  case (7): //Hotfire stage 3 
+  case (7): //Hotfire stage 3
 
     hotfire3();
   if ((loopStartTime-hotfireTimer) > hotfireStage3Time) state=8;
-  
+
     break;
 
   case (8): //Hotfire stage 4
 
     hotfire4();
   if ((loopStartTime-hotfireTimer) > hotfireStage4Time) state=0; MeasurementDelay=idleMeasurementDelay;
-  
+
     break;
 
 
@@ -411,10 +416,10 @@ void armed() {
 void ignition() {
 
   dataCheck();
-  
+
         igniteTimeControl = millis();
         ignite = 0;
- 
+
 
       if (millis() - igniteTimeControl <= igniteTime){
         digitalWrite(RELAYPIN1, LOW);
@@ -426,8 +431,8 @@ void ignition() {
         digitalWrite(RELAYPIN2, HIGH);
         Serial.println("Not ignite!");
 
-    
-  
+
+
 }
 }
 
@@ -440,43 +445,43 @@ void servoWrite() {
 
 void hotfire1() {
 dataCheck();
-  
+
   servo1curr=servo1ClosedPosition;
   servo2curr=servo2OpenPosition;
   servoWrite();
-  
+
 }
 void hotfire2() {
   dataCheck();
-  
+
   servo1curr=servo1OpenPosition;
   servo2curr=servo2OpenPosition;
-  servoWrite();  
+  servoWrite();
 }
 void hotfire3() {
   dataCheck();
-  
+
   servo1curr=servo1OpenPosition;
   servo2curr=servo2ClosedPosition;
-  servoWrite();  
+  servoWrite();
 }
 void hotfire4() {
   dataCheck();
-  
+
   servo1curr=servo1ClosedPosition;
   servo2curr=servo2ClosedPosition;
-  servoWrite();  
+  servoWrite();
 }
 
-  
+
 
 
 
 void addReadingsToQueue() {
   getReadings();
   queueLength+=1;
-  ReadingsQueue[queueLength].messageTime=loopStartTime; 
-  ReadingsQueue[queueLength].pt1val=pt1val; 
+  ReadingsQueue[queueLength].messageTime=loopStartTime;
+  ReadingsQueue[queueLength].pt1val=pt1val;
   ReadingsQueue[queueLength].pt2val=pt2val;
   ReadingsQueue[queueLength].pt3val=pt3val;
   ReadingsQueue[queueLength].pt4val=pt4val;
@@ -485,7 +490,7 @@ void addReadingsToQueue() {
   ReadingsQueue[queueLength].pt7val=pt7val;
   ReadingsQueue[queueLength].fmval=fmval;
   ReadingsQueue[queueLength].queueSize=queueLength;
-  
+
 }
 
 
@@ -493,9 +498,9 @@ void addReadingsToQueue() {
 void getReadings(){
 
  //pt1val = scale1.read(); pt2val = scale2.read(); pt3val = scale3.read(); pt4val = scale4.read(); pt5val = scale5.read(); pt6val = scale6.read(); pt7val = scale7.read();
-   
 
-    
+
+
    // flowMeterReadings();
     printSensorReadings();
     lastMeasurementTime=loopStartTime;
@@ -511,7 +516,7 @@ void getReadings(){
 void flowMeterReadings() {
   currentMillis = millis();
   fmcount = 0;
-   
+
    while (millis() - currentMillis < goalTime) {
     servo1.write(servo1curr);
     servo2.write(servo2curr);
@@ -566,7 +571,7 @@ void checkQueue() {
 void dataSend() {
    // Set values to send
   Readings.messageTime=ReadingsQueue[queueLength].messageTime;
-  Readings.pt1val = ReadingsQueue[queueLength].pt1val; 
+  Readings.pt1val = ReadingsQueue[queueLength].pt1val;
   Readings.pt2val = ReadingsQueue[queueLength].pt2val;
   Readings.pt3val = ReadingsQueue[queueLength].pt3val;
   Readings.pt4val = ReadingsQueue[queueLength].pt4val;
