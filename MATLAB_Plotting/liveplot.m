@@ -22,6 +22,8 @@ plotTime = 0.2;
 % observation time window
 observationInterval = 5;
 
+observationIntervalMillis = observationInterval*1000;
+
 % time conversion factor
 % timeFactor = 24 * 60 * 60;
 
@@ -85,9 +87,9 @@ ax7.YColor = [1 0 0];
 
 
 timeControl = now();
-timeControlContinuous = now();
+% timeControlContinuous = now();
 idx = 0;
-idxDumpTime = 0;
+idxSet = 0;
 
 % for storing data sequentially in data1 and data2
 i = 1;
@@ -208,13 +210,20 @@ while(1)
             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
 
         else % plot only the latest 5 seconds of data
-            if timeInterval == observationInterval
-             idx =  floor(length(timeInterval));
+%             timeInterval(i-1)-timeInterval(1) < observationInterval
+%             timeInterval(i)
+%             timeInterval(i)-timeInterval(1) >= observationInterval
+            if idxSet == 0
+             idx =  floor(length(timeInterval))-1;
+             idxSet = 1;
 
+%                 idx
 %             idxDumpTime = 1/(floor(length(timeInterval)/observationalInterval))
             end
+           
 
 %             if (now() - timeControlContinuous) * 24 * 60 * 60 >= idxDumpTime
+%             idx
 
             axes(ax1);
             plot(timeInterval(end-idx:end),data1(end-idx:end));
