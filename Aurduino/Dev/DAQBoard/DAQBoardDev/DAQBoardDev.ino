@@ -309,6 +309,7 @@ switch (state) {
     break;
     
   case (1): //Polling 
+      polling();
 
 
 
@@ -321,7 +322,7 @@ switch (state) {
   case (2): //Manual Servo Control 
 
 
-
+ manualControl();
       if (commandedState==0) state=0; MeasurementDelay=idleMeasurementDelay;
       if (commandedState==1) state=1; MeasurementDelay=pollingMeasurementDelay;
       if (commandedState==3) state=3; MeasurementDelay=pollingMeasurementDelay;  
@@ -329,7 +330,7 @@ switch (state) {
     
   case (3): //Armed 
 
-
+armed();
 
       if (commandedState==0) state=0; MeasurementDelay=idleMeasurementDelay;
       if (commandedState==4) state=4; 
