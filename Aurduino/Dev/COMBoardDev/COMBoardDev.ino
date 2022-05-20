@@ -19,8 +19,8 @@ const int buttonpin2 = 17;
 const int igniterIndicator = 16;
 const int firePin = 21; //SET PIN NUMBER BUTTON
 
-const int pin6 = 4;
-const int LEDpin = 23;
+const int state2Matlabindicator = 4; // state 2 light
+const int armedIndicator = 23; // armed indicator
 const int servo1Open = 22;//SET PIN NUMBER BASED ON SOLDERING//
 const int servo2Open = 14;//SET PIN NUMBER BASED ON SOLDERING//
 const int DAQIndicator = 25;//SET PIN NUMBER BASED ON SOLDERING//
@@ -41,11 +41,14 @@ short int incomingFM = 0;
 short int incomingLC1 = 0;
 short int incomingLC2 = 0;
 short int incomingLC3 = 0;
+short int incomingI = 0;
+short int incomingDAQstate = 0;
 short int IncomingqueueSize=0;
 esp_now_peer_info_t peerInfo;
 bool pressed1 = false;
 bool pressed2 = false;
 bool pressed3 = false;
+int commandstate = 0;
 
 // SET FOR ACTIVE MODE //
 bool hotfire = true;
@@ -93,6 +96,7 @@ typedef struct struct_message {
     unsigned char S1;
     unsigned char S2;
         int commandedState = 0;
+        int DAQstate=0;
     // char S1S2;
     unsigned char I;
     short int queueSize;
@@ -111,6 +115,7 @@ esp_err_t result;
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
  // Serial.print("\r\nLast Packet Send Status:\t");
  // Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+
   if (status == 0){
     success = "Delivery Success :)";
     digitalWrite(DAQIndicator, HIGH);
@@ -120,18 +125,18 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
     success = "Delivery Fail :(";
     digitalWrite(DAQIndicator, LOW);
   }
-  Serial.print(Commands.S1);
-  Serial.print(" ");
-  Serial.println(Commands.S2);
+  // Serial.print(Commands.S1);
+  // Serial.print(" ");
+  // Serial.println(Commands.S2);
 
 }
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&incomingReadings, incomingData, sizeof(incomingReadings));
- Serial.print("Bytes received: ");
-   Serial.println(len);
+ // Serial.print("Bytes received: ");
+   // Serial.println(len);
   incomingPT1 = incomingReadings.pt1;
-     Serial.print(incomingPT1);
+     // Serial.print(incomingPT1);
 
   incomingMessageTime= incomingReadings.messageTime;
   incomingPT2 = incomingReadings.pt2;
@@ -144,6 +149,8 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   incomingS1 = incomingReadings.S1;
   incomingS2 = incomingReadings.S2;
   IncomingqueueSize= incomingReadings.queueSize;
+  incomingI = incomingReadings.I;
+  incomingDAQstate = incomingReadings.DAQstate;
   digitalWrite(COMIndicator, HIGH);
 
 
@@ -152,9 +159,36 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 
 }
 
-void printLine(String string) {
-  // a = 10;
-  // Serial.println(string);
+void printLine() {
+  message = "";
+  message.concat(millis());
+  message.concat(" ");
+  message.concat(incomingPT1);
+  message.concat(" ");
+  message.concat(incomingPT2);
+  message.concat(" ");
+  message.concat(incomingPT3);
+  message.concat(" ");
+  message.concat(incomingPT4);
+  message.concat(" ");
+  message.concat(incomingLC1);
+  message.concat(" ");
+  message.concat(incomingLC2);
+  message.concat(" ");
+  message.concat(incomingLC3);
+  message.concat(" ");
+  message.concat(incomingFM);
+  message.concat(" ");
+  message.concat(Commands.commandedState);
+  message.concat(" ");
+  message.concat(Commands.S1);
+  message.concat(" ");
+  message.concat(Commands.S2);
+  message.concat(" ");
+  message.concat(Commands.I);
+  message.concat(" ");
+  message.concat(IncomingqueueSize);
+  // Serial.println(message);
 }
 
 void setup() {
@@ -167,19 +201,19 @@ void setup() {
   pinMode(igniterIndicator,INPUT);
   pinMode(firePin, INPUT);
 
-  pinMode(LEDpin, OUTPUT);
+  pinMode(armedIndicator, OUTPUT);
   pinMode(servo1Open, OUTPUT);
   pinMode(servo2Open, OUTPUT);
   pinMode(DAQIndicator, OUTPUT);
   pinMode(COMIndicator, OUTPUT);
-  pinMode(pin6, OUTPUT);
+  pinMode(state2Matlabindicator, OUTPUT);
 
-  digitalWrite(LEDpin,LOW);
+  digitalWrite(armedIndicator,LOW);
   digitalWrite(servo1Open, LOW);
   digitalWrite(servo2Open, LOW);
   digitalWrite(DAQIndicator, LOW);
   digitalWrite(COMIndicator, LOW);
-  digitalWrite(pin6, LOW);
+  digitalWrite(state2Matlabindicator, LOW);
 
 
   //set device as WiFi station
@@ -223,6 +257,12 @@ void loop() {
   //     READY FOR SERVO VALVE ANGLE INPUTS (IN FORM angle1,angle2)
 
 // Serial.println(state);
+
+if (incomingS1 == servo1OpenPosition) digitalWrite(servo1Open,HIGH); else digitalWrite(servo1Open,LOW);
+if (incomingS2 == servo2OpenPosition) digitalWrite(servo2Open,HIGH); else digitalWrite(servo2Open,LOW);
+if (incomingI == 1) digitalWrite(COMIndicator,HIGH);digitalWrite(DAQIndicator,HIGH);
+
+
   switch (state) {
     case 0:
 //      Serial.println("State 0");
@@ -231,7 +271,7 @@ void loop() {
       Commands.S2 = servo2ClosedPosition;
       // Commands.S1S2 = 0;
       Commands.commandedState = 0;
-      Serial.println(Commands.commandedState);
+      // Serial.println(Commands.commandedState);
       result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
       if (result != ESP_OK) {
         break;
@@ -240,11 +280,12 @@ void loop() {
 
       //Serial.println("State 0");
 
-      digitalWrite(LEDpin, LOW);
-      digitalWrite(pin6, LOW);
+      digitalWrite(armedIndicator, LOW);
+      digitalWrite(state2Matlabindicator, LOW);
       //digitalWrite(servo1Open, HIGH);
       //digitalWrite(servo2Open, HIGH);
       pressed1 = digitalRead(buttonpin1);
+
       currTime = millis();
       if (pressed1 && ((currTime - button1Time) > 1000)) {
         state = 1;
@@ -259,9 +300,10 @@ void loop() {
         digitalWrite(COMIndicator, LOW);
       }
       break;
+
     case 1:
     Commands.commandedState = 1;
-    Serial.println(Commands.commandedState);
+    // Serial.println(Commands.commandedState);
     result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
     if (result != ESP_OK) {
       break;
@@ -269,20 +311,14 @@ void loop() {
     }
       //Serial.println("State 1");
       //Serial.println("IN CASE 1");
-      digitalWrite(LEDpin, HIGH);
+
       //Serial.println("State 1");
       pressed2 = digitalRead(buttonpin2);
       pressed3 = digitalRead(buttonpin1);
       currTime = millis();
 
       if (pressed2) {
-        if (hotfire) {
-          state = 4;
-          // Serial.println("State 4");
-        } else {
-          state = 2;
-          // Serial.println("State 2");
-      }
+        if (hotfire) state = 4; else state = 2;
         // Serial.println("State 2");
       }
       if (pressed3 && ((currTime - button1Time) > 1000)) {
@@ -313,7 +349,7 @@ void loop() {
         servo1_curr = 90 - servo1_curr;
         servo2_curr = 90 - servo2_curr;
         pressTime = millis();
-        digitalWrite(pin6, HIGH);
+        digitalWrite(state2Matlabindicator, HIGH);
 
         while (millis() - pressTime <= 5000) {
 
@@ -321,7 +357,7 @@ void loop() {
           if (t2-t1 >=100){
               x=1-x;
               t1=millis();
-              digitalWrite(LEDpin,x);
+              digitalWrite(armedIndicator,x);
               // Serial.print(t1);
             }
 
@@ -348,33 +384,9 @@ void loop() {
             }
             //else {
               //Serial.println("Error sending the data");
-            //}
-            loopTime = millis();
-           // Serial.print(loopTime);
-           // Serial.print(" ");
-            // Print the flow rate for this second in litres / minute
-            // Serial.print("Flow rate: ");
-            //Serial.print(incomingFM);  // Print the integer part of the variable
-            //Serial.print("L/min");
-            //Serial.print(" ");       // Print tab space
 
-           //PT TEST
             //Serial.print("Output Pressures: ");
-            message = "";
-            message.concat(incomingPT1);
-            message.concat(" ");
-            message.concat(incomingPT2);
-            message.concat(" ");
-            message.concat(incomingPT3);
-            message.concat(" ");
-            message.concat(incomingPT4);
-            message.concat(" ");
-            message.concat(incomingLC1);
-            message.concat(" ");
-            message.concat(incomingFM);
-            message.concat(" ");
-            message.concat(IncomingqueueSize);
-            printLine(message);
+            printLine();
 
             //Serial.println("psi / ");
 
@@ -411,7 +423,7 @@ void loop() {
       } else {
         while (!Serial.available()) {
           pressed3 = digitalRead(buttonpin1);
-          Serial.print(pressed3);
+          // Serial.print(pressed3);
           delay(5);
           if ((millis() - receiveTimeDAQ) > 50) {
             digitalWrite(DAQIndicator, LOW);
@@ -489,14 +501,24 @@ void loop() {
       break;
 
     case 4:
+
       // Serial.println("State 4");
-      Commands.commandedState = 3;
+      if (incomingReadings.DAQstate == 4 || commandstate == 4){
+        Commands.commandedState = 4;
+        Serial.println("case 3 command state 3");
+
+
+      } else {
+          Commands.commandedState = 3;
+          Serial.println("case 4 command state 3");
+      }
+
       result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
       if (result != ESP_OK) {
         break;
       // Serial.println("Sent with success");
       }
-      digitalWrite(pin6, HIGH);
+      digitalWrite(state2Matlabindicator, HIGH);
       if (digitalRead(buttonpin1)) {
         state = 0;
         }
@@ -511,151 +533,58 @@ void loop() {
         Commands.S1 = servo1ClosedPosition;
         Commands.S2 = servo2ClosedPosition;
         Commands.commandedState = 4;
-        digitalWrite(COMIndicator,HIGH);
-        digitalWrite(DAQIndicator,HIGH);
-        Serial.print("dfdfdfdfdfd");
+        commandstate = 4;
+        state = 5;
         result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
         if (result != ESP_OK) {
           break;
         // Serial.println("Sent with success");
         }
 
-        state = 5;
+
       }
 
       break;
     case 5:
-    Commands.commandedState = 4;
-    result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
-    if (result != ESP_OK) {
-      break;
-    // Serial.println("Sent with success");
-    }
-    //Serial.println("State 5");
-    //Serial.println("State 5");
-    // Serial.println(digitalRead(firePin));
-      if (digitalRead(firePin)) {
-        // Commands.I = true;
-        Commands.S1 = servo1OpenPosition;
-        Commands.S2 = servo2OpenPosition;
+    Serial.println(commandstate);
+    if (incomingReadings.DAQstate == 5 || commandstate == 5) {
         Commands.commandedState = 5;
-        // Serial.println(Commands.I);
+
+    } else  {
+        Commands.commandedState = 4;
+        Serial.print("qqqqsdfsfsjhfsifasdufasifubhawifawdifasuhifusfa");
+      }
+
+    // } else {
+    //     Serial.print("fdfdfdffdfdfdffdfdfdffdfdfdffdfdfdffdfdfdf");
+    // }
+
+      if (digitalRead(firePin)) {
+        Commands.commandedState = 5;
+        commandstate = 5;
+        Serial.print("yyyyyyy");
         result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
-        // Serial.print("We are here");
         if (result != ESP_OK) {
 
-          // Serial.println("Sent with success");
           break;
           }
-        // Commands.I = false;
-       Commands.S1 = servo1OpenPosition;
-       Commands.S2 = servo2OpenPosition;
 
-        state = 0;
-        result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
-        if (result != ESP_OK) {
-            break;
-          // Serial.println("Sent with success");
-          }
-        float now = millis();
-        float runningTime = millis();
-        digitalWrite(servo1Open, HIGH);
-        digitalWrite(servo2Open, HIGH);
-        while ((now - runningTime) <= 3000) {
-          now = millis();
-  message = "";
-  message.concat(millis());
-  message.concat(" ");
-  message.concat(incomingPT1);
-  message.concat(" ");
-  message.concat(incomingPT2);
-  message.concat(" ");
-  message.concat(incomingPT3);
-  message.concat(" ");
-  message.concat(incomingPT4);
-  message.concat(" ");
-  message.concat(incomingLC1);
-  message.concat(" ");
-  message.concat(incomingLC2);
-  message.concat(" ");
-  message.concat(incomingLC3);
-  message.concat(" ");
-  message.concat(incomingFM);
-  message.concat(" ");
-  message.concat(Commands.S1);
-  message.concat(" ");
-  message.concat(Commands.S2);
-  message.concat(" ");
-  message.concat(Commands.I);
-  message.concat(" ");
-  // message.concat(Commands.S1S2);
-  // message.concat(" ");
-  message.concat(IncomingqueueSize);
-
-  //printLine(message);
-  // result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
-
-        }
-        digitalWrite(servo1Open, LOW);
-        Commands.S1 = servo1ClosedPosition;
-
-        result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
-        if (result != ESP_OK) {
-            break;
-          Serial.println("Sent with success");
-          }
-        now = millis();
-        runningTime = millis();
-        while ((now- runningTime) <= 500) {
-          now = millis();
-          message = "";
-          message.concat(incomingMessageTime);
-          message.concat(" ");
-          message.concat(incomingPT1);
-          message.concat(" ");
-          message.concat(incomingPT2);
-          message.concat(" ");
-          message.concat(incomingPT3);
-          message.concat(" ");
-          message.concat(incomingPT4);
-          message.concat(" ");
-          message.concat(incomingLC1);
-          message.concat(" ");
-          message.concat(incomingLC2);
-          message.concat(" ");
-          message.concat(incomingLC3);
-          message.concat(" ");
-          message.concat(incomingFM);
-          message.concat(" ");
-          message.concat(Commands.S1);
-          message.concat(" ");
-          message.concat(Commands.S2);
-          message.concat(" ");
-          message.concat(Commands.I);
-          message.concat(" ");
-          // message.concat(Commands.S1S2);
-          // message.concat(" ");
-          message.concat(IncomingqueueSize);
-
-         // printLine(message);
-          now = millis();
-        }
-        Commands.S2 = servo2ClosedPosition;
-         result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
-        if (result != ESP_OK) {
-            break;
-          // Serial.println("Sent with success");
-          }
-        digitalWrite(servo2Open, LOW);
       }
+          state = incomingDAQstate;
       if (digitalRead(buttonpin1)) {
         state = 0;
       }
+
+
       if ((millis() - receiveTimeDAQ) > 50) {
         digitalWrite(DAQIndicator, LOW);
       }
       if ((millis() - receiveTimeCOM) > 50) {
         digitalWrite(COMIndicator, LOW);
+      }
+      result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
+      if (result != ESP_OK) {
+        break;
       }
 
     delay(30);
@@ -671,34 +600,5 @@ void loop() {
 }
 
 void RecieveDataPrint() {
-    message = "";
-  message.concat(incomingMessageTime);
-  message.concat(" ");
-  message.concat(incomingPT1);
-  message.concat(" ");
-  message.concat(incomingPT2);
-  message.concat(" ");
-  message.concat(incomingPT3);
-  message.concat(" ");
-  message.concat(incomingPT4);
-  message.concat(" ");
-  message.concat(incomingLC1);
-  message.concat(" ");
-  message.concat(incomingLC2);
-  message.concat(" ");
-  message.concat(incomingLC3);
-  message.concat(" ");
-  message.concat(incomingFM);
-  message.concat(" ");
-  message.concat(Commands.S1);
-  message.concat(" ");
-  message.concat(Commands.S2);
-  message.concat(" ");
-  message.concat(Commands.I);
-  // message.concat(" ");
-  // message.concat(Commands.S1S2);
-  message.concat(" ");
-  message.concat(IncomingqueueSize);
-
-  printLine(message);
+  printLine();
 }

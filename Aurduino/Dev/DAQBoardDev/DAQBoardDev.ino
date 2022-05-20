@@ -136,7 +136,7 @@ int I;
 
 // int commandedState;
 // int prev_S1S2 = 0;
-bool ignite = 0;
+bool ignite = 1;
 
 // Define variables to store incoming commands, servos and igniter
 int incomingS1;
@@ -144,6 +144,9 @@ int incomingS2;
 // int incomingS1S2;
 bool incomingI;
 
+int DAQstate = 0;
+
+// int I = 0;
 
 float startTime;
 float endTime;
@@ -171,7 +174,7 @@ typedef struct struct_message {
     short int pt1val; short int pt2val; short int pt3val; short int pt4val; short int pt5val; short int pt6val; short int pt7val;
     short int fmval;
 
-    unsigned char S1; unsigned char S2; int commandedState=1; unsigned char I; short int queueSize;
+    unsigned char S1; unsigned char S2; int commandedState=1; int DAQstate=0;unsigned char I; short int queueSize;
 } struct_message;
 
 // Create a struct_message called Readings to hold sensor readings
@@ -209,9 +212,9 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 
   S1 =Commands.S1;
   S2 = Commands.S2;
-  Serial.print(Commands.S1);
-  Serial.print(" ");
-  Serial.println(Commands.S2);
+  // Serial.print(Commands.S1);
+  // Serial.print(" ");
+  // Serial.println(Commands.S2);
 
  // UNCOMMENT THIS LATER!!!!!!!!!!!!!!!!
  commandedState = Commands.commandedState;
@@ -302,12 +305,15 @@ void loop() {
 loopStartTime=millis();
 SerialRead();
 // State selector
+Serial.println(state);
+
 switch (state) {
 
   case (-1): //start signle loop
 
   state=0;
   break;
+
 
   case (0): //Default/idle
       idle();
@@ -404,32 +410,48 @@ void dataCheck() {
 }
 
 void polling() {
+    DAQstate = state;
   dataCheck();
 }
 void manualControl() {
+  DAQstate = state;
   dataCheck();
 }
 void armed() {
+  DAQstate = state;
   dataCheck();
 }
 
 void ignition() {
-
-  dataCheck();
+DAQstate = state;
+  // dataCheck();
 
         igniteTimeControl = millis();
-        ignite = 0;
+
+
 
 
       if (millis() - igniteTimeControl <= igniteTime){
+        if (ignite == 1) {
         digitalWrite(RELAYPIN1, LOW);
         digitalWrite(RELAYPIN2, LOW);
         Serial.println("ignite!");
+
+    I = 1;
       } else {
-        Serial.println(millis() - igniteTimeControl);
+        // Serial.println(millis() - igniteTimeControl);
         digitalWrite(RELAYPIN1, HIGH);
         digitalWrite(RELAYPIN2, HIGH);
         Serial.println("Not ignite!");
+        I = 0;
+        ignite = 0;
+      }
+
+
+
+
+
+        dataCheck();
 
 
 
@@ -444,6 +466,7 @@ void servoWrite() {
 }
 
 void hotfire1() {
+  DAQstate = 5;
 dataCheck();
 
   servo1curr=servo1ClosedPosition;
@@ -490,7 +513,8 @@ void addReadingsToQueue() {
   ReadingsQueue[queueLength].pt7val=pt7val;
   ReadingsQueue[queueLength].fmval=fmval;
   ReadingsQueue[queueLength].queueSize=queueLength;
-
+  ReadingsQueue[queueLength].I = I;
+  ReadingsQueue[queueLength].DAQstate = DAQstate;
 }
 
 
@@ -579,6 +603,8 @@ void dataSend() {
   Readings.pt6val = ReadingsQueue[queueLength].pt6val;
   Readings.pt7val = ReadingsQueue[queueLength].pt7val;
   Readings.fmval  = ReadingsQueue[queueLength].fmval;
+  Readings.I = ReadingsQueue[queueLength].I;
+  Readings.DAQstate = ReadingsQueue[queueLength].DAQstate;
 
   // Send message via ESP-NOW
   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Readings, sizeof(Readings));
