@@ -100,7 +100,7 @@ Servo servo2;
 //HEADERLESS BOARD {0x7C, 0x87, 0xCE, 0xF0 0x69, 0xAC}
 //NEWEST COM BOARD IN EVA {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC}
 // uint8_t broadcastAddress[] = {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC};
-uint8_t broadcastAddress[] = {0x7C, 0x9E, 0xBD, 0xD7, 0x2B, 0xE8};
+uint8_t broadcastAddress[] = {0x3C, 0x61, 0x05, 0x4A, 0xD5, 0xE0};
 // {0x7C, 0x87, 0xCE, 0xF0, 0x69, 0xAC};
 
 
@@ -174,7 +174,8 @@ typedef struct struct_message {
     short int pt1val; short int pt2val; short int pt3val; short int pt4val; short int pt5val; short int pt6val; short int pt7val;
     short int fmval;
 
-    unsigned char S1; unsigned char S2; int commandedState=1; int DAQstate=0;unsigned char I; short int queueSize;
+    unsigned char S1; unsigned char S2; int commandedState=1; 
+    int DAQstate=0;unsigned char I; short int queueSize;
 } struct_message;
 
 // Create a struct_message called Readings to hold sensor readings
@@ -309,7 +310,7 @@ Serial.println(state);
 
 switch (state) {
 
-  case (-1): //start signle loop
+  case (-1): //start single loop
 
   state=0;
   break;
@@ -348,6 +349,7 @@ switch (state) {
 armed();
 
       if (commandedState==0) state=0; MeasurementDelay=idleMeasurementDelay;
+      if (commandedState==1) state=1; MeasurementDelay=idleMeasurementDelay;
       if (commandedState==4) state=4;
     break;
 
@@ -356,6 +358,8 @@ armed();
 
     ignition();
     if (commandedState==0) state=0; MeasurementDelay=idleMeasurementDelay;
+    if (commandedState==1) state=1; MeasurementDelay=idleMeasurementDelay;
+
     if (commandedState==5) state=5; hotfireTimer=millis(); MeasurementDelay=hotfireMeasurementDelay;
 
 
@@ -399,6 +403,7 @@ armed();
 }
 
 void idle() {
+    DAQstate = state;
 
 dataCheck();
 

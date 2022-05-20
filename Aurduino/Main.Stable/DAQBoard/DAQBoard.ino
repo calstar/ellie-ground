@@ -14,32 +14,7 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 #include "HX711.h"
 
 
-//define pins to use for the various sensors and connections. define takes up less space on the chip
-// #define ONBOARD_LED  13
-//#define PT1DOUT 33
-//#define PT2DOUT 16 //update
-//#define CLKPT1 27
-//#define CLKPT2 25 //update
-#define FM 4 //update
-#define S1S 13
-#define S2S 12
-#define igniterPin 14
-#define igniterPin2 27
-
-
-//RESOLDER GROUND ON PROTOBOARD
-
-int servo1ClosedPosition = 100;
-int servo1OpenPosition = 0;
-int servo2ClosedPosition = 130;
-int servo2OpenPosition = 20;
-
-float currentPosition1 = float('inf');
-float currentPosition2 = float('inf');
-//EH VENT SEFRVO 1 =180
-
-//For breadboard
-// #define ONBOARD_LED  13
+#define FMPIN 4 //Flowmeter pin
 #define PTDOUT1 32
 #define CLKPT1 5
 #define PTDOUT2 15
@@ -55,23 +30,36 @@ float currentPosition2 = float('inf');
 #define PTDOUT7 39
 #define CLKPT7 33
 
-#define FM 34
-// #define VOLTAGEIN 12
-//#define S1S 21
+#define SERVOPIN1 13
+#define SERVOPIN2 12
+#define RELAYPIN1 14
+#define RELAYPIN2 27
+
+#define servo1ClosedPosition 100
+#define servo1OpenPosition 0
+#define servo2ClosedPosition 130
+#define servo2OpenPosition 20
+
+float currentPosition1 = float('inf');
+float currentPosition2 = float('inf');
 
 //define servo min and max values
 #define SERVO_MIN_USEC (900)
 #define SERVO_MAX_USEC (2100)
+//define servo necessary values
+#define ADC_Max 4096;
+
 
 //Initialize flow meter variables for how it computes the flow amount
-float currentMillis = 0;
-float goalTime = 50;
-float currReading1;
-float currReading2;
-float loopTime=10;
+short currentMillis = 0;
+short goalTime = 50;
+short currReading1;
+short currReading2;
+short loopTime=10;
 
-float igniteTimeControl = 0;
-float igniteTime = 750;
+
+unsigned long igniteTimeControl = 0;
+unsigned long igniteTime =  250;
 
 float servo1curr =0;
 float servo2curr=0;
@@ -102,42 +90,63 @@ HX711 scale7;
 Servo servo1;
 Servo servo2;
 
-//define servo necessary values
-int ADC_Max = 4096;
-
 ///////////////
 //IMPORTANT
 //////////////
 // REPLACE WITH THE MAC Address of your receiver
 
 //OLD COM BOARD {0xC4, 0xDD, 0x57, 0x9E, 0x91, 0x6C}
-//COM BOARD {0x7C, 0x9E, 0xBD, 0xD7, 0x2B, 0xE8}
+// COM BOARD {0x7C, 0x9E, 0xBD, 0xD7, 0x2B, 0xE8}
 //HEADERLESS BOARD {0x7C, 0x87, 0xCE, 0xF0 0x69, 0xAC}
 //NEWEST COM BOARD IN EVA {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC}
 // uint8_t broadcastAddress[] = {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC};
 uint8_t broadcastAddress[] = {0x7C, 0x9E, 0xBD, 0xD7, 0x2B, 0xE8};
+// {0x7C, 0x87, 0xCE, 0xF0, 0x69, 0xAC};
 
 
 int count=3;
 
-// Define variables to store readings to be sent
-float pt1=1;
-float pt2=1;
-float pt3=1;
-float pt4=1;
-float lc5=1;
-float lc6=1;
-float lc7=1;
-float fm=2;
+//STATEFLOW VARIABLES
+int state=-1;
+unsigned int dataArraySize =0;
+int loopStartTime=0;
+int MeasurementDelay=1000; //Delay between data measurment periods in the idle loop state in m
+int idleMeasurementDelay=1000;
+int pollingMeasurementDelay=200;
+int hotfireMeasurementDelay=2;
+
+int lastMeasurementTime=-1;
+short int queueLength=0;
+int commandedState;
+
+int hotfireStage1Time=500;
+int hotfireStage2Time=1000;
+int hotfireStage3Time=2500;
+int hotfireStage4Time=3000;
+
+int hotfireTimer=0;
+
+
+
 //the following are only used in the oposite direction, they are included because it may be necessary for the structure to be the same in both directions
-int S1; int S2; int S1S2; int I; int prev_S1S2 = 0; bool ignite = 0;
+int S1;
+int S2;
+// int S1S2;
+int I;
+
+// int commandedState;
+// int prev_S1S2 = 0;
+bool ignite = 1;
 
 // Define variables to store incoming commands, servos and igniter
 int incomingS1;
 int incomingS2;
-int incomingS1S2;
+// int incomingS1S2;
 bool incomingI;
 
+int DAQstate = 0;
+
+// int I = 0;
 
 float startTime;
 float endTime;
@@ -146,188 +155,123 @@ float timeDiff;
 // Variable to store if sending data was successful
 String success;
 
+// Define variables to store readings to be sent
+int messageTime=10;
+short int pt1val=1;
+short int pt2val=1;
+short int pt3val=1;
+short int pt4val=1;
+short int pt5val=1;
+short int pt6val=1;
+short int pt7val=1;
+short int fmval=2;
+
+
 //Structure example to send data
 //Must match the receiver structure
 typedef struct struct_message {
-    float pt1;
-    float pt2;
-    float pt3;
-    float pt4;
-    float lc1;
-    float lc2;
-    float lc3;
-    float fm;
+    int messageTime;
+    short int pt1val; short int pt2val; short int pt3val; short int pt4val; short int pt5val; short int pt6val; short int pt7val;
+    short int fmval;
 
-    int S1;
-    int S2;
-    int S1S2;
-    bool I;
+    unsigned char S1; unsigned char S2; int commandedState=1; int DAQstate=0;unsigned char I; short int queueSize;
 } struct_message;
 
 // Create a struct_message called Readings to hold sensor readings
 struct_message Readings;
+//create a queue for readings in case
+struct_message ReadingsQueue[120];
 
 // Create a struct_message to hold incoming commands
 struct_message Commands;
 
-
 esp_now_peer_info_t peerInfo;
+
+
+
+
 
 // Callback when data is sent
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
-  //Serial.print("\r\nLast Packet Send Status:\t");
-  // Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
-  // if (status ==0){
-  //   success = "Delivery Success :)";
-  // }
-  // else{
-  //   success = "Delivery Fail :(";
-  // }
+  Serial.print("\r\nLast Packet Send Status:\t");
+   Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+   if (status ==0){
+     success = "Delivery Success :)";
+   }
+   else{
+     success = "Delivery Fail :(";
+   }
 }
 
 // Callback when data is received
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&Commands, incomingData, sizeof(Commands));
-  // Serial.print("Bytes received: ");
-  // Serial.println(len);
+ //  Serial.print("Bytes received: ");
+ //  Serial.print(len);
       // digitalWrite(ONBOARD_LED,HIGH);
+
   S1 =Commands.S1;
   S2 = Commands.S2;
   // Serial.print(Commands.S1);
   // Serial.print(" ");
   // Serial.println(Commands.S2);
-  S1S2 = Commands.S1S2;
-  if (S1S2 == 99 & prev_S1S2 != 99) {
-    ignite = 1;
-    prev_S1S2 = S1S2;
-//    Serial.println("yayayayayayayayayayay");
-  }
-  else if (S1S2 == 99 & prev_S1S2 == 99) {
 
-//Serial.println("middle");
-  }
-  else {
-    ignite = 0;
-//    Serial.println("nonononononononooon");
-    prev_S1S2 = S1S2;
-  }
-  I = Commands.I;
-  // Serial.println(I);
-
-
-  // if (I) {
-  //   fireSequence();
-  // }
+ // UNCOMMENT THIS LATER!!!!!!!!!!!!!!!!
+ commandedState = Commands.commandedState;
+ // Serial.println(commandedState);
 
 }
 
-void fireSequence() {
-    Serial.println( "In Fire Sequence");
-  servo1curr=servo1OpenPosition;
-  servo2curr=servo2OpenPosition;
-  Serial.print(servo1OpenPosition);
-  Serial.print(" ");
-  Serial.println(servo2OpenPosition);
-  Serial.println(S1);
 
-  servo1.write(servo1curr);
-  servo2.write(servo2curr);
-  float beginTime = millis();
-  float currentTime = millis();
-  while ((currentTime - beginTime) <= 3000) {
-    currentTime = millis();
-    servo1.write(servo1curr);
-    servo2.write(servo2curr);
-    S1=servo1curr;
-    S2=servo2curr;
-
-
-    delay(5);
+void SerialRead() {
+    if (Serial.available() > 0) {
+ commandedState=Serial.read()-48;
+ Serial.print("AVAILABLE--------------------");
+    Serial.println(commandedState);
+    Serial.println(" ");
 
   }
-  beginTime = millis();
-  currentTime = millis();
-
-  servo1curr=servo1ClosedPosition;
-   servo2curr=servo2OpenPosition;
 
 
-  while ((currentTime - beginTime) <= 10) {
-    currentTime = millis();
-    S1=servo1curr;
-    S2=servo2curr;
-
-  servo1.write(servo1curr);
-  servo2.write(servo2curr);
-
-
-     delay(5);
-
-  }
-  servo1curr=servo1ClosedPosition;
-  servo2curr=servo2ClosedPosition;
-
-  servo1.write(servo1curr);
-
-  servo2.write(servo2curr);
+     //   Serial.println(commandedState);
+    //    Serial.println(" ");
 
 }
+
+
+
 
 void setup() {
   //attach servo pins
-  servo1.attach(S1S,SERVO_MIN_USEC,SERVO_MAX_USEC );
-  servo2.attach(S2S,SERVO_MIN_USEC,SERVO_MAX_USEC );
+  servo1.attach(SERVOPIN1,SERVO_MIN_USEC,SERVO_MAX_USEC);
+  servo2.attach(SERVOPIN2,SERVO_MIN_USEC,SERVO_MAX_USEC);
 
   // attach onboard LED
   // pinMode(ONBOARD_LED,OUTPUT);
-  pinMode(igniterPin, OUTPUT);
-  pinMode(igniterPin2, OUTPUT);
+  pinMode(RELAYPIN1, OUTPUT);
+  pinMode(RELAYPIN2, OUTPUT);
 
-  digitalWrite(igniterPin, HIGH);
-  digitalWrite(igniterPin2, HIGH);
-
-
-//attach flowmeter pin
-  //pinMode(FM, INPUT_PULLUP);
+  digitalWrite(RELAYPIN1, HIGH);
+  digitalWrite(RELAYPIN2, HIGH);
 
 //set gains for pt pins
-//set gains for pt pins
-  scale1.begin(PTDOUT1, CLKPT1);
-  scale1.set_gain(64);
-     //Sets the pin as an input
-
-//set gains for pt pins
-  scale2.begin(PTDOUT2, CLKPT2);
-  scale2.set_gain(64);
-
-  //set gains for pt pins
-  scale3.begin(PTDOUT3, CLKPT3);
-  scale3.set_gain(64);
-
-  //set gains for pt pins
-  scale4.begin(PTDOUT4, CLKPT4);
-  scale4.set_gain(64);
-
-  //set gains for pt pins
-  scale5.begin(PTDOUT5, CLKPT5);
-  scale5.set_gain(64);
-
-  //set gains for pt pins
-  scale6.begin(PTDOUT6, CLKPT6);
-  scale6.set_gain(64);
-
-//set gains for pt pins
-  scale7.begin(PTDOUT7, CLKPT7);
-  scale7.set_gain(64);
+  scale1.begin(PTDOUT1, CLKPT1); scale1.set_gain(64);
+  scale2.begin(PTDOUT2, CLKPT2); scale2.set_gain(64);
+  scale3.begin(PTDOUT3, CLKPT3); scale3.set_gain(64);
+  scale4.begin(PTDOUT4, CLKPT4); scale4.set_gain(64);
+  scale5.begin(PTDOUT5, CLKPT5); scale5.set_gain(64);
+  scale6.begin(PTDOUT6, CLKPT6); scale6.set_gain(64);
+  scale7.begin(PTDOUT7, CLKPT7); scale7.set_gain(64);
 
 //Flowmeter untreupt
-  pinMode(FM, INPUT);           //Sets the pin as an input
+  pinMode(FMPIN, INPUT);           //Sets the pin as an input
 
   Serial.begin(115200);
 
-
   // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
+  //Print MAC Accress on startup for easier connections
+  Serial.println(WiFi.macAddress());
 
   // Init ESP-NOW
   if (esp_now_init() != ESP_OK) {
@@ -353,136 +297,256 @@ void setup() {
   esp_now_register_recv_cb(OnDataRecv);
 }
 
+
+
+
+
 void loop() {
-  //reading voltage
-  // readVoltage = analogRead(VOLTAGEIN);
-  // convertedVoltage = readVoltage * (3.3/4032) * ((22 + 68) / 22);
-  // Serial.print("Voltage is: ");
-  // Serial.print(convertedVoltage);
-  //
-  // startTime=millis();
-  // Serial.println("In Main Loop");
-  // //Set LED back to low
-  // digitalWrite(ONBOARD_LED,LOW);
+loopStartTime=millis();
+SerialRead();
+// State selector
+Serial.println(state);
 
- //ADD PRINT STATEMENTS FOR DEBUGGING HERE IF NCESSARY
- // printSerial();
+switch (state) {
 
-//UPDATE SERVO POSITIONS
-  //Check new data for servo status updates
-  //switch (S1) {
-    //case 0:
-        //servo1.write(0);
-        //break;
-     //case 45:
-        //servo1.write(45);
-        //break;
-    //case 90:
-        //servo1.write(90);
-        //break;
-    //case 130:
-        //servo1.write(135);
-        //break;
-  //}
-    servo1curr=S1;
-    servo2curr=S2;
+  case (-1): //start signle loop
 
-// This portion of the code is written so that when the COM Board is in state 4, S1S2 is outputting 99, so the following if block will always run. Once the valves turn on, S1S2 will return to 0.
-// Since we are igniting before turning on servo valves there should not be any conflict.
-    if (S1S2 == 99) {
-      if (ignite == 1) {
-        igniteTimeControl = millis();
-        Serial.println("ignite =================================== 1");
-        ignite = 0;
-      }
+  state=0;
+  break;
 
-      if (millis() - igniteTimeControl <= igniteTime){
-        digitalWrite(igniterPin, LOW);
-        digitalWrite(igniterPin2, LOW);
-        Serial.println("ignite!");
-      } else {
-        Serial.println(millis() - igniteTimeControl);
-        digitalWrite(igniterPin, HIGH);
-        digitalWrite(igniterPin2, HIGH);
-        Serial.println("Not ignite!");
 
-      }
-    }
-    // else {
-    //   // Serial.print("im on high");
-    //   // Serial.print(" ");
-    //   // Serial.println(S1S2);
-    //   // if (millis()-igniteTimeControl)
-    //   digitalWrite(igniterPin, HIGH);
-    //   digitalWrite(igniterPin2, HIGH);
-    //   // digitalWrite(igniterPin, LOW);
-    //   // digitalWrite(igniterPin2, LOW);
-    // }
-      // Serial.println(S1);
-      // Serial.println(currentPosition1 - servo1curr);
-    if (abs((currentPosition1 - servo1curr)) >= 2) {
-      currentPosition1 = servo1curr;
-       Serial.println(S1);
+  case (0): //Default/idle
+      idle();
 
-      servo1.write(servo1curr);
-    }
-    if (abs((currentPosition2 - servo2curr)) >= 2) {
-      currentPosition2 = servo2curr;
-             Serial.println(S2);
-      servo2.write(servo2curr);
-    }
-    //servo1.write(servo1curr);
-    //servo2.write(servo2curr);
+      if (commandedState==1) state=1; MeasurementDelay=pollingMeasurementDelay;
+      if (commandedState==2) state=2; MeasurementDelay=pollingMeasurementDelay;
+      if (commandedState==3) state=3; MeasurementDelay=pollingMeasurementDelay;
+    break;
 
-  //Serial.print("loop");
+  case (1): //Polling
+      polling();
 
-  getReadings();
-  //Serial.print("loop2");
 
-  // Set values to send
-  Readings.pt1 = pt1;
-  Readings.pt2 = pt2;
-  Readings.pt3 = pt3;
-  Readings.pt4 = pt4;
-  Readings.lc1 = lc5;
-  Readings.lc2 = lc6;
-  Readings.lc3 = lc7;
-  Readings.fm  = fm;
 
-  // Send message via ESP-NOW
-  esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Readings, sizeof(Readings));
+      if (commandedState==0) state=0; MeasurementDelay=idleMeasurementDelay;
+      if (commandedState==2) state=2; MeasurementDelay=pollingMeasurementDelay;
+      if (commandedState==3) state=3; MeasurementDelay=pollingMeasurementDelay;
 
-  // if (result == ESP_OK) {
-  //   Serial.println("Sent with success");
-  // }
-  // else {
-  //   Serial.println("Error sending the data");
-  // }
+    break;
 
-  endTime=millis();
-  timeDiff=endTime-startTime;
-//  if (timeDiff<loopTime) {
-//    delay(timeDiff);
-//  }
+  case (2): //Manual Servo Control
 
-  delay(29);
 
-// Serial.println(servo1curr);
-// Serial.println(servo2curr);
+ manualControl();
+      if (commandedState==0) state=0; MeasurementDelay=idleMeasurementDelay;
+      if (commandedState==1) state=1; MeasurementDelay=pollingMeasurementDelay;
+      if (commandedState==3) state=3; MeasurementDelay=pollingMeasurementDelay;
+    break;
+
+  case (3): //Armed
+
+armed();
+
+      if (commandedState==0) state=0; MeasurementDelay=idleMeasurementDelay;
+      if (commandedState==4) state=4;
+    break;
+
+
+  case (4): //Ignition
+
+    ignition();
+    if (commandedState==0) state=0; MeasurementDelay=idleMeasurementDelay;
+    if (commandedState==5) state=5; hotfireTimer=millis(); MeasurementDelay=hotfireMeasurementDelay;
+
+
+    break;
+  case (5): //Hotfire stage 1
+
+    hotfire1();
+
+    if ((loopStartTime-hotfireTimer) > hotfireStage1Time) state=6;
+
+
+    break;
+
+
+  case (6): //Hotfire stage 2
+
+    hotfire2();
+  if ((loopStartTime-hotfireTimer) > hotfireStage2Time) state=7;
+
+    break;
+
+
+  case (7): //Hotfire stage 3
+
+    hotfire3();
+  if ((loopStartTime-hotfireTimer) > hotfireStage3Time) state=8;
+
+    break;
+
+  case (8): //Hotfire stage 4
+
+    hotfire4();
+  if ((loopStartTime-hotfireTimer) > hotfireStage4Time) state=0; MeasurementDelay=idleMeasurementDelay;
+
+    break;
+
+
 
 }
 
+}
+
+void idle() {
+
+dataCheck();
+
+}
+
+void dataCheck() {
+  if ((loopStartTime-lastMeasurementTime) > MeasurementDelay) addReadingsToQueue();
+  checkQueue();
+}
+
+void polling() {
+    DAQstate = state;
+  dataCheck();
+}
+void manualControl() {
+  DAQstate = state;
+  dataCheck();
+}
+void armed() {
+  DAQstate = state;
+  dataCheck();
+}
+
+void ignition() {
+DAQstate = state;
+  // dataCheck();
+
+        igniteTimeControl = millis();
+
+
+
+
+      if (millis() - igniteTimeControl <= igniteTime){
+        if (ignite == 1) {
+        digitalWrite(RELAYPIN1, LOW);
+        digitalWrite(RELAYPIN2, LOW);
+        Serial.println("ignite!");
+
+    I = 1;
+      } else {
+        // Serial.println(millis() - igniteTimeControl);
+        digitalWrite(RELAYPIN1, HIGH);
+        digitalWrite(RELAYPIN2, HIGH);
+        Serial.println("Not ignite!");
+        I = 0;
+        ignite = 0;
+      }
+
+
+
+
+
+        dataCheck();
+
+
+
+}
+}
+
+void servoWrite() {
+    servo1.write(servo1curr);
+    servo2.write(servo2curr);
+    S1=servo1curr;
+    S2=servo2curr;
+}
+
+void hotfire1() {
+  DAQstate = 5;
+dataCheck();
+
+  servo1curr=servo1ClosedPosition;
+  servo2curr=servo2OpenPosition;
+  servoWrite();
+
+}
+void hotfire2() {
+  dataCheck();
+
+  servo1curr=servo1OpenPosition;
+  servo2curr=servo2OpenPosition;
+  servoWrite();
+}
+void hotfire3() {
+  dataCheck();
+
+  servo1curr=servo1OpenPosition;
+  servo2curr=servo2ClosedPosition;
+  servoWrite();
+}
+void hotfire4() {
+  dataCheck();
+
+  servo1curr=servo1ClosedPosition;
+  servo2curr=servo2ClosedPosition;
+  servoWrite();
+}
+
+
+
+
+
+void addReadingsToQueue() {
+  getReadings();
+  queueLength+=1;
+  ReadingsQueue[queueLength].messageTime=loopStartTime;
+  ReadingsQueue[queueLength].pt1val=pt1val;
+  ReadingsQueue[queueLength].pt2val=pt2val;
+  ReadingsQueue[queueLength].pt3val=pt3val;
+  ReadingsQueue[queueLength].pt4val=pt4val;
+  ReadingsQueue[queueLength].pt5val=pt5val;
+  ReadingsQueue[queueLength].pt6val=pt6val;
+  ReadingsQueue[queueLength].pt7val=pt7val;
+  ReadingsQueue[queueLength].fmval=fmval;
+  ReadingsQueue[queueLength].queueSize=queueLength;
+  ReadingsQueue[queueLength].I = I;
+  ReadingsQueue[queueLength].DAQstate = DAQstate;
+}
+
+
+
 void getReadings(){
+
+ //pt1val = scale1.read(); pt2val = scale2.read(); pt3val = scale3.read(); pt4val = scale4.read(); pt5val = scale5.read(); pt6val = scale6.read(); pt7val = scale7.read();
+
+
+
+   // flowMeterReadings();
+    printSensorReadings();
+    lastMeasurementTime=loopStartTime;
+   // Serial.print("Queue Length :");
+  //  Serial.println(queueLength);
+
+   // Serial.print("Current State: ");
+    //Serial.println(state);
+}
+
+
+
+void flowMeterReadings() {
   currentMillis = millis();
   fmcount = 0;
 
- while (millis() - currentMillis < goalTime) {
+   while (millis() - currentMillis < goalTime) {
     servo1.write(servo1curr);
     servo2.write(servo2curr);
 
 
-
-    currentState = digitalRead(FM);
+    currentState = digitalRead(FMPIN);
     if (!(currentState == lastState)) {
 
      lastState = currentState;
@@ -490,41 +554,67 @@ void getReadings(){
    }
  }
   flowRate = fmcount;
-  fm =int(flowRate+1);  // Print the integer part of the variable
+  fmval =int(flowRate+1);  // Print the integer part of the variable
+}
 
- pt1 = scale1.read();
-      //Serial.print("pt1");
-      //Serial.print(" ");
 
- pt2 = scale2.read();
-      //Serial.print("pt2");
-      //Serial.print(" ");
 
- pt3 = scale3.read();
- //Serial.print("pt3");
- //Serial.print(" ");
-
- pt4 = scale4.read();
-
- lc5 = scale5.read();
- lc6 = scale6.read();
- lc7 = scale7.read();
-
- serialMessage = "";
+void printSensorReadings() {
+   serialMessage = "";
  //
  serialMessage.concat(millis());
  serialMessage.concat(" ");
- serialMessage.concat(pt1);
+ serialMessage.concat(pt1val);
  serialMessage.concat(" ");
- serialMessage.concat(pt2);
+ serialMessage.concat(pt2val);
  serialMessage.concat(" ");
- serialMessage.concat(pt3);
+ serialMessage.concat(pt3val);
  serialMessage.concat(" ");
- serialMessage.concat(pt4);
+ serialMessage.concat(pt4val);
  serialMessage.concat(" ");
- serialMessage.concat(lc5);
+ serialMessage.concat(pt5val);
  serialMessage.concat(" ");
- serialMessage.concat(lc6);
+ serialMessage.concat(pt6val);
  serialMessage.concat(" ");
- serialMessage.concat(lc7);
- // Serial.println(serialMessage);
+ serialMessage.concat(pt7val);
+ serialMessage.concat(" Queue Length: ");
+ serialMessage.concat(queueLength);
+  serialMessage.concat(" Current State: ");
+ serialMessage.concat(state);
+ Serial.println(serialMessage);
+
+}
+
+
+void checkQueue() {
+  if (queueLength>0){
+    dataSend();
+  }
+}
+
+void dataSend() {
+   // Set values to send
+  Readings.messageTime=ReadingsQueue[queueLength].messageTime;
+  Readings.pt1val = ReadingsQueue[queueLength].pt1val;
+  Readings.pt2val = ReadingsQueue[queueLength].pt2val;
+  Readings.pt3val = ReadingsQueue[queueLength].pt3val;
+  Readings.pt4val = ReadingsQueue[queueLength].pt4val;
+  Readings.pt5val = ReadingsQueue[queueLength].pt5val;
+  Readings.pt6val = ReadingsQueue[queueLength].pt6val;
+  Readings.pt7val = ReadingsQueue[queueLength].pt7val;
+  Readings.fmval  = ReadingsQueue[queueLength].fmval;
+  Readings.I = ReadingsQueue[queueLength].I;
+  Readings.DAQstate = ReadingsQueue[queueLength].DAQstate;
+
+  // Send message via ESP-NOW
+  esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Readings, sizeof(Readings));
+
+  if (result == ESP_OK) {
+     Serial.println("Sent with success Data Send");
+     ReadingsQueue[queueLength].pt1val=0;
+     queueLength-=1;
+  }
+  else {
+     Serial.println("Error sending the data");
+  }
+}
