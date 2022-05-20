@@ -331,7 +331,7 @@ switch (state) {
 
 
 
-      if ((digitalRead(BUTTON2)==1)||(serialState==2)) state=3; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay;
+      if ((digitalRead(BUTTON2)==1)||(serialState==2)) { state=3; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay; }
 
     break;
 
@@ -347,9 +347,9 @@ armed();
 
 
     //button to ignition 
-      if ((digitalRead(BUTTON3)==1)||(serialState==3)) state=4; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=ignitionSendDelay;
+      if ((digitalRead(BUTTON3)==1)||(serialState==3)) { state=4; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=ignitionSendDelay; }
       //RETURN BUTTON
-      if ((digitalRead(BUTTON1)==1)||(serialState==1)) state=1; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay;
+      if ((digitalRead(BUTTON1)==1)||(serialState==1)) { state=1; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay; }
       
     break;
 
@@ -360,7 +360,7 @@ armed();
     //HOTFIRE BUTTON
       if ((digitalRead(BUTTON4)==1)||(serialState==4)) state=5; 
       //RETURN BUTTON
-      if ((digitalRead(BUTTON1)==1)||(serialState==1)) state=1; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay;
+      if ((digitalRead(BUTTON1)==1)||(serialState==1)) { state=1; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay; }
       
 
 

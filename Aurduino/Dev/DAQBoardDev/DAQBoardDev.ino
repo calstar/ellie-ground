@@ -123,8 +123,10 @@ int hotfireStage1Time=500;
 int hotfireStage2Time=1000;
 int hotfireStage3Time=2500;
 int hotfireStage4Time=3000;
+int igniterTime=750;
 
 int hotfireTimer=0;
+int igniterTimer=0;
 
 
 
@@ -319,9 +321,9 @@ switch (state) {
   case (0): //Default/idle
       idle();
 
-      if (commandedState==1) state=1; MeasurementDelay=pollingMeasurementDelay;
-      if (commandedState==2) state=2; MeasurementDelay=pollingMeasurementDelay;
-      if (commandedState==3) state=3; MeasurementDelay=pollingMeasurementDelay;
+      if (commandedState==1) { state=1; MeasurementDelay=pollingMeasurementDelay; }
+      if (commandedState==2) { state=2; MeasurementDelay=pollingMeasurementDelay; }
+      if (commandedState==3) { state=3; MeasurementDelay=pollingMeasurementDelay; }
     break;
 
   case (1): //Polling
@@ -329,9 +331,9 @@ switch (state) {
 
 
 
-      if (commandedState==0) state=0; MeasurementDelay=idleMeasurementDelay;
-      if (commandedState==2) state=2; MeasurementDelay=pollingMeasurementDelay;
-      if (commandedState==3) state=3; MeasurementDelay=pollingMeasurementDelay;
+      if (commandedState==0) { state=0; MeasurementDelay=idleMeasurementDelay; }
+      if (commandedState==2){  state=2; MeasurementDelay=pollingMeasurementDelay; }
+      if (commandedState==3) { state=3; MeasurementDelay=pollingMeasurementDelay; }
 
     break;
 
@@ -339,28 +341,28 @@ switch (state) {
 
 
  manualControl();
-      if (commandedState==0) state=0; MeasurementDelay=idleMeasurementDelay;
-      if (commandedState==1) state=1; MeasurementDelay=pollingMeasurementDelay;
-      if (commandedState==3) state=3; MeasurementDelay=pollingMeasurementDelay;
+      if (commandedState==0) { state=0; MeasurementDelay=idleMeasurementDelay; }
+      if (commandedState==1) { state=1; MeasurementDelay=pollingMeasurementDelay; }
+      if (commandedState==3) { state=3; MeasurementDelay=pollingMeasurementDelay; }
     break;
 
   case (3): //Armed
 
 armed();
 
-      if (commandedState==0) state=0; MeasurementDelay=idleMeasurementDelay;
-      if (commandedState==1) state=1; MeasurementDelay=idleMeasurementDelay;
-      if (commandedState==4) state=4;
+      if (commandedState==0) { state=0; MeasurementDelay=idleMeasurementDelay; }
+      if (commandedState==1) { state=1; MeasurementDelay=idleMeasurementDelay; }
+      if (commandedState==4) { state=4; igniterTimer=loopStartTime; }
     break;
 
 
   case (4): //Ignition
 
     ignition();
-    if (commandedState==0) state=0; MeasurementDelay=idleMeasurementDelay;
-    if (commandedState==1) state=1; MeasurementDelay=idleMeasurementDelay;
+    if (commandedState==0) { state=0; MeasurementDelay=idleMeasurementDelay; }
+    if (commandedState==1) { state=1; MeasurementDelay=idleMeasurementDelay; }
 
-    if (commandedState==5) state=5; hotfireTimer=millis(); MeasurementDelay=hotfireMeasurementDelay;
+    if (commandedState==5) { state=5; hotfireTimer=loopStartTime; MeasurementDelay=hotfireMeasurementDelay; }
 
 
     break;
@@ -392,7 +394,7 @@ armed();
   case (8): //Hotfire stage 4
 
     hotfire4();
-  if ((loopStartTime-hotfireTimer) > hotfireStage4Time) state=0; MeasurementDelay=idleMeasurementDelay;
+  if ((loopStartTime-hotfireTimer) > hotfireStage4Time){  state=0; MeasurementDelay=idleMeasurementDelay; }
 
     break;
 
@@ -429,39 +431,17 @@ void armed() {
 
 void ignition() {
 DAQstate = state;
-  // dataCheck();
 
-        igniteTimeControl = millis();
-
-
-
-
-      if (millis() - igniteTimeControl <= igniteTime){
-        if (ignite == 1) {
-        digitalWrite(RELAYPIN1, LOW);
-        digitalWrite(RELAYPIN2, LOW);
-        Serial.println("ignite!");
-
-    I = 1;
-      } else {
-        // Serial.println(millis() - igniteTimeControl);
-        digitalWrite(RELAYPIN1, HIGH);
-        digitalWrite(RELAYPIN2, HIGH);
-        Serial.println("Not ignite!");
-        I = 0;
-        ignite = 0;
-      }
-
-
-
-
-
+    if ((loopStartTime-igniterTimer) < igniterTime) { digitalWrite(RELAYPIN1, LOW); digitalWrite(RELAYPIN2, LOW); Serial.print("IGNITE"); }
+    if ((loopStartTime-igniterTimer) > igniterTime) {  digitalWrite(RELAYPIN1, HIGH); digitalWrite(RELAYPIN2, HIGH); Serial.print("NO"); }
         dataCheck();
 
-
-
+  Serial.println(loopStartTime-igniterTimer);
+  Serial.println("Igniter time");
+  Serial.println(igniterTime);
+  Serial.println(" ");
 }
-}
+
 
 void servoWrite() {
     servo1.write(servo1curr);
@@ -507,7 +487,7 @@ void hotfire4() {
 
 void addReadingsToQueue() {
   getReadings();
-  queueLength+=1;
+  if (queueLength<40) queueLength+=1;
   ReadingsQueue[queueLength].messageTime=loopStartTime;
   ReadingsQueue[queueLength].pt1val=pt1val;
   ReadingsQueue[queueLength].pt2val=pt2val;
