@@ -156,7 +156,13 @@ while(1)
     end
 
     for n = 2:dataLength
+
         data(i,n) = str2double(str{n})*calibrationData(n,1)+calibrationData(n,2);
+
+        if i >=2 && i <=8
+            data(1,n) = data(1,n)/100;
+        end
+
     end
 
 
