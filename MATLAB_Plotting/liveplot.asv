@@ -7,6 +7,10 @@ close all; clear all;
 % create our clean up object for interrupt
 cleanupObj = onCleanup(@cleanMeUp);
 
+
+% Arduino Output
+dataLength = 13;
+
 % NAME THE TEST FIRST (only change the second part)
 fileName = [datestr(now,'yyyy-mm-dd_HHMMSS'),'_test3'];
 
@@ -14,8 +18,8 @@ fileName = [datestr(now,'yyyy-mm-dd_HHMMSS'),'_test3'];
 pauseTime = 0.05;
 % set up plotting frequency
 plotTime = 0.2;
-% check variable size
-SerialPrintSize = 14;
+% % check variable size
+% SerialPrintSize = 14;
 
 % frequency
 % fetchFrequency = 1/pauseTime;
@@ -28,11 +32,16 @@ observationIntervalMillis = observationInterval*1000;
 % time conversion factor
 % timeFactor = 24 * 60 * 60;
 
+data = [];
+
+calibrationData = [1,0;1,0;1,0]
+% [a, b]
+
 % set up table to collect data
-dataTypes = ["double","double","double","double","double","double","double","double"];
-dataLabels = ["time","PT1","PT2","PT3","PT4","LC5","LC6","LC7"];
-sz = [1,8];
-testDataTable = table('Size',sz,'VariableTypes',dataTypes,'VariableNames',dataLabels);
+dataTypes = ["double","double","double","double","double","double","double","double","double","double"];
+dataLabels = ["time","PT1","PT2","PT3","PT4","LC5","LC6","LC7","FM","S1","S2","commandedState","DAQState","Queue Size"];
+sz = [1,dataLength];
+% testDataTable = table('Size',sz,'VariableTypes',dataTypes,'VariableNames',dataLabels);
 
 
 % set up serial object
@@ -50,6 +59,7 @@ f = figure;
 f.Position = [300 -100 800 650];
 % t = tiledlayout(6,1);
 
+% tileblock = []
 % First tile
 ax1 = nexttile;
 ax1.XColor = [1 0 0];
@@ -71,20 +81,16 @@ ax3.YColor = [1 0 0];
 ax4 = nexttile;
 ax4.XColor = [1 0 0];
 ax4.YColor = [1 0 0];
-
-% Fifth Tile
-ax5 = nexttile;
-ax5.XColor = [1 0 0];
-ax5.YColor = [1 0 0];
-
-% Sixth Tile
-ax6 = nexttile;
-ax6.XColor = [1 0 0];
-ax6.YColor = [1 0 0];
-
-ax7 = nexttile;
-ax7.XColor = [1 0 0];
-ax7.YColor = [1 0 0];
+%
+% % Fifth Tile
+% ax5 = nexttile;
+% ax5.XColor = [1 0 0];
+% ax5.YColor = [1 0 0];
+%
+% % Sixth Tile
+% ax6 = nexttile;
+% ax6.XColor = [1 0 0];
+% ax6.YColor = [1 0 0];
 
 
 timeControl = now();
@@ -122,197 +128,188 @@ errorLength = 0;
 correctLength = 0;
 
 while(1)
-%     startTime=datestr(now,'dd-mm-yyyy HH:MM:SS FFF');
-%     startTime=startTime(21:23);
+    %     startTime=datestr(now,'dd-mm-yyyy HH:MM:SS FFF');
+    %     startTime=startTime(21:23);
     rawStr = fscanf(s);
     linestr = split(rawStr,'←↵');
     str = split(linestr{1}," ");
-    if length(str) ~= SerialPrintSize
+    if length(str) ~= dataLength
 
         errorLength = errorLength + 1
 
         str
         rawStr
         length(str)
-       
-        
+
+
         continue;
-    else 
+    else
         correctLength = correctLength + 1;
     end
 
+
     % each data line represents one sensor data
-    timeInterval(i) = (str2double(str{1})-timeZeroer)/1000;
+    data(i,1) = (str2double(str{1})-timeZeroer)/1000;
+    %     timeInterval(i) = (str2double(str{1})-timeZeroer)/1000;
     if i == 1
         timeZeroer = str2double(str{1});
-        timeInterval(i) = (str2double(str{1})-timeZeroer)/1000;
+        data(i,1) = (str2double(str{1})-timeZeroer)/1000;
+    end
+
+    for n = 2:dataLength
+        data(i,n) = str2double(str{n})*calibrationData(n,1)+calibrationData(n,2);
     end
 
 
-   
-    % data1 receives flowrate in L/min
-    % data1(i) = str2double(str{2})/10000;
 
-    % data1 receives PT1
-    data1(i) = str2double(str{2})*1.0789e-04+21.5850;
-    % data2 receives PT2
-    data2(i) = str2double(str{3})*2.6509e-05+25.5954;
-    % data3 receives PT3
-    data3(i) = str2double(str{4})*1.0949e-04+25.0202;
-    % data4 receives PT4
-    data4(i) = str2double(str{5})*1.0603e-04+27.2010;
-    % data5 receives PT5
-    data5(i) = str2double(str{6})*-0.00030042+-0.144152513;
-    % data6 receives flowrate in samples/50ms, multiplies by calibration
-    % coefficent [g/cycle] and 20 to convert samples per 50 ms to samples per second
-    % (20 observation intervals of 50ms in 1 s)
-    data6(i) = str2double(str{7})*-0.000364984+0.445296444;
-    data7(i) = str2double(str{8})*-0.00038533+-0.107909483;
-    data8(i) = str2double(str{9});
-%     data15 = str2double(str{14})
-
-
-    testDataTable(i,:) = {timeInterval(i),data1(i),data2(i),data3(i),data4(i),data5(i),data6(i),data7(i),data8(i)};
+    %     testDataTable(i,:) = {timeInterval(i),data1(i),data2(i),data3(i),data4(i),data5(i),data6(i),data7(i),data8(i)};
 
 
 
 
 
-% 
+    %
     if (now() - timeControl) * 24 * 60 * 60 >= plotTime % plot every x seconds
         if timeInterval(end)-timeInterval(1) < observationInterval
 
 
+
+
             axes(ax1);
-            plot(timeInterval,data1);
+            % subplot(2,3,1),
+            plot(data(:,1),data(:,2));
             title('Pressure Transducer 1')
 
-            xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
+            xlim([data(i,1)-observationInterval, data(i,1)]);
 
             axes(ax2);
-            plot(timeInterval,data2);
+            % subplot(2,3,2),
+            plot(data(:,1),data(:,3));
             title('Pressure Transducer 2')
 
-            xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
+            xlim([data(i,1)-observationInterval, data(i,1)]);
             % ylim([-500000 100000]);
 
             axes(ax3);
-            plot(timeInterval,data3);
+            % subplot(2,3,3),
+            plot(data(:,1),data(:,4));
             title('Pressure Transducer 3')
 
-            xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
-
+            xlim([data(i,1)-observationInterval, data(i,1)]);
             axes(ax4);
-            plot(timeInterval,data4);
+            % subplot(2,3,4),
+            plot(data(:,1),data(:,5));
             title('Pressure Transducer 4')
 
-            xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
-
-            axes(ax5);
-            plot(timeInterval,data5+data6+data7);
-            title('Load Cell Combined')
-
-            xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
-
-            axes(ax6);
-            plot(timeInterval,data6);
-            title('FM')
-
-            axes(ax7);
-            plot(timeInterval,data7);
-            title('Load Cell 7')
-
-            xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
+            %
+            %             axes(ax5);
+            % % subplot(2,3,5),
+            % plot(timeInterval,data5+data6+data7);
+            %             title('Load Cell Combined')
+            %
+            %             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
+            %
+            %             axes(ax6);
+            % % subplot(2,3,6),
+            % plot(timeInterval,data8);
+            %             title('FM');
+            %
+            %             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
 
         else % plot only the latest 5 seconds of data
-%             timeInterval(i-1)-timeInterval(1) < observationInterval
-%             timeInterval(i)
-%             timeInterval(i)-timeInterval(1) >= observationInterval
+            %             timeInterval(i-1)-timeInterval(1) < observationInterval
+            %             timeInterval(i)
+            %             timeInterval(i)-timeInterval(1) >= observationInterval
             if idxSet == 0
-             idx =  floor(length(timeInterval))-1;
-             idxSet = 1;
+                idx =  floor(length(timeInterval))-1;
+                idxSet = 1;
 
-%                 idx
-%             idxDumpTime = 1/(floor(length(timeInterval)/observationalInterval))
+                %                 idx
+                %             idxDumpTime = 1/(floor(length(timeInterval)/observationalInterval))
             end
-           
 
-%             if (now() - timeControlContinuous) * 24 * 60 * 60 >= idxDumpTime
-%             idx
+
+            %             if (now() - timeControlContinuous) * 24 * 60 * 60 >= idxDumpTime
+            %             idx
 
             axes(ax1);
-            plot(timeInterval(end-idx:end),data1(end-idx:end));
+            % subplot(2,3,1),
+            plot(data(end-idx:end,1),data(end-idx:end,2));
             % set the x limits so that only the last 5 seconds of data is
             % plotted
             title('Pressure Transducer 1')
 
-            xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
+            %             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
+            xlim([data(i,1)-observationInterval, data(i,1)]);
 
             axes(ax2);
-            % change the number e.g "-6" according to trials.
-            plot(timeInterval(end-idx:end),data2(end-idx:end));
+            % subplot(2,3,2),
+            plot(data(end-idx:end,1),data(end-idx:end,3));
             title('Pressure Transducer 2')
 
-            xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
+            %             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
             % ylim([-500000 100000]);
+            xlim([data(i,1)-observationInterval, data(i,1)]);
 
             axes(ax3);
-            % change the number e.g "-6" according to trials.
-            plot(timeInterval(end-idx:end),data3(end-idx:end));
+            % subplot(2,3,3),
+            plot(data(end-idx:end,1),data(end-idx:end,4));
             title('Pressure Transducer 3')
 
-            xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
+            %             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
             % ylim([-500000 100000]);
+            xlim([data(i,1)-observationInterval, data(i,1)]);
+
 
             axes(ax4);
-            % change the number e.g "-6" according to trials.
+            % subplot(2,3,4),
             plot(timeInterval(end-idx:end),data4(end-idx:end));
             title('Pressure Transducer 4')
 
-            xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
-
-            axes(ax5);
-            % change the number e.g "-6" according to trials.
-            plot(timeInterval(end-idx:end),data5(end-idx:end));
-            title('Load Cell 5')
-
-            xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
+            %             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
+            xlim([data(i,1)-observationInterval, data(i,1)]);
 
 
-            axes(ax6);
-            LoadCellDataLastCombined = data6+data7+data8;
-            plot(timeInterval(end-idx:end),LoadCellDataLastCombined(end-idx:end));
-            % set the x limits so that only last 5 seconds of data is
-            % plotted
-            title('Load Cell 6')
 
-            axes(ax7);
-            plot(timeInterval(end-idx:end),data7(end-idx:end));
-            % set the x limits so that only the last 5 seconds of data is
-            % plotted
-            title('Load Cell 7')
 
-            xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
-            timeControlContinuous = now();
-%             end
+            %
+            % %             axes(ax5);
+            % LoadCellDataLastCombined = data5+data6+data7;
+            % subplot(2,3,5), PLOT(timeInterval(end-idx:end),LoadCellDataLastCombined(end-idx:end));
+            %             % set the x limits so that only last 5 seconds of data is
+            %             % plotted
+            %             title('Load Cell Total')
+            %
+            %             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
+            %
+            % %             axes(ax6);
+            % subplot(2,3,6), PLOT(timeInterval(end-idx:end),data8(end-idx:end));
+            %             title('FM')
+            %
+            %             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
+            %
+            %
+            % %             timeControlContinuous = now();
+            % %             end
         end
         timeControl = now();
     end
-%     endTime=datestr(now,'dd-mm-yyyy HH:MM:SS FFF');
-%     endTime=endTime(21:23);
+    %     endTime=datestr(now,'dd-mm-yyyy HH:MM:SS FFF');
+    %     endTime=endTime(21:23);
 
-%     timeDifference=str2double(endTime)-str2double(startTime);
-%     if timeDifference<pauseTime
-%         pause(timeDifference);
-%     end
+    %     timeDifference=str2double(endTime)-str2double(startTime);
+    %     if timeDifference<pauseTime
+    %         pause(timeDifference);
+    %     end
     i = i+1;
 end
     function cleanMeUp()
+        testDataTable = array2table(data,'VariableNames',dataLabels);
         % saves data to file (or could save to workspace)
         fprintf('Saving test data as %s.xls\n',fileName);
         setUpTest(['Test_Data_',datestr(now,'yyyy-mm-dd')],fileName,testDataTable);
         %         writetable(testDataTable,fileName,"FileType","spreadsheet");
-%         fclose(s);
+        %         fclose(s);
         ratio = errorLength/correctLength
         clear s
         instrreset;

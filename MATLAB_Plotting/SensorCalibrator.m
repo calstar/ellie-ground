@@ -16,10 +16,10 @@ cleanupObj = onCleanup(@cleanMeUp);
 % The code will read from the previous data, or establish a new file if no
 % data present.
 % MUST CHANGE NAME OR DELETE PREVIOUS FILE IF DIFFERENT NUMBER OF SENSORS REPORT DATA
-fileName = 'Load_Cell_calibration_LC6';
+fileName = 'Load_Cell_calibration_LC7';
 
 % NAME THE FOLDER YOU WANT THE TEST TO BE IN
-folderName = 'Test_Data_May_16_LC';
+folderName = 'Test_Data_May_21_LC';
 
 % Name the sensors (will be used in data logging and graph titles)
 testDevice = 'LC ';
@@ -108,6 +108,12 @@ end
 if serialPortOpened == 1
     while(1)
         str = split(fscanf(s));
+
+%         if length(str) ~= dataLength
+%             continue;
+%             t = "uayayaydaishdiushfniusdjfbsiufbdsiufdfbis"
+%         end
+
 
 %         if ~isnumeric(str2num(str{1}))
 %             m = str2num(str{1});

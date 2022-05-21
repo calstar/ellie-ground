@@ -1,5 +1,5 @@
 % Which .xls file are you reading from
-fileName = 'Load_Cell_calibration_LCs';
+fileName = 'Load_Cell_calibration_LC7';
 
 % Name the sensors
 testDevice = 'LC ';
