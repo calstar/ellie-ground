@@ -36,18 +36,37 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 #define RELAYPIN2 27
 
 #define servo1ClosedPosition 100
-#define servo1OpenPosition 0
+#define servo1OpenPosition 10
 #define servo2ClosedPosition 130
-#define servo2OpenPosition 20
+#define servo2OpenPosition 0
 
 float currentPosition1 = float('inf');
 float currentPosition2 = float('inf');
 
 //define servo min and max values
-#define SERVO_MIN_USEC (900)
+#define SERVO_MIN_USEC (800)
 #define SERVO_MAX_USEC (2100)
 //define servo necessary values
 #define ADC_Max 4096;
+
+
+//PT CALIBRATION CONSTANTS
+double PT1C1 =0.0001129;
+double PT1C2 =12.49;
+double PT2C1 =0.00002772;
+double PT2C2 =17.53;
+double PT3C1 =.0001438;
+double PT3C2 =16.23;
+double PT4C1 = 0.00002767;
+double PT4C2 =18.94;
+double PT5C1 =-.000303;
+double PT5C2 =-.154;
+double PT6C1 =-0.000341;
+double PT6C2 =0.833;
+double PT7C1 =-.000250;
+double PT7C2 =1.64;
+
+double PTdiv =100;
 
 
 //Initialize flow meter variables for how it computes the flow amount
@@ -123,7 +142,7 @@ int lastMeasurementTime=-1;
 short int queueLength=0;
 int commandedState;
 
-int hotfireStage1Time=500;
+int hotfireStage1Time=250;
 int hotfireStage2Time=2500;
 int hotfireStage3Time=2800;
 int hotfireStage4Time=3000;
@@ -539,7 +558,13 @@ void addReadingsToQueue() {
 
 void getReadings(){
 
- pt1val = scale1.read(); pt2val = scale2.read(); pt3val = scale3.read(); pt4val = scale4.read(); pt5val = scale5.read(); pt6val = scale6.read(); pt7val = scale7.read();
+ pt1val = (PT1C1*scale1.read() + PT1C2)*PTdiv; 
+ pt2val = (PT2C1*scale2.read() + PT2C2)*PTdiv; 
+ pt3val = (PT3C1*scale3.read()+PT3C2)*PTdiv; 
+ pt4val = (PT3C1*scale4.read()+PT4C2)*PTdiv; 
+ pt5val = (PT5C1*scale5.read()+PT5C2)*PTdiv; 
+ pt6val = (PT6C1*scale6.read()+PT6C2)*PTdiv; 
+ pt7val = (PT7C1*scale7.read()+PT7C2)*PTdiv;
 
 
 

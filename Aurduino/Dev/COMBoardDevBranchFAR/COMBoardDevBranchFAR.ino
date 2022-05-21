@@ -190,7 +190,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 void SerialRead() {
     if (Serial.available() > 0) {
  serialState=Serial.read()-48;
- Serial.print("AVAILABLE--------------------");
+// Serial.print("AVAILABLE--------------------");
    // Serial.println(serialState);
    // Serial.println(" ");
 
@@ -209,11 +209,12 @@ void SerialRead() {
 
 
 void setup() {
-  Serial.println("Start of Setup");
   Commands.S1 = servo1ClosedPosition;
   Commands.S2 = servo2ClosedPosition;
   // put your setup code here, to run once:
   Serial.begin(115200);
+   // Serial.println("Start of Setup");
+
   pinMode(BUTTON1,INPUT);
   pinMode(BUTTON2, INPUT);
   pinMode(BUTTON3,INPUT);
@@ -259,7 +260,7 @@ void setup() {
   // Register for a callback function that will be called when data is received
   esp_now_register_recv_cb(OnDataRecv);
 
-  //  Serial.println(WiFi.macAddress());
+   Serial.println(WiFi.macAddress());
 
 
 }
