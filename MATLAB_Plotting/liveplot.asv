@@ -14,7 +14,8 @@ fileName = [datestr(now,'yyyy-mm-dd_HHMMSS'),'_test3'];
 pauseTime = 0.05;
 % set up plotting frequency
 plotTime = 0.2;
-% plotTimeControl
+% check variable size
+SerialPrintSize = 14;
 
 % frequency
 % fetchFrequency = 1/pauseTime;
@@ -117,11 +118,29 @@ while (strlength(split(fscanf(s))) < 1)
 end
 
 fprintf("Receiving data now\n")
+errorLength = 0;
+correctLength = 0;
 
 while(1)
-    startTime=datestr(now,'dd-mm-yyyy HH:MM:SS FFF');
-    startTime=startTime(21:23);
-    str = split(fscanf(s))
+%     startTime=datestr(now,'dd-mm-yyyy HH:MM:SS FFF');
+%     startTime=startTime(21:23);
+    rawStr = fscanf(s);
+    linestr = split(rawStr,'←↵');
+    str = split(linestr{1}," ");
+    if length(str) ~= SerialPrintSize
+
+        errorLength = errorLength + 1
+
+        str
+        rawStr
+        length(str)
+       
+        
+        continue;
+    else 
+        correctLength = correctLength + 1;
+    end
+
     % each data line represents one sensor data
     timeInterval(i) = (str2double(str{1})-timeZeroer)/1000;
     if i == 1
@@ -149,22 +168,17 @@ while(1)
     % (20 observation intervals of 50ms in 1 s)
     data6(i) = str2double(str{7})*-0.000364984+0.445296444;
     data7(i) = str2double(str{8})*-0.00038533+-0.107909483;
+    data8(i) = str2double(str{9});
+%     data15 = str2double(str{14})
 
 
-    testDataTable(i,:) = {timeInterval(i),data1(i),data2(i),data3(i),data4(i),data5(i),data6(i),data7(i)};
-
-
-
-    % data7 receives LC1
-    % data7(i) = str2double(str{7});
-    % data8 receives LC2
-    % data8(i) = str2double(str{8});
-    % data9 receives LC3
-    % data9(i) = str2double(str{9});
+    testDataTable(i,:) = {timeInterval(i),data1(i),data2(i),data3(i),data4(i),data5(i),data6(i),data7(i),data8(i)};
 
 
 
 
+
+% 
     if (now() - timeControl) * 24 * 60 * 60 >= plotTime % plot every x seconds
         if timeInterval(end)-timeInterval(1) < observationInterval
 
@@ -195,14 +209,14 @@ while(1)
             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
 
             axes(ax5);
-            plot(timeInterval,data5);
-            title('Load Cell 5')
+            plot(timeInterval,data5+data6+data7);
+            title('Load Cell Combined')
 
             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
 
             axes(ax6);
             plot(timeInterval,data6);
-            title('Load Cell 6')
+            title('FM')
 
             axes(ax7);
             plot(timeInterval,data7);
@@ -264,9 +278,11 @@ while(1)
 
             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
 
+
             axes(ax6);
-            plot(timeInterval(end-idx:end),data6(end-idx:end));
-            % set the x limits so that only the last 5 seconds of data is
+            LoadCellDataLastCombined = data6+data7+data8;
+            plot(timeInterval(end-idx:end),LoadCellDataLastCombined(end-idx:end));
+            % set the x limits so that only last 5 seconds of data is
             % plotted
             title('Load Cell 6')
 
@@ -282,13 +298,13 @@ while(1)
         end
         timeControl = now();
     end
-    endTime=datestr(now,'dd-mm-yyyy HH:MM:SS FFF');
-    endTime=endTime(21:23);
+%     endTime=datestr(now,'dd-mm-yyyy HH:MM:SS FFF');
+%     endTime=endTime(21:23);
 
-    timeDifference=str2double(endTime)-str2double(startTime);
-    if timeDifference<pauseTime
-        pause(timeDifference);
-    end
+%     timeDifference=str2double(endTime)-str2double(startTime);
+%     if timeDifference<pauseTime
+%         pause(timeDifference);
+%     end
     i = i+1;
 end
     function cleanMeUp()
@@ -297,6 +313,7 @@ end
         setUpTest(['Test_Data_',datestr(now,'yyyy-mm-dd')],fileName,testDataTable);
         %         writetable(testDataTable,fileName,"FileType","spreadsheet");
 %         fclose(s);
+        ratio = errorLength/correctLength
         clear s
         instrreset;
     end
