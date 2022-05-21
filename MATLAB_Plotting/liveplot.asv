@@ -14,8 +14,7 @@ fileName = [datestr(now,'yyyy-mm-dd_HHMMSS'),'_test3'];
 pauseTime = 0.05;
 % set up plotting frequency
 plotTime = 0.2;
-% check variable size
-SerialPrintSize = 14;
+% plotTimeControl
 
 % frequency
 % fetchFrequency = 1/pauseTime;
@@ -118,28 +117,11 @@ while (strlength(split(fscanf(s))) < 1)
 end
 
 fprintf("Receiving data now\n")
-errorLength = 0;
-correctLength = 0;
 
 while(1)
-%     startTime=datestr(now,'dd-mm-yyyy HH:MM:SS FFF');
-%     startTime=startTime(21:23);
-    rawStr = fscanf(s);
-    str = split(rawStr,'\n');
-    if length(str) ~= SerialPrintSize
-
-        errorLength = errorLength + 1
-
-        str
-        rawStr
-        length(str)
-       
-        
-        continue;
-    else 
-        correctLength = correctLength + 1;
-    end
-
+    startTime=datestr(now,'dd-mm-yyyy HH:MM:SS FFF');
+    startTime=startTime(21:23);
+    str = split(fscanf(s))
     % each data line represents one sensor data
     timeInterval(i) = (str2double(str{1})-timeZeroer)/1000;
     if i == 1
@@ -167,7 +149,6 @@ while(1)
     % (20 observation intervals of 50ms in 1 s)
     data6(i) = str2double(str{7})*-0.000364984+0.445296444;
     data7(i) = str2double(str{8})*-0.00038533+-0.107909483;
-%     data15 = str2double(str{14})
 
 
     testDataTable(i,:) = {timeInterval(i),data1(i),data2(i),data3(i),data4(i),data5(i),data6(i),data7(i)};
@@ -301,13 +282,13 @@ while(1)
         end
         timeControl = now();
     end
-%     endTime=datestr(now,'dd-mm-yyyy HH:MM:SS FFF');
-%     endTime=endTime(21:23);
+    endTime=datestr(now,'dd-mm-yyyy HH:MM:SS FFF');
+    endTime=endTime(21:23);
 
-%     timeDifference=str2double(endTime)-str2double(startTime);
-%     if timeDifference<pauseTime
-%         pause(timeDifference);
-%     end
+    timeDifference=str2double(endTime)-str2double(startTime);
+    if timeDifference<pauseTime
+        pause(timeDifference);
+    end
     i = i+1;
 end
     function cleanMeUp()
@@ -316,7 +297,6 @@ end
         setUpTest(['Test_Data_',datestr(now,'yyyy-mm-dd')],fileName,testDataTable);
         %         writetable(testDataTable,fileName,"FileType","spreadsheet");
 %         fclose(s);
-        ratio = errorLength/correctLength
         clear s
         instrreset;
     end
