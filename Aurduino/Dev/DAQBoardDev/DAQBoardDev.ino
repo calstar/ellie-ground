@@ -100,9 +100,10 @@ Servo servo2;
 //HEADERLESS BOARD {0x7C, 0x87, 0xCE, 0xF0 0x69, 0xAC}
 //NEWEST COM BOARD IN EVA {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC}
 // uint8_t broadcastAddress[] = {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC};
-uint8_t broadcastAddress[] = {0x3C, 0x61, 0x05, 0x4A, 0xD5, 0xE0};
+uint8_t broadcastAddress[] ={0x7C, 0x9E, 0xBD, 0xD7, 0x2B, 0xE8};
 // {0x7C, 0x87, 0xCE, 0xF0, 0x69, 0xAC};
-
+//{0x3C, 0x61, 0x05, 0x4A, 0xD5, 0xE0};
+// {0xC4, 0xDD, 0x57, 0x9E, 0x96, 0x34}
 
 int count=3;
 
@@ -115,13 +116,16 @@ int idleMeasurementDelay=1000;
 int pollingMeasurementDelay=200;
 int hotfireMeasurementDelay=2;
 
+int lastPrintTime=0;
+int PrintDelay =1000;
+
 int lastMeasurementTime=-1;
 short int queueLength=0;
 int commandedState;
 
 int hotfireStage1Time=500;
-int hotfireStage2Time=1000;
-int hotfireStage3Time=2500;
+int hotfireStage2Time=2500;
+int hotfireStage3Time=2800;
 int hotfireStage4Time=3000;
 int igniterTime=750;
 
@@ -178,6 +182,7 @@ typedef struct struct_message {
 
     unsigned char S1; unsigned char S2; int commandedState=1; 
     int DAQstate=0;unsigned char I; short int queueSize;
+    int Debug;
 } struct_message;
 
 // Create a struct_message called Readings to hold sensor readings
@@ -301,6 +306,12 @@ void setup() {
 }
 
 
+void servoWrite() {
+    servo1.write(servo1curr);
+    servo2.write(servo2curr);
+    S1=servo1curr;
+    S2=servo2curr;
+}
 
 
 
@@ -308,12 +319,24 @@ void loop() {
 loopStartTime=millis();
 SerialRead();
 // State selector
-Serial.println(state);
+
+statePrint();
+
 
 switch (state) {
 
+  case (17): //BASIC WIFI TEST DEBUG STATE B
+   wifiDebug();
+   
+    if (commandedState==1) {state=1;} 
+  break;
+
   case (-1): //start single loop
 
+  servo1curr=servo1ClosedPosition;
+  servo2curr=servo2ClosedPosition;
+  servoWrite();
+  
   state=0;
   break;
 
@@ -334,6 +357,7 @@ switch (state) {
       if (commandedState==0) { state=0; MeasurementDelay=idleMeasurementDelay; }
       if (commandedState==2){  state=2; MeasurementDelay=pollingMeasurementDelay; }
       if (commandedState==3) { state=3; MeasurementDelay=pollingMeasurementDelay; }
+    if (commandedState==17) {state=17;} 
 
     break;
 
@@ -404,6 +428,13 @@ armed();
 
 }
 
+void statePrint() {
+  
+  if ((loopStartTime-lastPrintTime) > PrintDelay) { Serial.println(state); lastPrintTime=loopStartTime; }
+
+}
+
+
 void idle() {
     DAQstate = state;
 
@@ -422,6 +453,9 @@ void polling() {
 }
 void manualControl() {
   DAQstate = state;
+  servo1curr=S1;
+  servo2curr=S2;
+  servoWrite();
   dataCheck();
 }
 void armed() {
@@ -443,12 +477,6 @@ DAQstate = state;
 }
 
 
-void servoWrite() {
-    servo1.write(servo1curr);
-    servo2.write(servo2curr);
-    S1=servo1curr;
-    S2=servo2curr;
-}
 
 void hotfire1() {
   DAQstate = 5;
@@ -500,13 +528,18 @@ void addReadingsToQueue() {
   ReadingsQueue[queueLength].queueSize=queueLength;
   ReadingsQueue[queueLength].I = I;
   ReadingsQueue[queueLength].DAQstate = DAQstate;
+  ReadingsQueue[queueLength].S1 = servo1curr;
+  ReadingsQueue[queueLength].S2 = servo2curr;
+
+  
+  
 }
 
 
 
 void getReadings(){
 
- //pt1val = scale1.read(); pt2val = scale2.read(); pt3val = scale3.read(); pt4val = scale4.read(); pt5val = scale5.read(); pt6val = scale6.read(); pt7val = scale7.read();
+ pt1val = scale1.read(); pt2val = scale2.read(); pt3val = scale3.read(); pt4val = scale4.read(); pt5val = scale5.read(); pt6val = scale6.read(); pt7val = scale7.read();
 
 
 
@@ -590,16 +623,27 @@ void dataSend() {
   Readings.fmval  = ReadingsQueue[queueLength].fmval;
   Readings.I = ReadingsQueue[queueLength].I;
   Readings.DAQstate = ReadingsQueue[queueLength].DAQstate;
+  Readings.S1 = ReadingsQueue[queueLength].S1;
+  Readings.S2 = ReadingsQueue[queueLength].S2;
 
   // Send message via ESP-NOW
   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Readings, sizeof(Readings));
 
   if (result == ESP_OK) {
      Serial.println("Sent with success Data Send");
-     ReadingsQueue[queueLength].pt1val=0;
+   //  ReadingsQueue[queueLength].pt1val=0;
      queueLength-=1;
   }
   else {
      Serial.println("Error sending the data");
   }
+}
+
+void wifiDebug() {
+  Readings.Debug=17;
+  dataSend();
+  Serial.println(Commands.Debug);
+
+  
+  
 }

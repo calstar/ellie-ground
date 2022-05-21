@@ -13,7 +13,7 @@
 #define INDICATOR1  4 // state 2 light
 #define INDICATOR2 23 // armed indicator
 #define INDICATOR3 22//Servo1 indicator
-#define INDICATOR4 14//seevo 2
+#define INDICATOR4 14//seevo 2 
 #define INDICATOR5 25//daq indicaor
 #define INDICATOR6 5//com indicator
 
@@ -21,9 +21,9 @@
 
 
 #define servo1ClosedPosition 100
-#define INDICATOR3Position 0
+#define servo1OpenPosition 0
 #define servo2ClosedPosition 130
-#define INDICATOR4Position 20
+#define servo2OpenPosition 20
 
 float pressTime = 0;
 
@@ -46,6 +46,7 @@ short int incomingLC1 = 0;
 short int incomingLC2 = 0;
 short int incomingLC3 = 0;
 short int incomingI = 0;
+int incomingDebug=0;
 int actualState = -5;
 short int queueSize=0;
 esp_now_peer_info_t peerInfo;
@@ -65,9 +66,12 @@ int SendDelay=pollingSendDelay;
 int commandedState;
 int serialState;
 
-int S1=servo1ClosedPosition;
+int S1=servo1ClosedPosition; 
 int S2=servo2ClosedPosition;
 int lastSendTime=0;
+
+int lastPrintTime=0;
+int PrintDelay =1000;
 
 
 
@@ -97,8 +101,11 @@ unsigned long t2;
 //DAQ Protoboard {0x0C, 0xDC, 0x7E, 0xCB, 0x05, 0xC4}
 //NON BUSTED DAQ {0x7C, 0x9E, 0xBD, 0xD8, 0xFC, 0x14}
 // uint8_t broadcastAddress[] = {0x7C, 0x9E, 0xBD, 0xD8, 0xFC, 0x14}; //change to new Mac Address
+// {0xC4, 0xDD, 0x57, 0x9E, 0x96, 0x34};
 
-uint8_t broadcastAddress[] = {0xC4, 0xDD, 0x57, 0x9E, 0x96, 0x34};
+uint8_t broadcastAddress[] = {0x30, 0xC6, 0xF7, 0x2A, 0x28, 0x04};
+//{0x30, 0xC6, 0xF7, 0x2A, 0x28, 0x04}
+
 //Structure example to send data
 //Must match the receiver structure
 typedef struct struct_message {
@@ -119,6 +126,7 @@ typedef struct struct_message {
     char S1S2;
     unsigned char I;
     short int queueSize;
+    int Debug;
 } struct_message;
 
 // Create a struct_message called Readings to recieve sensor readings remotely
@@ -136,12 +144,12 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 
   if (status == 0){
     success = "Delivery Success :)";
-    digitalWrite(INDICATOR5, HIGH);
+    digitalWrite(INDICATOR2, HIGH);
     receiveTimeDAQ = millis();
   }
   else{
     success = "Delivery Fail :(";
-    digitalWrite(INDICATOR5, LOW);
+    digitalWrite(INDICATOR2, LOW);
   }
   // Serial.print(Commands.S1);
   // Serial.print(" ");
@@ -156,6 +164,8 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   incomingPT1 = incomingReadings.pt1;
      // Serial.print(incomingPT1);
 
+     digitalWrite(INDICATOR1,HIGH);
+
   incomingMessageTime= incomingReadings.messageTime;
   incomingPT2 = incomingReadings.pt2;
   incomingPT3 = incomingReadings.pt3;
@@ -169,11 +179,12 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   queueSize= incomingReadings.queueSize;
   incomingI = incomingReadings.I;
   actualState = incomingReadings.DAQstate;
-  digitalWrite(INDICATOR6, HIGH);
+  incomingDebug= incomingReadings.Debug;
 
-
+  
   receiveTimeCOM = millis();
   // Serial.println("Data received");
+  RecieveDataPrint();
 
 }
 
@@ -181,14 +192,12 @@ void SerialRead() {
     if (Serial.available() > 0) {
  serialState=Serial.read()-48;
  Serial.print("AVAILABLE--------------------");
-    Serial.println(commandedState);
-    Serial.println(" ");
+   // Serial.println(serialState);
+   // Serial.println(" ");
 
   }
-
-
-     //   Serial.println(commandedState);
-    //    Serial.println(" ");
+     //   Serial.println(commandedState); 
+     //    Serial.println(" ");
 
 }
 
@@ -230,7 +239,7 @@ void setup() {
 
   //initialize ESP32
    if (esp_now_init() != ESP_OK) {
-    //Serial.println("Error initializing ESP-NOW");
+  //  Serial.println("Error initializing ESP-NOW");
     return;
   }
    // Once ESPNow is successfully Init, we will register for Send CB to
@@ -244,107 +253,31 @@ void setup() {
 
   // Add peer
   if (esp_now_add_peer(&peerInfo) != ESP_OK){
-    //Serial.println("Failed to add peer");
+ //   Serial.println("Failed to add peer");
     return;
   }
   // Register for a callback function that will be called when data is received
   esp_now_register_recv_cb(OnDataRecv);
 
-    Serial.println(WiFi.macAddress());
+  //  Serial.println(WiFi.macAddress());
 
 
 }
 
-void printLine() {
-  // message = "";
-  // message.concat(millis());
-  // message.concat(" ");
-  // message.concat(incomingPT1);
-  // message.concat(" ");
-  // message.concat(incomingPT2);
-  // message.concat(" ");
-  // message.concat(incomingPT3);
-  // message.concat(" ");
-  // message.concat(incomingPT4);
-  // message.concat(" ");
-  // message.concat(incomingLC1);
-  // message.concat(" ");
-  // message.concat(incomingLC2);
-  // message.concat(" ");
-  // message.concat(incomingLC3);
-  // message.concat(" ");
-  // message.concat(incomingFM);
-  // message.concat(" ");
-  // message.concat(Commands.commandedState);
-  // message.concat(" ");
-  // message.concat(Commands.S1);
-  // message.concat(" ");
-  // message.concat(Commands.S2);
-  // message.concat(" ");
-  // message.concat(Commands.I);
-  // message.concat(" ");
-  // message.concat(queueSize);
-
-    // message.concat(" ");
-
-    Serial.print(millis());
-    // Serial.print(",");
-    Serial.print(" ");
-    Serial.print(incomingPT1);
-    Serial.print(" ");
-        // Serial.print(",");
-    Serial.print(incomingPT2);
-    Serial.print(" ");
-        // Serial.print(",");
-    Serial.print(incomingPT3);
-    Serial.print(" ");
-        // Serial.print(",");
-    Serial.print(incomingPT4);
-    Serial.print(" ");
-        // Serial.print(",");
-    Serial.print(incomingLC1);
-    Serial.print(" ");
-        // Serial.print(",");
-    Serial.print(incomingLC2);
-    Serial.print(" ");
-        // Serial.print(",");
-    Serial.print(incomingLC3);
-    Serial.print(" ");
-        // Serial.print(",");
-    Serial.print(incomingFM);
-    Serial.print(" ");
-        // Serial.print(",");
-    Serial.print(Commands.commandedState);
-    Serial.print(" ");
-        // Serial.print(",");
-    Serial.print(Commands.S1);
-    Serial.print(" ");
-        // Serial.print(",");
-    Serial.print(Commands.S2);
-    Serial.print(" ");
-        // Serial.print(",");
-    Serial.print(Commands.I);
-    Serial.print(" ");
-        // Serial.print(",");
-    Serial.print(queueSize);
-    Serial.println("");
 
 
-
-
-  // Serial.println(message);
-}
 void printLine(String string) {
   Serial.println(string);
 }
 
 
 void LEDUpdate() {
+  
 
+if (incomingS1 == servo1OpenPosition) digitalWrite(INDICATOR3,HIGH); else digitalWrite(INDICATOR3,LOW);
+if (incomingS2 == servo2OpenPosition) digitalWrite(INDICATOR4,HIGH); else digitalWrite(INDICATOR4,LOW);
+digitalWrite(INDICATOR1,LOW);
 
-if (incomingS1 == INDICATOR3Position) digitalWrite(INDICATOR3,HIGH); else digitalWrite(INDICATOR3,LOW);
-if (incomingS2 == INDICATOR4Position) digitalWrite(INDICATOR4,HIGH); else digitalWrite(INDICATOR4,LOW);
-if (incomingI == 1) digitalWrite(INDICATOR6,HIGH);digitalWrite(INDICATOR5,HIGH);
 
 }
 
@@ -354,17 +287,29 @@ void loop() {
 loopStartTime=millis();
 SerialRead();
 // State selector
-// Serial.println(actualState);
+//Serial.println(actualState);
 
 LEDUpdate();
-printLine();
 
 
 switch (state) {
 
+  case (17): //BASIC WIFI TEST DEBUG STATE A STATE
+   wifiDebug();
+   
+    if (serialState==1) {state=1;} 
+  break;
+  
+
+  case (18): //COM INTERFACE BUTTON DEBUG STATE  B STATE
+  comDebug();
+
+    if (serialState==1) {state=1;} 
+  break;
+
   case (-1): //start single loop
 
-  state=0;
+  state=0; 
   break;
 
 
@@ -372,7 +317,7 @@ switch (state) {
       idle();
 
 
-    state=1;
+    state=1;  
     break;
 
   case (1): //Polling
@@ -381,12 +326,17 @@ switch (state) {
 
 
       if ((digitalRead(BUTTON2)==1)||(serialState==2)) { state=3; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay; }
+    if (serialState==18) {state=18;} 
+    if (serialState==17) {state=17;} 
 
     break;
 
   case (2): //Manual Servo Control
 
  manualControl();
+
+ 
+   if ((serialState==40)) { state=0; SendDelay=pollingSendDelay; }
 
     break;
 
@@ -395,11 +345,11 @@ switch (state) {
 armed();
 
 
-    //button to ignition
+    //button to ignition 
       if ((digitalRead(BUTTON3)==1)||(serialState==3)) { state=4; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=ignitionSendDelay; }
       //RETURN BUTTON
       if ((digitalRead(BUTTON1)==1)||(serialState==1)) { state=1; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay; }
-
+      
     break;
 
 
@@ -407,10 +357,10 @@ armed();
 
     ignition();
     //HOTFIRE BUTTON
-      if ((digitalRead(BUTTON4)==1)||(serialState==4)) state=5;
+      if ((digitalRead(BUTTON4)==1)||(serialState==4)) state=5; 
       //RETURN BUTTON
       if ((digitalRead(BUTTON1)==1)||(serialState==1)) { state=1; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay; }
-
+      
 
 
     break;
@@ -425,14 +375,23 @@ armed();
 
 }
 }
+void statePrint() {
+  
+
+}
+
+
 
 void idle() {
   dataSendCheck();
+    digitalWrite(INDICATOR5,LOW);
+
 }
 
 void polling() {
   commandedState=1;
   dataSendCheck();
+  digitalWrite(INDICATOR5,HIGH);
 
 }
 
@@ -440,11 +399,15 @@ void manualControl() {
   commandedState=2;
   dataSendCheck();
 
+    digitalWrite(INDICATOR5,LOW);
+
+
 }
 
 void armed() {
   commandedState=3;
   dataSendCheck();
+  digitalWrite(INDICATOR5,LOW);
 
 }
 
@@ -461,7 +424,7 @@ void hotfire() {
 }
 
 void dataSendCheck() {
-  if ((loopStartTime-lastSendTime) > SendDelay) dataSend();
+  if ((loopStartTime-lastSendTime) > SendDelay) dataSend(); 
 }
 
 
@@ -475,10 +438,10 @@ void dataSend() {
   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
 
   if (result == ESP_OK) {
-     // Serial.println("Sent with success Data Send");
+   //  Serial.println("Sent with success Data Send");
   }
   else {
-     // Serial.println("Error sending the data");
+  //   Serial.println("Error sending the data");
   }
 
   lastSendTime=loopStartTime;
@@ -511,17 +474,12 @@ void oldcode() {
         // Serial.println("State 1");
         // Serial.println("BUTTON 1 GOOD");
       }
-      if ((millis() - receiveTimeDAQ) > 50) {
-        digitalWrite(INDICATOR5, LOW);
-      }
-      if ((millis() - receiveTimeCOM) > 50) {
-        digitalWrite(INDICATOR6, LOW);
-      }
+  
       break;
 
     case 1:
 
-
+ 
       pressed2 = digitalRead(BUTTON2);
       pressed3 = digitalRead(BUTTON1);
       currTime = millis();
@@ -594,24 +552,7 @@ void oldcode() {
             //else {
               //Serial.println("Error sending the data");
 
-            //Serial.print("Output Pressures: ");
-            printLine();
-            message = "";
-            message.concat(incomingPT1);
-            message.concat(" ");
-            message.concat(incomingPT2);
-            message.concat(" ");
-            message.concat(incomingPT3);
-            message.concat(" ");
-            message.concat(incomingPT4);
-            message.concat(" ");
-            message.concat(incomingLC1);
-            message.concat(" ");
-            message.concat(incomingFM);
-  message.concat(" ");
-  message.concat(queueSize);
-
-            printLine(message);
+   
 
          }
         }
@@ -703,7 +644,7 @@ void oldcode() {
           Serial.println("case 4 command state 3");
       }
 
-
+     
       digitalWrite(INDICATOR1, HIGH);
       if (digitalRead(BUTTON1)) {
         state = 0;
@@ -721,7 +662,7 @@ void oldcode() {
         Commands.S1 = servo1ClosedPosition;
         Commands.S2 = servo2ClosedPosition;
 
-
+     
       }
       if (digitalRead(BUTTON1)) {
         state = 0;
@@ -747,12 +688,12 @@ void oldcode() {
       if (digitalRead(BUTTON4)) {
         Commands.commandedState = 5;
         commandstate = 5;
-        // Serial.print("yyyyyyy");
+        Serial.print("yyyyyyy");
 
       if (digitalRead(BUTTON4)) {
         // Commands.I = true;
-        Commands.S1 = INDICATOR3Position;
-        Commands.S2 = INDICATOR4Position;
+        Commands.S1 = servo1OpenPosition;
+        Commands.S2 = servo2OpenPosition;
         // Serial.println(Commands.I);
         esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
 
@@ -763,7 +704,7 @@ void oldcode() {
 
 
         state = 0;
-
+      
         float now = millis();
         float runningTime = millis();
         digitalWrite(INDICATOR3, HIGH);
@@ -779,25 +720,17 @@ void oldcode() {
         runningTime = millis();
         while ((now- runningTime) <= 500) {
           now = millis();
-
+          
 
          // printLine(message);
           now = millis();
         }
         Commands.S2 = servo2ClosedPosition;
-
+       
         digitalWrite(INDICATOR4, LOW);
       }
       if (digitalRead(BUTTON1)) {
         state = 0;
-      }
-
-
-      if ((millis() - receiveTimeDAQ) > 50) {
-        digitalWrite(INDICATOR5, LOW);
-      }
-      if ((millis() - receiveTimeCOM) > 50) {
-        digitalWrite(INDICATOR6, LOW);
       }
 
     delay(30);
@@ -814,8 +747,8 @@ void oldcode() {
 
 void RecieveDataPrint() {
 
-    message = "";
-  message.concat(incomingMessageTime);
+  message = "";
+  message.concat(millis());
   message.concat(" ");
   message.concat(incomingPT1);
   message.concat(" ");
@@ -833,15 +766,88 @@ void RecieveDataPrint() {
   message.concat(" ");
   message.concat(incomingFM);
   message.concat(" ");
-  message.concat(Commands.S1);
+  message.concat(incomingS1);
   message.concat(" ");
-  message.concat(Commands.S2);
+  message.concat(incomingS2);
   message.concat(" ");
-  message.concat(Commands.I);
+  message.concat(Commands.commandedState);
   message.concat(" ");
-  message.concat(Commands.S1S2);
+  message.concat(Commands.DAQstate);
   message.concat(" ");
   message.concat(queueSize);
 
   printLine(message);
+}
+
+
+void wifiDebug() {
+  Commands.Debug=-64;
+  dataSend();
+  commandedState=17;
+
+  Serial.println(incomingReadings.Debug);
+  
+}
+
+
+
+void comDebug() {
+Serial.print("COM Interface Debug Mode");
+int Push_button_state = digitalRead(BUTTON1);
+int Push_button_state2 = digitalRead(BUTTON2);
+int Push_button_state3 = digitalRead(BUTTON3);
+int Push_button_state4 = digitalRead(BUTTON4);
+
+// if condition checks if push button is pressed
+// if pressed LED will turn on otherwise remain off 
+
+if ( Push_button_state == HIGH )
+{ 
+  Serial.println("button1");
+}
+
+if ( Push_button_state2 == HIGH )
+{ 
+  Serial.println("button2");
+}
+
+if ( Push_button_state3 == HIGH )
+{ 
+  Serial.println("button3");
+}
+
+if ( Push_button_state4 == HIGH )
+{ 
+  Serial.println("button4");
+}
+
+
+digitalWrite(INDICATOR1, HIGH); 
+digitalWrite(INDICATOR2, HIGH); 
+delay(200);
+
+digitalWrite(INDICATOR1, LOW); 
+digitalWrite(INDICATOR2, LOW); 
+
+
+digitalWrite(INDICATOR3, HIGH); 
+digitalWrite(INDICATOR4, HIGH); 
+delay(200);
+
+digitalWrite(INDICATOR3, LOW); 
+digitalWrite(INDICATOR4, LOW); 
+
+
+digitalWrite(INDICATOR5, HIGH); 
+digitalWrite(INDICATOR6, HIGH); 
+delay(200);
+
+digitalWrite(INDICATOR5, LOW); 
+digitalWrite(INDICATOR6, LOW); 
+ 
+
+
+
+
+  
 }
