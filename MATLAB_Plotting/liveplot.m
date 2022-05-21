@@ -9,7 +9,7 @@ cleanupObj = onCleanup(@cleanMeUp);
 
 
 % Arduino Output
-dataLength = 13;
+dataLength = 14;
 
 % NAME THE TEST FIRST (only change the second part)
 fileName = [datestr(now,'yyyy-mm-dd_HHMMSS'),'_test3'];
@@ -33,7 +33,7 @@ observationInterval = 5;
 
 data = [];
 
-calibrationData = [1,0;1,0;1,0]
+calibrationData = [1,0;1,0;1,0;1,0;1,0;1,0;1,0;1,0;1,0;1,0;1,0;1,0;1,0;1,0];
 % [a, b]
 
 % set up table to collect data
@@ -80,11 +80,11 @@ ax3.YColor = [1 0 0];
 ax4 = nexttile;
 ax4.XColor = [1 0 0];
 ax4.YColor = [1 0 0];
-%
-% % Fifth Tile
-% ax5 = nexttile;
-% ax5.XColor = [1 0 0];
-% ax5.YColor = [1 0 0];
+
+% Fifth Tile
+ax5 = nexttile;
+ax5.XColor = [1 0 0];
+ax5.YColor = [1 0 0];
 %
 % % Sixth Tile
 % ax6 = nexttile;
@@ -169,7 +169,7 @@ while(1)
 
     %
     if (now() - timeControl) * 24 * 60 * 60 >= plotTime % plot every x seconds
-        if timeInterval(end)-timeInterval(1) < observationInterval
+        if data(end,1)-data(1,1) < observationInterval
 
 
 
@@ -200,14 +200,13 @@ while(1)
             plot(data(:,1),data(:,5));
             title('Pressure Transducer 4')
 
-            %
-            %             axes(ax5);
-            % % subplot(2,3,5),
-            % plot(timeInterval,data5+data6+data7);
-            %             title('Load Cell Combined')
-            %
-            %             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
-            %
+            
+                        axes(ax5);
+            % subplot(2,3,5),
+            plot(timeInterval,data5+data6+data7);
+                        title('Load Cells Combined')
+            
+ xlim([data(i,1)-observationInterval, data(i,1)]);            %
             %             axes(ax6);
             % % subplot(2,3,6),
             % plot(timeInterval,data8);
@@ -220,7 +219,7 @@ while(1)
             %             timeInterval(i)
             %             timeInterval(i)-timeInterval(1) >= observationInterval
             if idxSet == 0
-                idx =  floor(length(timeInterval))-1;
+                idx =  floor(length(data(:,1)))-1;
                 idxSet = 1;
 
                 %                 idx
@@ -239,7 +238,7 @@ while(1)
             title('Pressure Transducer 1')
 
             %             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
-            xlim([data(i,1)-observationInterval, data(i,1)]);
+            xlim([data(i-idx,1), data(i,1)]);
 
             axes(ax2);
             % subplot(2,3,2),
@@ -248,7 +247,8 @@ while(1)
 
             %             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
             % ylim([-500000 100000]);
-            xlim([data(i,1)-observationInterval, data(i,1)]);
+%             xlim([data(i,1)-observationInterval, data(i,1)]);
+ xlim([data(i-idx,1), data(i,1)]);
 
             axes(ax3);
             % subplot(2,3,3),
@@ -257,7 +257,8 @@ while(1)
 
             %             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
             % ylim([-500000 100000]);
-            xlim([data(i,1)-observationInterval, data(i,1)]);
+%             xlim([data(i,1)-observationInterval, data(i,1)]);
+ xlim([data(i-idx,1), data(i,1)]);
 
 
             axes(ax4);
@@ -266,21 +267,22 @@ while(1)
             title('Pressure Transducer 4')
 
             %             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
-            xlim([data(i,1)-observationInterval, data(i,1)]);
+%             xlim([data(i,1)-observationInterval, data(i,1)]);
+ xlim([data(i-idx,1), data(i,1)]);
 
 
 
 
-            %
-            % %             axes(ax5);
-            % LoadCellDataLastCombined = data5+data6+data7;
-            % subplot(2,3,5), PLOT(timeInterval(end-idx:end),LoadCellDataLastCombined(end-idx:end));
-            %             % set the x limits so that only last 5 seconds of data is
-            %             % plotted
-            %             title('Load Cell Total')
-            %
-            %             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
-            %
+            
+                        axes(ax5);
+            LoadCellDataLastCombined = data5+data6+data7;
+%             subplot(2,3,5), 
+plot(timeInterval(end-idx:end),LoadCellDataLastCombined(end-idx:end));
+                        % set the x limits so that only last 5 seconds of data is
+                        % plotted
+                        title('Load Cells Total')
+            
+ xlim([data(i-idx,1), data(i,1)]);            %
             % %             axes(ax6);
             % subplot(2,3,6), PLOT(timeInterval(end-idx:end),data8(end-idx:end));
             %             title('FM')
