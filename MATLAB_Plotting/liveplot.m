@@ -29,9 +29,9 @@ observationIntervalMillis = observationInterval*1000;
 % timeFactor = 24 * 60 * 60;
 
 % set up table to collect data
-dataTypes = ["double","double","double","double","double","double","double","double"];
-dataLabels = ["time","PT1","PT2","PT3","PT4","LC5","LC6","LC7"];
-sz = [1,8];
+dataTypes = ["double","double","double","double","double","double","double","double","double"];
+dataLabels = ["time","PT1","PT2","PT3","PT4","LC5","LC6","LC7","FM"];
+sz = [1,9];
 testDataTable = table('Size',sz,'VariableTypes',dataTypes,'VariableNames',dataLabels);
 
 
@@ -82,10 +82,6 @@ ax6 = nexttile;
 ax6.XColor = [1 0 0];
 ax6.YColor = [1 0 0];
 
-ax7 = nexttile;
-ax7.XColor = [1 0 0];
-ax7.YColor = [1 0 0];
-
 
 timeControl = now();
 % timeControlContinuous = now();
@@ -125,7 +121,8 @@ while(1)
 %     startTime=datestr(now,'dd-mm-yyyy HH:MM:SS FFF');
 %     startTime=startTime(21:23);
     rawStr = fscanf(s);
-    str = split(rawStr,'\n');
+    linestr = split(rawStr,'←↵');
+    str = split(linestr{1}," ");
     if length(str) ~= SerialPrintSize
 
         errorLength = errorLength + 1
@@ -167,23 +164,17 @@ while(1)
     % (20 observation intervals of 50ms in 1 s)
     data6(i) = str2double(str{7})*-0.000364984+0.445296444;
     data7(i) = str2double(str{8})*-0.00038533+-0.107909483;
+    data8(i) = str2double(str{9});
 %     data15 = str2double(str{14})
 
 
-    testDataTable(i,:) = {timeInterval(i),data1(i),data2(i),data3(i),data4(i),data5(i),data6(i),data7(i)};
-
-
-
-    % data7 receives LC1
-    % data7(i) = str2double(str{7});
-    % data8 receives LC2
-    % data8(i) = str2double(str{8});
-    % data9 receives LC3
-    % data9(i) = str2double(str{9});
+    testDataTable(i,:) = {timeInterval(i),data1(i),data2(i),data3(i),data4(i),data5(i),data6(i),data7(i),data8(i)};
 
 
 
 
+
+% 
     if (now() - timeControl) * 24 * 60 * 60 >= plotTime % plot every x seconds
         if timeInterval(end)-timeInterval(1) < observationInterval
 
@@ -214,18 +205,14 @@ while(1)
             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
 
             axes(ax5);
-            plot(timeInterval,data5);
-            title('Load Cell 5')
+            plot(timeInterval,data5+data6+data7);
+            title('Load Cell Combined')
 
             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
 
             axes(ax6);
-            plot(timeInterval,data6);
-            title('Load Cell 6')
-
-            axes(ax7);
-            plot(timeInterval,data7);
-            title('Load Cell 7')
+            plot(timeInterval,data8);
+            title('FM');
 
             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
 
@@ -276,26 +263,26 @@ while(1)
 
             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
 
+
+
+
             axes(ax5);
-            % change the number e.g "-6" according to trials.
-            plot(timeInterval(end-idx:end),data5(end-idx:end));
-            title('Load Cell 5')
+            LoadCellDataLastCombined = data5+data6+data7;
+            plot(timeInterval(end-idx:end),LoadCellDataLastCombined(end-idx:end));
+            % set the x limits so that only last 5 seconds of data is
+            % plotted
+            title('Load Cell Total')
 
             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
 
             axes(ax6);
-            plot(timeInterval(end-idx:end),data6(end-idx:end));
-            % set the x limits so that only the last 5 seconds of data is
-            % plotted
-            title('Load Cell 6')
-
-            axes(ax7);
-            plot(timeInterval(end-idx:end),data7(end-idx:end));
-            % set the x limits so that only the last 5 seconds of data is
-            % plotted
-            title('Load Cell 7')
+            % change the number e.g "-6" according to trials.
+            plot(timeInterval(end-idx:end),data8(end-idx:end));
+            title('FM')
 
             xlim([timeInterval(i)-observationInterval, timeInterval(i)]);
+
+
             timeControlContinuous = now();
 %             end
         end
