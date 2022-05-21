@@ -13,7 +13,7 @@
 #define INDICATOR1  4 // state 2 light
 #define INDICATOR2 23 // armed indicator
 #define INDICATOR3 22//Servo1 indicator
-#define INDICATOR4 14//seevo 2 
+#define INDICATOR4 14//seevo 2
 #define INDICATOR5 25//daq indicaor
 #define INDICATOR6 5//com indicator
 
@@ -65,7 +65,7 @@ int SendDelay=pollingSendDelay;
 int commandedState;
 int serialState;
 
-int S1=servo1ClosedPosition; 
+int S1=servo1ClosedPosition;
 int S2=servo2ClosedPosition;
 int lastSendTime=0;
 
@@ -171,7 +171,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   actualState = incomingReadings.DAQstate;
   digitalWrite(INDICATOR6, HIGH);
 
-  
+
   receiveTimeCOM = millis();
   // Serial.println("Data received");
 
@@ -256,34 +256,82 @@ void setup() {
 }
 
 void printLine() {
-  message = "";
-  message.concat(millis());
-  message.concat(" ");
-  message.concat(incomingPT1);
-  message.concat(" ");
-  message.concat(incomingPT2);
-  message.concat(" ");
-  message.concat(incomingPT3);
-  message.concat(" ");
-  message.concat(incomingPT4);
-  message.concat(" ");
-  message.concat(incomingLC1);
-  message.concat(" ");
-  message.concat(incomingLC2);
-  message.concat(" ");
-  message.concat(incomingLC3);
-  message.concat(" ");
-  message.concat(incomingFM);
-  message.concat(" ");
-  message.concat(Commands.commandedState);
-  message.concat(" ");
-  message.concat(Commands.S1);
-  message.concat(" ");
-  message.concat(Commands.S2);
-  message.concat(" ");
-  message.concat(Commands.I);
-  message.concat(" ");
-  message.concat(queueSize);
+  // message = "";
+  // message.concat(millis());
+  // message.concat(" ");
+  // message.concat(incomingPT1);
+  // message.concat(" ");
+  // message.concat(incomingPT2);
+  // message.concat(" ");
+  // message.concat(incomingPT3);
+  // message.concat(" ");
+  // message.concat(incomingPT4);
+  // message.concat(" ");
+  // message.concat(incomingLC1);
+  // message.concat(" ");
+  // message.concat(incomingLC2);
+  // message.concat(" ");
+  // message.concat(incomingLC3);
+  // message.concat(" ");
+  // message.concat(incomingFM);
+  // message.concat(" ");
+  // message.concat(Commands.commandedState);
+  // message.concat(" ");
+  // message.concat(Commands.S1);
+  // message.concat(" ");
+  // message.concat(Commands.S2);
+  // message.concat(" ");
+  // message.concat(Commands.I);
+  // message.concat(" ");
+  // message.concat(queueSize);
+
+    // message.concat(" ");
+
+    Serial.print(millis());
+    // Serial.print(",");
+    Serial.print(" ");
+    Serial.print(incomingPT1);
+    Serial.print(" ");
+        // Serial.print(",");
+    Serial.print(incomingPT2);
+    Serial.print(" ");
+        // Serial.print(",");
+    Serial.print(incomingPT3);
+    Serial.print(" ");
+        // Serial.print(",");
+    Serial.print(incomingPT4);
+    Serial.print(" ");
+        // Serial.print(",");
+    Serial.print(incomingLC1);
+    Serial.print(" ");
+        // Serial.print(",");
+    Serial.print(incomingLC2);
+    Serial.print(" ");
+        // Serial.print(",");
+    Serial.print(incomingLC3);
+    Serial.print(" ");
+        // Serial.print(",");
+    Serial.print(incomingFM);
+    Serial.print(" ");
+        // Serial.print(",");
+    Serial.print(Commands.commandedState);
+    Serial.print(" ");
+        // Serial.print(",");
+    Serial.print(Commands.S1);
+    Serial.print(" ");
+        // Serial.print(",");
+    Serial.print(Commands.S2);
+    Serial.print(" ");
+        // Serial.print(",");
+    Serial.print(Commands.I);
+    Serial.print(" ");
+        // Serial.print(",");
+    Serial.print(queueSize);
+    Serial.println("");
+
+
+
+
   // Serial.println(message);
 }
 void printLine(String string) {
@@ -292,7 +340,7 @@ void printLine(String string) {
 
 
 void LEDUpdate() {
-  
+
 
 if (incomingS1 == INDICATOR3Position) digitalWrite(INDICATOR3,HIGH); else digitalWrite(INDICATOR3,LOW);
 if (incomingS2 == INDICATOR4Position) digitalWrite(INDICATOR4,HIGH); else digitalWrite(INDICATOR4,LOW);
@@ -306,16 +354,17 @@ void loop() {
 loopStartTime=millis();
 SerialRead();
 // State selector
-Serial.println(actualState);
+// Serial.println(actualState);
 
 LEDUpdate();
+printLine();
 
 
 switch (state) {
 
   case (-1): //start single loop
 
-  state=0; 
+  state=0;
   break;
 
 
@@ -323,7 +372,7 @@ switch (state) {
       idle();
 
 
-    state=1;  
+    state=1;
     break;
 
   case (1): //Polling
@@ -346,11 +395,11 @@ switch (state) {
 armed();
 
 
-    //button to ignition 
+    //button to ignition
       if ((digitalRead(BUTTON3)==1)||(serialState==3)) { state=4; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=ignitionSendDelay; }
       //RETURN BUTTON
       if ((digitalRead(BUTTON1)==1)||(serialState==1)) { state=1; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay; }
-      
+
     break;
 
 
@@ -358,10 +407,10 @@ armed();
 
     ignition();
     //HOTFIRE BUTTON
-      if ((digitalRead(BUTTON4)==1)||(serialState==4)) state=5; 
+      if ((digitalRead(BUTTON4)==1)||(serialState==4)) state=5;
       //RETURN BUTTON
       if ((digitalRead(BUTTON1)==1)||(serialState==1)) { state=1; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay; }
-      
+
 
 
     break;
@@ -412,7 +461,7 @@ void hotfire() {
 }
 
 void dataSendCheck() {
-  if ((loopStartTime-lastSendTime) > SendDelay) dataSend(); 
+  if ((loopStartTime-lastSendTime) > SendDelay) dataSend();
 }
 
 
@@ -426,10 +475,10 @@ void dataSend() {
   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Commands, sizeof(Commands));
 
   if (result == ESP_OK) {
-     Serial.println("Sent with success Data Send");
+     // Serial.println("Sent with success Data Send");
   }
   else {
-     Serial.println("Error sending the data");
+     // Serial.println("Error sending the data");
   }
 
   lastSendTime=loopStartTime;
@@ -472,7 +521,7 @@ void oldcode() {
 
     case 1:
 
- 
+
       pressed2 = digitalRead(BUTTON2);
       pressed3 = digitalRead(BUTTON1);
       currTime = millis();
@@ -561,7 +610,7 @@ void oldcode() {
             message.concat(incomingFM);
   message.concat(" ");
   message.concat(queueSize);
-  
+
             printLine(message);
 
          }
@@ -654,7 +703,7 @@ void oldcode() {
           Serial.println("case 4 command state 3");
       }
 
-     
+
       digitalWrite(INDICATOR1, HIGH);
       if (digitalRead(BUTTON1)) {
         state = 0;
@@ -672,7 +721,7 @@ void oldcode() {
         Commands.S1 = servo1ClosedPosition;
         Commands.S2 = servo2ClosedPosition;
 
-     
+
       }
       if (digitalRead(BUTTON1)) {
         state = 0;
@@ -698,7 +747,7 @@ void oldcode() {
       if (digitalRead(BUTTON4)) {
         Commands.commandedState = 5;
         commandstate = 5;
-        Serial.print("yyyyyyy");
+        // Serial.print("yyyyyyy");
 
       if (digitalRead(BUTTON4)) {
         // Commands.I = true;
@@ -714,7 +763,7 @@ void oldcode() {
 
 
         state = 0;
-      
+
         float now = millis();
         float runningTime = millis();
         digitalWrite(INDICATOR3, HIGH);
@@ -730,13 +779,13 @@ void oldcode() {
         runningTime = millis();
         while ((now- runningTime) <= 500) {
           now = millis();
-          
+
 
          // printLine(message);
           now = millis();
         }
         Commands.S2 = servo2ClosedPosition;
-       
+
         digitalWrite(INDICATOR4, LOW);
       }
       if (digitalRead(BUTTON1)) {
@@ -750,7 +799,7 @@ void oldcode() {
       if ((millis() - receiveTimeCOM) > 50) {
         digitalWrite(INDICATOR6, LOW);
       }
-   
+
     delay(30);
   }
 
