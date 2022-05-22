@@ -129,6 +129,7 @@ correctLength = 0;
 while(1)
     %     startTime=datestr(now,'dd-mm-yyyy HH:MM:SS FFF');
     %     startTime=startTime(21:23);
+    
     rawStr = fscanf(s);
     linestr = split(rawStr,'←↵');
     str = split(linestr{1}," ");
@@ -164,6 +165,9 @@ while(1)
         end
 
     end
+      data(i,12)
+
+%     fprintf(data(:,))
 
 
 
@@ -209,7 +213,7 @@ while(1)
             
                         axes(ax5);
             % subplot(2,3,5),
-            plot(timeInterval,data5+data6+data7);
+            plot(data(:,1),data(:,6)+data(:,7)+data(:,8));
                         title('Load Cells Combined')
             
  xlim([data(i,1)-observationInterval, data(i,1)]);            %
@@ -281,9 +285,9 @@ while(1)
 
             
                         axes(ax5);
-            LoadCellDataLastCombined = data5+data6+data7;
+            LoadCellDataLastCombined = data(:,6)+data(:,7)+data(:,8);
 %             subplot(2,3,5), 
-plot(timeInterval(end-idx:end),LoadCellDataLastCombined(end-idx:end));
+plot(data(end-idx:end,1),LoadCellDataLastCombined(end-idx:end));
                         % set the x limits so that only last 5 seconds of data is
                         % plotted
                         title('Load Cells Total')

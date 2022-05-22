@@ -16,10 +16,10 @@ cleanupObj = onCleanup(@cleanMeUp);
 % The code will read from the previous data, or establish a new file if no
 % data present.
 % MUST CHANGE NAME OR DELETE PREVIOUS FILE IF DIFFERENT NUMBER OF SENSORS REPORT DATA
-fileName = 'PressureTransfuserCalibration';
+fileName = 'LoadCellCalibration_LC5';
 
 % NAME THE FOLDER YOU WANT THE TEST TO BE IN
-folderName = 'PREHOTFIRECHECK';
+folderName = 'POSTHOTFIRE';
 
 % Name the sensors (will be used in data logging and graph titles)
 testDevice = 'PT ';

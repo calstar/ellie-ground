@@ -13,7 +13,7 @@
 #define INDICATOR1  4 // state 2 light
 #define INDICATOR2 23 // armed indicator
 #define INDICATOR3 22//Servo1 indicator
-#define INDICATOR4 14//seevo 2 
+#define INDICATOR4 14//seevo 2
 #define INDICATOR5 25//daq indicaor
 #define INDICATOR6 5//com indicator
 
@@ -22,8 +22,8 @@
 
 #define servo1ClosedPosition 100
 #define servo1OpenPosition 10
-#define servo2ClosedPosition 130
-#define servo2OpenPosition 0
+#define servo2ClosedPosition 80
+#define servo2OpenPosition 160
 
 float pressTime = 0;
 
@@ -66,7 +66,7 @@ int SendDelay=pollingSendDelay;
 int commandedState;
 int serialState;
 
-int S1=servo1ClosedPosition; 
+int S1=servo1ClosedPosition;
 int S2=servo2ClosedPosition;
 int lastSendTime=0;
 
@@ -180,7 +180,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   actualState = incomingReadings.DAQstate;
   incomingDebug= incomingReadings.Debug;
 
-  
+
   receiveTimeCOM = millis();
   // Serial.println("Data received");
   RecieveDataPrint();
@@ -195,7 +195,7 @@ void SerialRead() {
    // Serial.println(" ");
 
   }
-     //   Serial.println(commandedState); 
+     //   Serial.println(commandedState);
      //    Serial.println(" ");
 
 }
@@ -273,7 +273,7 @@ void printLine(String string) {
 
 
 void LEDUpdate() {
-  
+
 
 if (incomingS1 == servo1OpenPosition) digitalWrite(INDICATOR3,HIGH); else digitalWrite(INDICATOR3,LOW);
 if (incomingS2 == servo2OpenPosition) digitalWrite(INDICATOR4,HIGH); else digitalWrite(INDICATOR4,LOW);
@@ -297,20 +297,20 @@ switch (state) {
 
   case (17): //BASIC WIFI TEST DEBUG STATE A STATE
    wifiDebug();
-   
-    if (serialState==1) {state=1;} 
+
+    if (serialState==1) {state=1;}
   break;
-  
+
 
   case (18): //COM INTERFACE BUTTON DEBUG STATE  B STATE
   comDebug();
 
-    if (serialState==1) {state=1;} 
+    if (serialState==1) {state=1;}
   break;
 
   case (-1): //start single loop
 
-  state=0; 
+  state=0;
   break;
 
 
@@ -318,7 +318,7 @@ switch (state) {
       idle();
 
 
-    state=1;  
+    state=1;
     break;
 
   case (1): //Polling
@@ -327,8 +327,8 @@ switch (state) {
 
 
       if ((digitalRead(BUTTON2)==1)||(serialState==2)) { state=3; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay; }
-    if (serialState==18) {state=18;} 
-    if (serialState==17) {state=17;} 
+    if (serialState==18) {state=18;}
+    if (serialState==17) {state=17;}
 
     break;
 
@@ -336,7 +336,7 @@ switch (state) {
 
  manualControl();
 
- 
+
    if ((serialState==40)) { state=0; SendDelay=pollingSendDelay; }
 
     break;
@@ -346,11 +346,11 @@ switch (state) {
 armed();
 
 
-    //button to ignition 
+    //button to ignition
       if ((digitalRead(BUTTON3)==1)||(serialState==3)) { state=4; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=ignitionSendDelay; }
       //RETURN BUTTON
       if ((digitalRead(BUTTON1)==1)||(serialState==1)) { state=1; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay; }
-      
+
     break;
 
 
@@ -358,10 +358,10 @@ armed();
 
     ignition();
     //HOTFIRE BUTTON
-      if ((digitalRead(BUTTON4)==1)||(serialState==4)) state=5; 
+      if ((digitalRead(BUTTON4)==1)||(serialState==4)) state=5;
       //RETURN BUTTON
       if ((digitalRead(BUTTON1)==1)||(serialState==1)) { state=1; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay; }
-      
+
 
 
     break;
@@ -378,7 +378,7 @@ armed();
 
 }
 void statePrint() {
-  
+
 
 }
 
@@ -426,7 +426,7 @@ void hotfire() {
 }
 
 void dataSendCheck() {
-  if ((loopStartTime-lastSendTime) > SendDelay) dataSend(); 
+  if ((loopStartTime-lastSendTime) > SendDelay) dataSend();
 }
 
 
@@ -476,12 +476,12 @@ void oldcode() {
         // Serial.println("State 1");
         // Serial.println("BUTTON 1 GOOD");
       }
-  
+
       break;
 
     case 1:
 
- 
+
       pressed2 = digitalRead(BUTTON2);
       pressed3 = digitalRead(BUTTON1);
       currTime = millis();
@@ -554,7 +554,7 @@ void oldcode() {
             //else {
               //Serial.println("Error sending the data");
 
-   
+
 
          }
         }
@@ -646,7 +646,7 @@ void oldcode() {
           Serial.println("case 4 command state 3");
       }
 
-     
+
       digitalWrite(INDICATOR1, HIGH);
       if (digitalRead(BUTTON1)) {
         state = 0;
@@ -659,7 +659,7 @@ void oldcode() {
         }
 
 
- 
+
       if (digitalRead(BUTTON1)) {
         state = 0;
       }
@@ -700,7 +700,7 @@ void oldcode() {
 
 
         state = 0;
-      
+
         float now = millis();
         float runningTime = millis();
         digitalWrite(INDICATOR3, HIGH);
@@ -716,13 +716,13 @@ void oldcode() {
         runningTime = millis();
         while ((now- runningTime) <= 500) {
           now = millis();
-          
+
 
          // printLine(message);
           now = millis();
         }
         Commands.S2 = servo2ClosedPosition;
-       
+
         digitalWrite(INDICATOR4, LOW);
       }
       if (digitalRead(BUTTON1)) {
@@ -782,7 +782,7 @@ void wifiDebug() {
   commandedState=17;
 
   Serial.println(incomingReadings.Debug);
-  
+
 }
 
 
@@ -795,55 +795,55 @@ int Push_button_state3 = digitalRead(BUTTON3);
 int Push_button_state4 = digitalRead(BUTTON4);
 
 // if condition checks if push button is pressed
-// if pressed LED will turn on otherwise remain off 
+// if pressed LED will turn on otherwise remain off
 
 if ( Push_button_state == HIGH )
-{ 
+{
   Serial.println("button1");
 }
 
 if ( Push_button_state2 == HIGH )
-{ 
+{
   Serial.println("button2");
 }
 
 if ( Push_button_state3 == HIGH )
-{ 
+{
   Serial.println("button3");
 }
 
 if ( Push_button_state4 == HIGH )
-{ 
+{
   Serial.println("button4");
 }
 
 
-digitalWrite(INDICATOR1, HIGH); 
-digitalWrite(INDICATOR2, HIGH); 
+digitalWrite(INDICATOR1, HIGH);
+digitalWrite(INDICATOR2, HIGH);
 delay(200);
 
-digitalWrite(INDICATOR1, LOW); 
-digitalWrite(INDICATOR2, LOW); 
+digitalWrite(INDICATOR1, LOW);
+digitalWrite(INDICATOR2, LOW);
 
 
-digitalWrite(INDICATOR3, HIGH); 
-digitalWrite(INDICATOR4, HIGH); 
+digitalWrite(INDICATOR3, HIGH);
+digitalWrite(INDICATOR4, HIGH);
 delay(200);
 
-digitalWrite(INDICATOR3, LOW); 
-digitalWrite(INDICATOR4, LOW); 
+digitalWrite(INDICATOR3, LOW);
+digitalWrite(INDICATOR4, LOW);
 
 
-digitalWrite(INDICATOR5, HIGH); 
-digitalWrite(INDICATOR6, HIGH); 
+digitalWrite(INDICATOR5, HIGH);
+digitalWrite(INDICATOR6, HIGH);
 delay(200);
 
-digitalWrite(INDICATOR5, LOW); 
-digitalWrite(INDICATOR6, LOW); 
- 
+digitalWrite(INDICATOR5, LOW);
+digitalWrite(INDICATOR6, LOW);
 
 
 
 
-  
+
+
 }
