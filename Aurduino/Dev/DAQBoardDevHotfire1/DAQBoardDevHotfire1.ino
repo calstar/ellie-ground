@@ -50,8 +50,23 @@ float currentPosition2 = float('inf');
 #define ADC_Max 4096;
 
 
+//PT CALIBRATION CONSTANTS
+double PT1C1 =0.0001129;
+double PT1C2 =12.49;
+double PT2C1 =0.00002772;
+double PT2C2 =17.53;
+double PT3C1 =.0001438;
+double PT3C2 =16.23;
+double PT4C1 = 0.00002767;
+double PT4C2 =18.94;
+double PT5C1 =-.000303;
+double PT5C2 =-.154;
+double PT6C1 =-0.000341;
+double PT6C2 =0.833;
+double PT7C1 =-.000250;
+double PT7C2 =1.64;
 
-
+double PTdiv =100;
 
 
 //Initialize flow meter variables for how it computes the flow amount
@@ -118,7 +133,7 @@ int loopStartTime=0;
 int MeasurementDelay=1000; //Delay between data measurment periods in the idle loop state in m
 int idleMeasurementDelay=1000;
 int pollingMeasurementDelay=200;
-int hotfireMeasurementDelay=20;
+int hotfireMeasurementDelay=2;
 
 int lastPrintTime=0;
 int PrintDelay =1000;
@@ -127,10 +142,10 @@ int lastMeasurementTime=-1;
 short int queueLength=0;
 int commandedState;
 
-int hotfireStage1Time=750;
-int hotfireStage2Time=8500;
-int hotfireStage3Time=9300;
-int hotfireStage4Time=10800;
+int hotfireStage1Time=250;
+int hotfireStage2Time=2500;
+int hotfireStage3Time=2800;
+int hotfireStage4Time=3000;
 int igniterTime=750;
 
 int hotfireTimer=0;
@@ -167,22 +182,22 @@ String success;
 
 // Define variables to store readings to be sent
 int messageTime=10;
- int pt1val=1;
- int pt2val=1;
- int pt3val=1;
- int pt4val=1;
- int pt5val=1;
- int pt6val=1;
- int pt7val=1;
- int fmval=2;
+short int pt1val=1;
+short int pt2val=1;
+short int pt3val=1;
+short int pt4val=1;
+short int pt5val=1;
+short int pt6val=1;
+short int pt7val=1;
+short int fmval=2;
 
 
 //Structure example to send data
 //Must match the receiver structure
 typedef struct struct_message {
     int messageTime;
-     int pt1val;  int pt2val;  int pt3val;  int pt4val;  int pt5val;  int pt6val; int pt7val;
-     int fmval;
+    short int pt1val; short int pt2val; short int pt3val; short int pt4val; short int pt5val; short int pt6val; short int pt7val;
+    short int fmval;
 
     unsigned char S1; unsigned char S2; int commandedState=1; 
     int DAQstate=0;unsigned char I; short int queueSize;
@@ -543,13 +558,13 @@ void addReadingsToQueue() {
 
 void getReadings(){
 
- pt1val = scale1.read(); 
- pt2val = scale2.read() ; 
- pt3val = scale3.read(); 
- pt4val = scale4.read(); 
- pt5val = scale5.read(); 
- pt6val = scale6.read(); 
- pt7val = scale7.read();
+ pt1val = (PT1C1*scale1.read() + PT1C2)*PTdiv; 
+ pt2val = (PT2C1*scale2.read() + PT2C2)*PTdiv; 
+ pt3val = (PT3C1*scale3.read()+PT3C2)*PTdiv; 
+ pt4val = (PT3C1*scale4.read()+PT4C2)*PTdiv; 
+ pt5val = (PT5C1*scale5.read()+PT5C2)*PTdiv; 
+ pt6val = (PT6C1*scale6.read()+PT6C2)*PTdiv; 
+ pt7val = (PT7C1*scale7.read()+PT7C2)*PTdiv;
 
 
 
