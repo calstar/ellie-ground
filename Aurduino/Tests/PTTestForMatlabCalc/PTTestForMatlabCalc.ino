@@ -128,13 +128,13 @@ void getReadings(){
   pt4 = scale4.read();
        // Serial.print(" pt4: ");
 
-  pt5 = scale5.read();
+  pt5 = scale5.read()*-3.0272e-04-0.1535;
        // Serial.print(" pt5: ");
 
-  pt6 = scale6.read();
+  pt6 = scale6.read()*-3.4136e-04+0.8333;
        // Serial.print(" pt6: ");
 
-  pt7 = scale7.read();
+  pt7 = scale7.read()*-2.4978e-04+1.6369;
        // Serial.print(" pt7: ");
 
   serialMessage = "";
