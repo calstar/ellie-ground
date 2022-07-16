@@ -18,42 +18,70 @@ double flowRate;
 volatile int count;
 unsigned long openTimeControl = 0;
 unsigned long openTime = 3000;
+
+double totalVL = 0;
+double totalVGal = 0;
+double q = 0;
+
+unsigned long timeD = 0;
+unsigned long firstTime = millis();
+unsigned long secondTime = millis();
 void setup() {
   // put your setup code here, to run once:
-pinMode(FMPIN, INPUT_PULLUP);
+pinMode(FMPIN, INPUT);
 //attach servo pins
 servo1.attach(SERVOPIN1,SERVO_MIN_USEC,SERVO_MAX_USEC);
 
 Serial.begin(115200);
-attachInterrupt(0, Flow, RISING);
+attachInterrupt(digitalPinToInterrupt(18), Flow, RISING);
 
-delay(5000);
-openTimeControl = millis();
+// if you want to do an accurate valve open/close for calibration
+// delay(5000);
+// openTimeControl = millis();
 
 }
 
 void loop() {
-  count = 0;
+  // count = 0;
   // Serial.print(millis()-openTimeControl);
-  if (millis()-openTimeControl <= openTime-1000) {
-    IsOpened = 1;
-  servo1.write(servo1OpenPosition);
-  interrupts();
-  delay(1000);
-  noInterrupts();
-  // count = 800;
-  // put your main code here, to run repeatedly:
-} else {
-  servo1.write(servo1ClosedPosition);
-  IsOpened = 0;
-}
+//   if (millis()-openTimeControl <= openTime-1000) {
+//     IsOpened = 1;
+//   servo1.write(servo1OpenPosition);
+//   interrupts();
+//   delay(1000);
+//   noInterrupts();
+//   // count = 800;
+//   // put your main code here, to run repeatedly:
+// } else {
+//   servo1.write(servo1ClosedPosition);
+//   IsOpened = 0;
+// }
 // Serial.print(" ");
-Serial.print(count);
-Serial.print(" ");
-Serial.println(IsOpened);
+  interrupts();
+Serial.print("flowRate (Gal/M): ");
+Serial.print(q);
+Serial.print(" Total V (Gal): ");
+Serial.print(totalVGal);
+Serial.print(" Total V (L): ");
+Serial.print(totalVL);
+Serial.print(" count: ");
+Serial.println(count);
+// q = 0;
+// count = 0;
+delay(50);
 }
 
 void Flow()
 {
-  count++;
+  Serial.print("AHHAHAHHHA THERE IS FLUID IN THE SYSTEM HAHAHAHAHAHH");
+  secondTime = millis();
+  // how many counts per second
+  timeD = secondTime-firstTime;
+  count = 1000/timeD;
+  firstTime = secondTime;
+  q = 2+exp(count-1847);
+  // gal
+  totalVGal = totalVGal + q*timeD/1000;
+  totalVL =  totalVGal*3.78541;
+
 }
