@@ -7,7 +7,7 @@
 #include "HX711.h"
 #define SERVO_MIN_USEC (800)
 #define SERVO_MAX_USEC (2100)
-#define FMPIN 18
+#define FMPIN 12
 #define SERVOPIN1 13
 #define servo1ClosedPosition 100
 #define servo1OpenPosition 10
@@ -35,7 +35,7 @@ pinMode(FMPIN, INPUT);
 servo1.attach(SERVOPIN1,SERVO_MIN_USEC,SERVO_MAX_USEC);
 
 Serial.begin(115200);
-// attachInterrupt(digitalPinToInterrupt(18), Flow, RISING);
+attachInterrupt(digitalPinToInterrupt(18), Flow, RISING);
 
 // if you want to do an accurate valve open/close for calibration
 // delay(5000);
@@ -44,8 +44,8 @@ Serial.begin(115200);
 }
 
 void loop() {
-  pulse = digitalRead(FMPIN);
-  println(pulse);
+  // pulse = digitalRead(FMPIN);
+  // Serial.println(pulse);
   // count = 0;
   // Serial.print(millis()-openTimeControl);
 //   if (millis()-openTimeControl <= openTime-1000) {
@@ -61,17 +61,17 @@ void loop() {
 //   IsOpened = 0;
 // }
 // Serial.print(" ");
-//   interrupts();
-// Serial.print("flowRate (Gal/M): ");
-// Serial.print(q);
-// Serial.print(" Total V (Gal): ");
-// Serial.print(totalVGal);
-// Serial.print(" Total V (L): ");
-// Serial.print(totalVL);
-// Serial.print(" count: ");
-// Serial.println(count);
-// q = 0;
-// count = 0;
+  interrupts();
+Serial.print("flowRate (Gal/M): ");
+Serial.print(q);
+Serial.print(" Total V (Gal): ");
+Serial.print(totalVGal);
+Serial.print(" Total V (L): ");
+Serial.print(totalVL);
+Serial.print(" count: ");
+Serial.println(count);
+q = 0;
+count = 0;
 delay(50);
 }
 
