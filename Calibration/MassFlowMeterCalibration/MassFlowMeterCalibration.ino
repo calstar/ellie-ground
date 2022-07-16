@@ -18,6 +18,8 @@ double flowRate;
 volatile int count;
 unsigned long openTimeControl = 0;
 unsigned long openTime = 3000;
+bool pulse = 0;
+
 
 double totalVL = 0;
 double totalVGal = 0;
@@ -33,7 +35,7 @@ pinMode(FMPIN, INPUT);
 servo1.attach(SERVOPIN1,SERVO_MIN_USEC,SERVO_MAX_USEC);
 
 Serial.begin(115200);
-attachInterrupt(digitalPinToInterrupt(18), Flow, RISING);
+// attachInterrupt(digitalPinToInterrupt(18), Flow, RISING);
 
 // if you want to do an accurate valve open/close for calibration
 // delay(5000);
@@ -42,6 +44,8 @@ attachInterrupt(digitalPinToInterrupt(18), Flow, RISING);
 }
 
 void loop() {
+  pulse = digitalRead(FMPIN);
+  println(pulse);
   // count = 0;
   // Serial.print(millis()-openTimeControl);
 //   if (millis()-openTimeControl <= openTime-1000) {
@@ -57,15 +61,15 @@ void loop() {
 //   IsOpened = 0;
 // }
 // Serial.print(" ");
-  interrupts();
-Serial.print("flowRate (Gal/M): ");
-Serial.print(q);
-Serial.print(" Total V (Gal): ");
-Serial.print(totalVGal);
-Serial.print(" Total V (L): ");
-Serial.print(totalVL);
-Serial.print(" count: ");
-Serial.println(count);
+//   interrupts();
+// Serial.print("flowRate (Gal/M): ");
+// Serial.print(q);
+// Serial.print(" Total V (Gal): ");
+// Serial.print(totalVGal);
+// Serial.print(" Total V (L): ");
+// Serial.print(totalVL);
+// Serial.print(" count: ");
+// Serial.println(count);
 // q = 0;
 // count = 0;
 delay(50);
