@@ -2,8 +2,8 @@
 This code runs on the DAQ ESP32 and has a couple of main functions.
 1. Read sensor data
 2. Send sensor data to COM ESP32
-3. Recieve servo commands from COM ESP32
-4. Send PWM signals to servos
+3. Recieve commands from COM ESP32
+4. Send PWM signals to servos (if in use)
 */
 
 #include <esp_now.h>
@@ -13,6 +13,26 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 #include <Arduino.h>
 #include "HX711.h"
 
+/* TEST SPECIFIC PARAMETERS:
+numPTs - Number of pressure transducers connected
+numLCs - Number of load cells connected
+numRTDs - Number of RTDs connected
+flowInc - Boolean determining whether a flowmeter is connected
+test - Name of the testcase being used
+
+Pinouts for different sensors. Assign sensors in ASCENDING NUMERICAL ORDER
+(i.e. If there are three PTs, assign PT1, PT2, and PT3). Note that these can 
+change depending on the board being used. Note that each sensor requires a
+different clock pin.
+If a sensor is not used, the numerical pin assignment is arbitrary. It is 
+recommended to assign a negative value to ensure that they are not accidentally
+used and to improve readability for which sensors are in use.
+*/
+#define numPTs 0
+#define numLCs 0
+#define numRTDs 0
+bool flowInc = false;
+String test = "LE2"
 
 #define FMPIN 4 //Flowmeter pin
 #define PTDOUT1 32
@@ -35,17 +55,24 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 #define RELAYPIN1 14
 #define RELAYPIN2 27
 
+/* Manually set hardware specific parameters. These parameters should not
+change between testcases but may change if the hardware is altered. If the
+system isn't exhibiting expected behavior, check these parameters.
+*/
+
+// Define the closed and open angles for servos
 #define servo1ClosedPosition 100
 #define servo1OpenPosition 10
 #define servo2ClosedPosition 80
 #define servo2OpenPosition 160
 
+// Define servo min and max values
+#define SERVO_MIN_USEC (800)
+#define SERVO_MAX_USEC (2100)
+
 float currentPosition1 = float('inf');
 float currentPosition2 = float('inf');
 
-//define servo min and max values
-#define SERVO_MIN_USEC (800)
-#define SERVO_MAX_USEC (2100)
 //define servo necessary values
 #define ADC_Max 4096;
 
@@ -181,8 +208,22 @@ int messageTime=10;
 //Must match the receiver structure
 typedef struct struct_message {
     int messageTime;
-     int pt1val;  int pt2val;  int pt3val;  int pt4val;  int pt5val;  int pt6val; int pt7val;
-     int fmval;
+    int pt1;  
+    int pt2;  
+    int pt3;  
+    int pt4;  
+    int pt5;  
+    int pt6; 
+    int pt7;
+    int pt8;
+    int lc1;
+    int lc2;
+    int lc3;
+    int rtd1;
+    int rtd2;
+    int rtd3;
+    int rtd4;
+    int flow;
 
     unsigned char S1; unsigned char S2; int commandedState=1; 
     int DAQstate=0;unsigned char I; short int queueSize;
