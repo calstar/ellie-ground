@@ -7,7 +7,7 @@
 #include "HX711.h"
 #define SERVO_MIN_USEC (800)
 #define SERVO_MAX_USEC (2100)
-#define FMPIN 12
+#define FMPIN 19
 #define SERVOPIN1 13
 #define servo1ClosedPosition 100
 #define servo1OpenPosition 10
@@ -25,10 +25,10 @@ double totalVL = 0;
 double totalVGal = 0;
 double q = 0;
 
-unsigned long timeD = 0;
-unsigned long firstTime = millis();
-
+unsigned long timeDelta = 0;
+unsigned long firstTime;
 unsigned long secondTime;
+unsigned long duration;
 
 
 void setup() {
@@ -37,24 +37,33 @@ void setup() {
 }
 
 void loop() {
-  if (digitalRead(FMPIN)) {
-    Flow();
-  } else {
-    Serial.println("NO PULSE");
-  }
+//  if (digitalRead(FMPIN)) {
+//    Flow();
+//  } else {
+//    Serial.println("NO PULSE");
+//  }
+
+  duration = pulseIn(FMPIN, HIGH);
+  Serial.println(duration);
 }
 
 void Flow()
 {
-  secondTime = millis();
+  
+  //calculate pulse rate
+
+
+  
+ 
+  //secondTime = millis();
   // how many counts per second
-  timeDelta = secondTime - firstTime;
-  count = 1000 / timeDelta;
-  firstTime = secondTime;
-  q = 2 + exp(count-1847);
-  // gal
-  totalVGal = totalVGal + q*timeD/1000;
-  totalVL =  totalVGal*3.78541;
-  Serial.println(count, 4)
+//  timeDelta = secondTime - firstTime;
+//  count = 1000 / timeDelta;
+//  firstTime = secondTime;
+//  q = 2 + exp(count-1847);
+//  // gal
+//  totalVGal = totalVGal + q*timeDelta/1000;
+//  totalVL =  totalVGal*3.78541;
+//  Serial.println(count, 4);
 
 }
