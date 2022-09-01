@@ -4,16 +4,8 @@
 #include <ESP32Servo.h>
 #include <Wire.h>
 #include <Arduino.h>
-#include "HX711.h"
-#define SERVO_MIN_USEC (800)
-#define SERVO_MAX_USEC (2100)
 #define FMPIN 19
-#define SERVOPIN1 13
-#define servo1ClosedPosition 100
-#define servo1OpenPosition 10
-float currentPosition1 = float('inf');
-Servo servo1;
-int IsOpened = 0;
+
 double flowRate;
 volatile float count;
 unsigned long openTimeControl = 0;
@@ -27,9 +19,8 @@ double q = 0;
 
 unsigned long timeDelta = 0;
 unsigned long firstTime;
-
-
 unsigned long secondTime;
+unsigned long duration;
 
 
 void setup() {
@@ -38,23 +29,12 @@ void setup() {
 }
 
 void loop() {
-  if (digitalRead(FMPIN)) {
-    Flow();
-  } else {
-    Serial.println("NO PULSE");
-  }
+  duration = pulseIn(FMPIN, HIGH);
+  Serial.println(duration);
 }
 
 void Flow()
 {
-  firstTime = millis();
-  count = 0;
-  Serial.println("1");
-  //calculate pulse rate
-
-
-  
- 
   //secondTime = millis();
   // how many counts per second
 //  timeDelta = secondTime - firstTime;
