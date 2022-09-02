@@ -6,11 +6,16 @@
 #include <Arduino.h>
 #define FMPIN 19
 
+#define PULSE_RATE 2006
+
 double flowRate;
 volatile float count;
 unsigned long openTimeControl = 0;
 unsigned long openTime = 3000;
 bool pulse = 0;
+
+int pulseSTart, pulseEnd, period;
+float frequency;
 
 
 double totalVL = 0;
@@ -29,8 +34,12 @@ void setup() {
 }
 
 void loop() {
-  duration = pulseIn(FMPIN, HIGH);
-  Serial.println(duration);
+  pulseStart = pulseIn(FMPIN, HIGH);
+  pulseEnd = pulseIn(FMPIN, LOW);
+  period = ((pulseStart + pulseEnd) / 1000) / 60;
+  frequency = 1 / period;
+  flowRate = frequency / PULSE_RATE;
+  Serial.println(flowRate);
 }
 
 void Flow()
