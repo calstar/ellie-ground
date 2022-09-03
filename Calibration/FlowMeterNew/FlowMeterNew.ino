@@ -6,7 +6,9 @@
 #include <Arduino.h>
 #define FMPIN 19
 
-#define PULSE_RATE 2006
+// how mamy pulses per gallon
+// plastic sensor
+#define PULSE_RATE 1694.9
 
 double flowRate;
 volatile float count;
@@ -14,7 +16,7 @@ unsigned long openTimeControl = 0;
 unsigned long openTime = 3000;
 bool pulse = 0;
 
-int pulseSTart, pulseEnd, period;
+double pulseStart, pulseEnd, period;
 float frequency;
 
 
@@ -34,25 +36,39 @@ void setup() {
 }
 
 void loop() {
+  // 1 pulse ~= 2.25 mL
   pulseStart = pulseIn(FMPIN, HIGH);
-  pulseEnd = pulseIn(FMPIN, LOW);
-  period = ((pulseStart + pulseEnd) / 1000) / 60;
-  frequency = 1 / period;
-  flowRate = frequency / PULSE_RATE;
+  period = ((pulseStart) / 1000) / 60;
+  if (period <= 0) {
+    Serial.println("Period 0");
+  } else {
+    Serial.print("period Not 0, equals to ");
+    Serial.println(period);
+    // frequency in 1/seconds
+    frequency = 1.00 / period;
+    // convert frequency to 1/minute, 1/s * s / m
+    frequency = frequency * 60 / 1;
+    // flowrate (Vol/Time) = frequency (1/Time) / Pulserate (1/Vol)
+    flowRate = frequency / PULSE_RATE ;
+      // Serial.println(flowRate);
+  }
+
   Serial.println(flowRate);
+
+  delay(20);
 }
 
 void Flow()
 {
-  //secondTime = millis();
-  // how many counts per second
-//  timeDelta = secondTime - firstTime;
-//  count = 1000 / timeDelta;
-//  firstTime = secondTime;
-//  q = 2 + exp(count-1847);
-//  // gal
-//  totalVGal = totalVGal + q*timeDelta/1000;
-//  totalVL =  totalVGal*3.78541;
-//  Serial.println(count, 4);
+ //  secondTime = millis();
+ //  // how many counts per second
+ // timeDelta = secondTime - firstTime;
+ // count = 1000 / timeDelta;
+ // firstTime = secondTime;
+ // q = 2 + exp(count-1847);
+ // // gal
+ // totalVGal = totalVGal + q*timeDelta/1000;
+ // totalVL =  totalVGal*3.78541;
+ // Serial.println(count, 4);
 
 }
