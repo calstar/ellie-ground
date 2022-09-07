@@ -110,14 +110,23 @@ uint8_t broadcastAddress[] = {0x30, 0xC6, 0xF7, 0x2A, 0x28, 0x04};
 //Must match the receiver structure
 typedef struct struct_message {
     int messageTime;
-     int pt1;
-     int pt2;
-     int pt3;
-     int pt4;
-     int lc1;
-     int lc2;
-     int lc3;
-     int fm;
+    int pt1;
+    int pt2;
+    int pt3;
+    int pt4;
+    int pt5;
+    int pt6;
+    int pt7;
+    int pt8;
+    int lc1;
+    int lc2;
+    int lc3;
+    int rtd1;
+    int rtd2;
+    int rtd3;
+    int rtd4;
+    int flow;
+
     unsigned char S1;
     unsigned char S2;
         int commandedState = 0;
