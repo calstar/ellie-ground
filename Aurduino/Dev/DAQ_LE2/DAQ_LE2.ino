@@ -192,14 +192,18 @@ String success;
 
 // Define variables to store readings to be sent
 int messageTime=10;
- int pt1val=1;
- int pt2val=1;
- int pt3val=1;
- int pt4val=1;
- int pt5val=1;
- int pt6val=1;
- int pt7val=1;
- int fmval=2;
+int pt1val=1;
+int pt2val=1;
+int pt3val=1;
+int pt4val=1;
+int pt5val=1;
+int pt6val=1;
+int pt7val=1;
+int fmval=2;
+float rtd1val=1;
+float rtd2val=1;
+float rtd3val=1;
+float rtd4val=1;
 
 
 //Structure example to send data
@@ -217,10 +221,10 @@ typedef struct struct_message {
     int lc1;
     int lc2;
     int lc3;
-    int rtd1;
-    int rtd2;
-    int rtd3;
-    int rtd4;
+    float rtd1;
+    float rtd2;
+    float rtd3;
+    float rtd4;
     int flow;
 
     unsigned char S1; unsigned char S2; int commandedState=1; 
