@@ -1,0 +1,14 @@
+Done
+-taking out the wago connector sensors 
+
+To Do
+-decide how many HX711s we're going to need 
+-are we keeping/using relay board?
+-how many flow meters 
+-how many servo connectors, how do we protec them
+-power source?
+-how many lipos? 
+-Potential data logger: https://www.sparkfun.com/products/12772 Are we still trying to collect any data or leaving that to recovery?
+	-other people have had luck with the miccroSD breakout board we're using https://www.adafruit.com/product/254 using SPI communication 
+-doesnt seem like using a blackbox is very common, microsd's seem to be most popular and probably have better guidelines online 
+	-check in on what exactly went wrong with the SD card last time
