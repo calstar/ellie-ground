@@ -76,18 +76,12 @@ float currentPosition2 = float('inf');
 //define servo necessary values
 #define ADC_Max 4096;
 
-
-
-
-
-
 //Initialize flow meter variables for how it computes the flow amount
 short currentMillis = 0;
 short goalTime = 50;
 short currReading1;
 short currReading2;
 short loopTime=10;
-
 
 unsigned long igniteTimeControl = 0;
 unsigned long igniteTime =  250;
@@ -116,6 +110,10 @@ HX711 scale4;
 HX711 scale5;
 HX711 scale6;
 HX711 scale7;
+HX711 scale8;
+HX711 scale9;
+HX711 scale10;
+HX711 scale11;
 
 //Initialize the servo objects
 Servo servo1;
@@ -142,7 +140,7 @@ int count=3;
 int state=-1;
 unsigned int dataArraySize =0;
 int loopStartTime=0;
-int MeasurementDelay=1000; //Delay between data measurment periods in the idle loop state in m
+int MeasurementDelay=1000; //Delay between data measurment periods in the idle loop state in ms
 int idleMeasurementDelay=1000;
 int pollingMeasurementDelay=200;
 int hotfireMeasurementDelay=20;
@@ -194,14 +192,18 @@ String success;
 
 // Define variables to store readings to be sent
 int messageTime=10;
- int pt1val=1;
- int pt2val=1;
- int pt3val=1;
- int pt4val=1;
- int pt5val=1;
- int pt6val=1;
- int pt7val=1;
- int fmval=2;
+int pt1val=1;
+int pt2val=1;
+int pt3val=1;
+int pt4val=1;
+int pt5val=1;
+int pt6val=1;
+int pt7val=1;
+int fmval=2;
+float rtd1val=1;
+float rtd2val=1;
+float rtd3val=1;
+float rtd4val=1;
 
 
 //Structure example to send data
@@ -219,10 +221,10 @@ typedef struct struct_message {
     int lc1;
     int lc2;
     int lc3;
-    int rtd1;
-    int rtd2;
-    int rtd3;
-    int rtd4;
+    float rtd1;
+    float rtd2;
+    float rtd3;
+    float rtd4;
     int flow;
 
     unsigned char S1; unsigned char S2; int commandedState=1; 
@@ -282,13 +284,9 @@ void SerialRead() {
  Serial.print("AVAILABLE--------------------");
     Serial.println(commandedState);
     Serial.println(" ");
-
   }
-
-
      //   Serial.println(commandedState);
     //    Serial.println(" ");
-
 }
 
 
@@ -307,7 +305,7 @@ void setup() {
   digitalWrite(RELAYPIN1, HIGH);
   digitalWrite(RELAYPIN2, HIGH);
 
-//set gains for pt pins
+  //set gains for pt pins
   scale1.begin(PTDOUT1, CLKPT1); scale1.set_gain(64);
   scale2.begin(PTDOUT2, CLKPT2); scale2.set_gain(64);
   scale3.begin(PTDOUT3, CLKPT3); scale3.set_gain(64);
@@ -316,14 +314,14 @@ void setup() {
   scale6.begin(PTDOUT6, CLKPT6); scale6.set_gain(64);
   scale7.begin(PTDOUT7, CLKPT7); scale7.set_gain(64);
 
-//Flowmeter untreupt
+  //Flowmeter untreupt
   pinMode(FMPIN, INPUT);           //Sets the pin as an input
 
   Serial.begin(115200);
 
   // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
-  //Print MAC Accress on startup for easier connections
+  //Print MAC Address on startup for easier connections
   Serial.println(WiFi.macAddress());
 
   // Init ESP-NOW
@@ -333,7 +331,7 @@ void setup() {
   }
 
   // Once ESPNow is successfully Init, we will register for Send CB to
-  // get the status of Trasnmitted packet
+  // get the status of Transmitted packet
   esp_now_register_send_cb(OnDataSent);
 
   // Register peer
@@ -350,15 +348,12 @@ void setup() {
   esp_now_register_recv_cb(OnDataRecv);
 }
 
-
 void servoWrite() {
     servo1.write(servo1curr);
     servo2.write(servo2curr);
     S1=servo1curr;
     S2=servo2curr;
 }
-
-
 
 void loop() {
 loopStartTime=millis();
@@ -384,7 +379,6 @@ switch (state) {
   
   state=0;
   break;
-
 
   case (0): //Default/idle
       idle();
@@ -525,7 +519,7 @@ DAQstate = state;
 
 void hotfire1() {
   DAQstate = 5;
-dataCheck();
+  dataCheck();
 
   servo1curr=servo1ClosedPosition;
   servo2curr=servo2OpenPosition;
@@ -562,14 +556,18 @@ void addReadingsToQueue() {
   getReadings();
   if (queueLength<40) queueLength+=1;
   ReadingsQueue[queueLength].messageTime=loopStartTime;
-  ReadingsQueue[queueLength].pt1val=pt1val;
-  ReadingsQueue[queueLength].pt2val=pt2val;
-  ReadingsQueue[queueLength].pt3val=pt3val;
-  ReadingsQueue[queueLength].pt4val=pt4val;
-  ReadingsQueue[queueLength].pt5val=pt5val;
-  ReadingsQueue[queueLength].pt6val=pt6val;
-  ReadingsQueue[queueLength].pt7val=pt7val;
-  ReadingsQueue[queueLength].fmval=fmval;
+  ReadingsQueue[queueLength].pt1=pt1val;
+  ReadingsQueue[queueLength].pt2=pt2val;
+  ReadingsQueue[queueLength].pt3=pt3val;
+  ReadingsQueue[queueLength].pt4=pt4val;
+  ReadingsQueue[queueLength].pt5=pt5val;
+  ReadingsQueue[queueLength].pt6=pt6val;
+  ReadingsQueue[queueLength].pt7=pt7val;
+  ReadingsQueue[queueLength].pt8=pt8val;
+  ReadingsQueue[queueLength].lc1=lc1val;
+  ReadingsQueue[queueLength].lc2=lc2val;
+  ReadingsQueue[queueLength].lc3=lc3val;
+  ReadingsQueue[queueLength].flow=fmval;
   ReadingsQueue[queueLength].queueSize=queueLength;
   ReadingsQueue[queueLength].I = I;
   ReadingsQueue[queueLength].DAQstate = DAQstate;
@@ -591,8 +589,10 @@ void getReadings(){
  pt5val = scale5.read(); 
  pt6val = scale6.read(); 
  pt7val = scale7.read();
-
-
+ pt8val = scale8.read();
+ lc1val = scale9.read();
+ lc2val = scale10.read();
+ lc3val = scale11.read();
 
    // flowMeterReadings();
     printSensorReadings();
@@ -646,9 +646,17 @@ void printSensorReadings() {
  serialMessage.concat(pt6val);
  serialMessage.concat(" ");
  serialMessage.concat(pt7val);
+ serialMessage.concat(" ");
+ serialMessage.concat(pt8val);
+ serialMessage.concat(" ");
+ serialMessage.concat(lc1val);
+ serialMessage.concat(" ");
+ serialMessage.concat(lc2val);
+ serialMessage.concat(" ");
+ serialMessage.concat(lc3val);
  serialMessage.concat(" Queue Length: ");
  serialMessage.concat(queueLength);
-  serialMessage.concat(" Current State: ");
+ serialMessage.concat(" Current State: ");
  serialMessage.concat(state);
  Serial.println(serialMessage);
 
@@ -664,14 +672,18 @@ void checkQueue() {
 void dataSend() {
    // Set values to send
   Readings.messageTime=ReadingsQueue[queueLength].messageTime;
-  Readings.pt1val = ReadingsQueue[queueLength].pt1val;
-  Readings.pt2val = ReadingsQueue[queueLength].pt2val;
-  Readings.pt3val = ReadingsQueue[queueLength].pt3val;
-  Readings.pt4val = ReadingsQueue[queueLength].pt4val;
-  Readings.pt5val = ReadingsQueue[queueLength].pt5val;
-  Readings.pt6val = ReadingsQueue[queueLength].pt6val;
-  Readings.pt7val = ReadingsQueue[queueLength].pt7val;
-  Readings.fmval  = ReadingsQueue[queueLength].fmval;
+  Readings.pt1 = ReadingsQueue[queueLength].pt1;
+  Readings.pt2 = ReadingsQueue[queueLength].pt2;
+  Readings.pt3 = ReadingsQueue[queueLength].pt3;
+  Readings.pt4 = ReadingsQueue[queueLength].pt4;
+  Readings.pt5 = ReadingsQueue[queueLength].pt5;
+  Readings.pt6 = ReadingsQueue[queueLength].pt6;
+  Readings.pt7 = ReadingsQueue[queueLength].pt7;
+  Readings.pt8 = ReadingsQueue[queueLength].pt8;
+  Readings.lc1 = ReadingsQueue[queueLength].lc1;
+  Readings.lc2 = ReadingsQueue[queueLength].lc2;
+  Readings.lc3 = ReadingsQueue[queueLength].lc3;
+  Readings.flow  = ReadingsQueue[queueLength].flow;
   Readings.I = ReadingsQueue[queueLength].I;
   Readings.DAQstate = ReadingsQueue[queueLength].DAQstate;
   Readings.S1 = ReadingsQueue[queueLength].S1;
@@ -693,8 +705,5 @@ void dataSend() {
 void wifiDebug() {
   Readings.Debug=17;
   dataSend();
-  Serial.println(Commands.Debug);
-
-  
-  
+  Serial.println(Commands.Debug);  
 }
