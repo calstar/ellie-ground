@@ -1,4 +1,4 @@
-function SensorCalibrator
+function MatlabCdCalc
 %% Initial Reset
 % Clear everything
 close all; clear;
@@ -10,22 +10,36 @@ instrreset;
 cleanupObj = onCleanup(@cleanMeUp);
 
 %% User Control
-% Linear least square method is used in this code. 
+% Linear least square method is used in this code.
 
 % NAME THE TEST FIRST
 % The code will read from the previous data, or establish a new file if no
 % data present.
 % MUST CHANGE NAME OR DELETE PREVIOUS FILE IF DIFFERENT NUMBER OF SENSORS REPORT DATA
-fileName = 'PTCalibration_1';
+fileName = 'Sep102022CdCalcr';
 
 % NAME THE FOLDER YOU WANT THE TEST TO BE IN
-folderName = 'Sep10PTNum';
+folderName = 'Sep102022CdTest';
 
 % Name the sensors (will be used in data logging and graph titles)
 testDevice = 'PT ';
 
+% Name the device that will be next to the flow meter
+downStreamPTNum = 2;
+upStreamPTNum = 3;
+
+% What is the density of fluid (kg/m^3)
+density = 1000;
+
+% Pulse rate 
+% small plastic flow sensor
+% PULSE_RATE = 1694.9;
+
+% brass sensor
+PULSE_RATE = 1874;
+
 % How many sensors are you reporting each time? (match with Arduino output)
-dataLength = 3;
+dataLength = 5;
 
 % How many data points do you want to use to calculate (if use 5,only the last 5 data points will be kept upon stopping the
 % program)
@@ -33,8 +47,11 @@ dataPointNum = 5;
 
 
 
+
+
 %% Automated Process Starts here
 
+% n = dataLength;
 dataFileExist = 0;
 arrayMatch = 1;
 prevArray = [];
@@ -57,18 +74,24 @@ end
 
 
 % set up dynamic table columns
-dataLabels = [];
-for n = 1:dataLength
+dataLabels = "Time(ms)";
+for n = 2:dataLength-1
     eachLabel = convertCharsToStrings({[testDevice,num2str(n)]});
     dataLabels = [dataLabels,eachLabel];
-
 end
-eachLabel = convertCharsToStrings({[testDevice,'Readings']});
+
+eachLabel = "volume flow (m^3/s)";
 dataLabels = [dataLabels,eachLabel];
 
+eachLabel = "break Interval";
+dataLabels = [dataLabels,eachLabel];
 
+eachLabel = "mass flow (kg/s)";
+dataLabels = [dataLabels,eachLabel];
+
+eachLabel = "Cd Value";
+dataLabels = [dataLabels,eachLabel];
 finalArray = [];
-reading = [];
 
 
 % set up serial object
@@ -84,10 +107,10 @@ i = 1;
 % open serial port and read data
 serialPortOpened = 1;
 try
-fopen(s);
-flushinput(s);
-% fscanf(s);
-catch 
+    fopen(s);
+    flushinput(s);
+    % fscanf(s);
+catch
     serialPortOpened = 0;
     availablePorts = convertStringsToChars(serialportlist("all"));
     [~,numOfPorts] = size(availablePorts);
@@ -105,51 +128,46 @@ catch
     throw(ME)
 
 end
+
 if serialPortOpened == 1
-    while(1)
-        str = split(fscanf(s));
-%         length(str)
+%    str = fscanf(s);
 
-        if length(str) ~= dataLength+1
-            continue;
-            t = "uayayaydaishdiushfniusdjfbsiufbdsiufdfbis"
-        end
+       while(1)
+            str = split(fscanf(s));
+
+           if length(str) ~= dataLength+1
+               continue;
+           end
+           if ~isnumeric(str2double(str{1}))
+               continue;
+           end
+           % each data line represents one sensor data
+         
+
+%            rawData(i,1) = str2double(str{1})-rawData(1,1)
+
+           for n = 1:dataLength
+               rawData(i,n) = str2double(str{n})
+           end
+
+           % time interval from last one
+           if i ~= 1
+               rawData(i,n+1) = rawData(i,1) - rawData(i-1,1)
+           end
+
+           i = i+1;
+       end
 
 
-        if ~isnumeric(str2num(str{1}))
-            m = str2num(str{1});
-            continue;
-        else
-
-            m = str2num(str{1});
-            % each data line represents one sensor data
-            for n = 1:dataLength
-                rawData(i,n) = str2double(str{n})
-            end
-
-            if i > dataPointNum
-                rawData(i-dataPointNum,:) = [];
-            end
-
-            i = i+1;
-        end
-    end
 end
     function cleanMeUp()
+%         rawData
         if arrayMatch == 1 && serialPortOpened == 1
+%            instrreset;
 
             % saves data to file (or could save to workspace)
             fprintf('saving test data as %s.xls\n',fileName)
 
-            prompt = "What is the pressure gage reading? (Numbers only) \n";
-            reading = input(prompt);
-
-            %         str2double(reading);
-            %         while (isnumeric(reading) == false)
-            %             prompt = "What is the pressure gage reading?"
-            %             reading = input(prompt);
-            %         end
-            %         reading = str2double(reading);
             if ~exist(folderName, 'dir')
                 mkdir(folderName);
                 addpath(folderName);
@@ -159,31 +177,10 @@ end
                 addpath(folderName);
             end
 
+            rawData = rawData(2:end,:);
 
-            % calculate mean values
-
-            for n = 1:dataLength
-                meanArray(1,n) = mean(rmoutliers(rawData(:,n)));
-            end
-            processArray = [meanArray,reading];
-            processArray = [prevArray;processArray];
-
-            a = [];
-            b = [];
-            endsol = [];
-            for j = 1:length(dataLabels)-1
-                X = processArray(:,j);
-                Y = processArray(:,end);
-                coefficients = polyfit(X,Y,1)';
-                a = [a;coefficients(1)]
-                b = [b;coefficients(2)]
-                endsol = [endsol,coefficients];
-
-
-            end
-
-
-            finalArray = [[a',NaN];[b',NaN];processArray];
+            finalArray = finalizeData(rawData,downStreamPTNum,upStreamPTNum)
+%             dataLabels
 
             testDataTable = array2table(finalArray,'VariableNames',dataLabels);
 
@@ -197,49 +194,37 @@ end
                 movefile(fileString,folderName);
 
             end
-            dataProcessingGraphing(processArray,endsol)
 
         end
         fclose(s);
         instrreset;
     end
 
-    function dataProcessingGraphing(array,solution)
-        figure;
-        set(gcf, 'PaperSize', [10 10]);
-        plotNumber = length(array(1,:))-1;
+    function returnArray = finalizeData(arrayInput, leftPTNum, rightPTNum)
 
-        for k = 1:plotNumber
-            nexttile
-            sortedArray = sort(array(:,k));
+        rawData
+        volFlow = rawData(:,5)/PULSE_RATE
+        volFlowMetric = volFlow*6.309e-5;
+        massFlowRate = volFlowMetric*density;
 
-            x = linspace(sortedArray(1),sortedArray(end),100);
-            titleString = [testDevice,num2str(k)];
-            plot(array(:,k),array(:,end),'o')
-            title(titleString);
-            hold on
-            y = solution(1,k)*x+solution(2,k);
+        leftPTVals = arrayInput(:,leftPTNum);
+        rightPTVals = arrayInput(:,rightPTNum);
+        cdVals = massFlowRate./(sqrt(2*density*(rightPTVals-leftPTVals)));
+        arrayInput(:,5) = volFlowMetric
+%         arrayOut = arrayInput(:,5)/PULSE_RATE;
+        returnArray = [arrayInput,massFlowRate,cdVals];
 
-            plot(x,y)
-            hold off
-
-        end
-
-
-
-
-
-
-
-
-
-
-
+       % 1 gal/min = 6.309e-5 m^3/s
 
     end
 
 
 
+
+
+
+
+
+
+
 end
-
-

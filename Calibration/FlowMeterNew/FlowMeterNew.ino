@@ -41,6 +41,7 @@ void loop() {
   period = ((pulseStart) / 1000) / 60;
   if (period <= 0) {
     Serial.println("Period 0");
+    flowRate = 0;
   } else {
     Serial.print("period Not 0, equals to ");
     Serial.println(period);

@@ -81,21 +81,33 @@ i = 1;
 
 % accounts for any time delay from reading
 if serialPortOpened == 1
-while(1)
-    str = split(fscanf(s));
+    while(1)
+        str = split(fscanf(s));
+
+%         if length(str) ~= dataLength
+%             continue;
+%             t = "uayayaydaishdiushfniusdjfbsiufbdsiufdfbis"
+%         end
 
 
-    % data1 receives PT1
-    data1 = str2double(str{1})
-    % data2 receives PT2
-    data2 = str2double(str{2})
+        if ~isnumeric(str2num(str{1}))
+            m = str2num(str{1});
+            continue;
+        else
 
-    data(i,1) = data1
-    data(i,2) = data2
-%     testDataTable(i,:) = {data1,data2};
+            m = str2num(str{1});
+            % each data line represents one sensor data
+            for n = 1:dataLength
+                rawData(i,n) = str2double(str{n});
+            end
 
-    i = i+1;
-end
+            if i > dataPointNum
+                rawData(i-dataPointNum,:) = [];
+            end
+
+            i = i+1;
+%         end
+    end
 end
     function cleanMeUp()
     if serialPortOpened == 1
