@@ -9,7 +9,7 @@
 // define PT pins (3)
 #define PTDOUT1 15
 #define CLKPT1 17
-#define PTDOUT2 15
+#define PTDOUT2 18
 #define CLKPT2 2
 #define PTDOUT3 36
 #define CLKPT3 5
@@ -69,7 +69,7 @@ void loop() {
   // 1 pulse ~= 2.25 mL
   pulseStart = pulseIn(FMPIN, HIGH);
   flowFreq = FlowRateCalc(pulseStart);
-//  
+//
   Serial.print(OperateTime);
   Serial.print(" ");
   Serial.print(pt1val);
@@ -107,8 +107,8 @@ double FlowRateCalc(double pulseStart)
 }
 
 void scaleReading() {
-  pt1val = scale1.read(); 
-  pt2val = scale2.read() ; 
+  pt1val = scale1.read();
+  pt2val = scale2.read() ;
   pt3val = scale3.read();
 }
 
