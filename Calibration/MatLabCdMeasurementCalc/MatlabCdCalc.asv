@@ -16,7 +16,7 @@ cleanupObj = onCleanup(@cleanMeUp);
 % The code will read from the previous data, or establish a new file if no
 % data present.
 % MUST CHANGE NAME OR DELETE PREVIOUS FILE IF DIFFERENT NUMBER OF SENSORS REPORT DATA
-fileName = 'Sep102022CdCalcr4';
+fileName = 'Sep102022CdCalcr3';
 
 % NAME THE FOLDER YOU WANT THE TEST TO BE IN
 folderName = 'Sep102022CdTest';
@@ -223,7 +223,7 @@ end
         reynolds = density*L*(volFlowMetric/pi*(L/2*0.69))/0.001;
 %         arrayOut = arrayInput(:,5)/PULSE_RATE;
         returnArray = [arrayInput,massFlowRate,cdVals,reynolds];
-        fprintf("Mass Flow Total: %8f\n",sum(massFlowRate.*arrayInput(:,1)/1000))
+        fprintf("Mass Flow Total: %8f",sum(massFlowRate.*arrayInput(:,1)))
 
        % 1 gal/min = 6.309e-5 m^3/s
 
