@@ -16,7 +16,7 @@ cleanupObj = onCleanup(@cleanMeUp);
 % The code will read from the previous data, or establish a new file if no
 % data present.
 % MUST CHANGE NAME OR DELETE PREVIOUS FILE IF DIFFERENT NUMBER OF SENSORS REPORT DATA
-fileName = 'Sep102022CdCalcr';
+fileName = 'Sep102022CdCalcr1';
 
 % NAME THE FOLDER YOU WANT THE TEST TO BE IN
 folderName = 'Sep102022CdTest';
@@ -37,6 +37,11 @@ density = 1000;
 
 % brass sensor
 PULSE_RATE = 1874;
+
+r0 = 0.49;
+r1 = 0.2;
+L = 2*(r0-r1)/1000;
+
 
 % How many sensors are you reporting each time? (match with Arduino output)
 dataLength = 5;
@@ -90,6 +95,9 @@ eachLabel = "mass flow (kg/s)";
 dataLabels = [dataLabels,eachLabel];
 
 eachLabel = "Cd Value";
+dataLabels = [dataLabels,eachLabel];
+
+eachLabel = "Reynolds Num";
 dataLabels = [dataLabels,eachLabel];
 finalArray = [];
 
@@ -210,9 +218,11 @@ end
         leftPTVals = arrayInput(:,leftPTNum);
         rightPTVals = arrayInput(:,rightPTNum);
         cdVals = massFlowRate./(sqrt(2*density*(rightPTVals-leftPTVals)));
+
         arrayInput(:,5) = volFlowMetric
+        reynolds = density*L*(volFlowMetric/pi*(L/2*0.69))/0.001;
 %         arrayOut = arrayInput(:,5)/PULSE_RATE;
-        returnArray = [arrayInput,massFlowRate,cdVals];
+        returnArray = [arrayInput,massFlowRate,cdVals,reynolds];
 
        % 1 gal/min = 6.309e-5 m^3/s
 

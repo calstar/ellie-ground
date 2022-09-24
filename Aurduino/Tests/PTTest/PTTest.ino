@@ -23,11 +23,11 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 #define PTDOUT3 23
 #define CLKPT3 22
 #define PTDOUT4 15
-#define CLKPT4 34
-#define PTDOUT5 26
-#define CLKPT5 19
-#define PTDOUT6 36
-#define CLKPT6 5
+#define CLKPT4 32
+#define PTDOUT5 35
+#define CLKPT5 25
+#define PTDOUT6 34
+#define CLKPT6 26
 #define PTDOUT7 39
 #define CLKPT7 4
 
@@ -114,37 +114,37 @@ void getReadings(){
 
 
  pt1 = scale1.read();
-       Serial.print("pt1: ");
+//       Serial.print(" ");
 
  Serial.print(pt1);
 
   pt2 = scale2.read();
-       Serial.print(" p2: ");
+       Serial.print(" ");
 
  Serial.print(pt2);
 
   pt3 = scale3.read();
-       Serial.print(" pt3: ");
+       Serial.print(" ");
 
  Serial.print(pt3);
 
   pt4 = scale4.read();
-       Serial.print(" pt4: ");
+       Serial.print(" ");
 
  Serial.print(pt4);
 
   pt5 = scale5.read();
-       Serial.print(" pt5: ");
+       Serial.print(" ");
 
  Serial.print(pt5);
 
   pt6 = scale6.read();
-       Serial.print(" pt6: ");
+       Serial.print(" ");
 
  Serial.print(pt6);
 
   pt7 = scale7.read();
-       Serial.print(" pt7: ");
+       Serial.print(" ");
 
  Serial.println(pt7);
 

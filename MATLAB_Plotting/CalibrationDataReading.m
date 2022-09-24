@@ -1,8 +1,8 @@
 % Which .xls file are you reading from
-fileName = 'Load_Cell_calibration_LC7';
+fileName = 'PTCalibration_2';
 
 % Name the sensors
-testDevice = 'LC ';
+testDevice = 'PT ';
 
 table = readtable([fileName,'.xls']);
 dataArray = table2array(table);
