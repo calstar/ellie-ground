@@ -1,5 +1,5 @@
 % Which .xls file are you reading from
-fileName = 'PTCalibration_2';
+fileName = 'PTCalibration_1';
 
 % Name the sensors
 testDevice = 'PT ';
