@@ -102,6 +102,9 @@ dataLabels = [dataLabels,eachLabel];
 finalArray = [];
 
 
+
+
+
 % set up serial object
 % serialPortName = '/dev/cu.SLAB_USBtoUART'
 serialPortName = 'COM14'; % on Windows would be COMx
@@ -155,12 +158,12 @@ if serialPortOpened == 1
 %            rawData(i,1) = str2double(str{1})-rawData(1,1)
 
            for n = 1:dataLength
-               rawData(i,n) = str2double(str{n})
+               rawData(i,n) = str2double(str{n});
            end
 
            % time interval from last one
            if i ~= 1
-               rawData(i,n+1) = rawData(i,1) - rawData(i-1,1)
+               rawData(i,n+1) = rawData(i,1) - rawData(i-1,1);
            end
 
            i = i+1;

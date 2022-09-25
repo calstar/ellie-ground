@@ -7,8 +7,8 @@
 #define FMPIN 19
 
 // define PT pins (3)
-#define PTDOUT1 15
-#define CLKPT1 17
+#define PTDOUT1 35
+#define CLKPT1 25
 #define PTDOUT2 18
 #define CLKPT2 2
 #define PTDOUT3 36
@@ -19,6 +19,7 @@
 //#define CLKPT2 4
 //#define PTDOUT3 27
 //#define CLKPT3 5
+#define psi2Pa 6894.75729
 
 // how mamy pulses per gallon
 // plastic sensor
@@ -72,9 +73,9 @@ void loop() {
 //
   Serial.print(OperateTime);
   Serial.print(" ");
-  Serial.print(pt1val);
+  Serial.print(pt1val*psi2Pa);
   Serial.print(" ");
-  Serial.print(pt2val);
+  Serial.print(14.7*psi2Pa);
   Serial.print(" ");
   Serial.print(pt3val);
   Serial.print(" ");
@@ -107,7 +108,7 @@ double FlowRateCalc(double pulseStart)
 }
 
 void scaleReading() {
-  pt1val = scale1.read();
+  pt1val = scale1.read()*2.9256e-05+20.5070;
   pt2val = scale2.read() ;
   pt3val = scale3.read();
 }
