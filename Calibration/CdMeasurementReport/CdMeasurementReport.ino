@@ -4,12 +4,12 @@
 #include <Wire.h>
 #include <Arduino.h>
 #include "HX711.h"
-#define FMPIN 19
+#define FMPIN 18
 
 // define PT pins (3)
 #define PTDOUT1 35
 #define CLKPT1 25
-#define PTDOUT2 18
+#define PTDOUT2 19
 #define CLKPT2 2
 #define PTDOUT3 36
 #define CLKPT3 5

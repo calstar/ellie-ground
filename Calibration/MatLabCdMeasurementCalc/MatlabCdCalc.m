@@ -16,7 +16,7 @@ cleanupObj = onCleanup(@cleanMeUp);
 % The code will read from the previous data, or establish a new file if no
 % data present.
 % MUST CHANGE NAME OR DELETE PREVIOUS FILE IF DIFFERENT NUMBER OF SENSORS REPORT DATA
-fileName = 'Sep102022CdCalcr4';
+fileName = 'Sep102022CdCalcr1';
 
 % NAME THE FOLDER YOU WANT THE TEST TO BE IN
 folderName = 'Sep102022CdTest';
@@ -106,8 +106,8 @@ finalArray = [];
 
 
 % set up serial object
-% serialPortName = '/dev/cu.SLAB_USBtoUART'
-serialPortName = 'COM14'; % on Windows would be COMx
+serialPortName = '/dev/cu.SLAB_USBtoUART'
+% serialPortName = 'COM14'; % on Windows would be COMx
 %s = serialport(serialPortName,115200);
 s = serial(serialPortName,'BaudRate',115200);
 
@@ -158,12 +158,12 @@ if serialPortOpened == 1
 %            rawData(i,1) = str2double(str{1})-rawData(1,1)
 
            for n = 1:dataLength
-               rawData(i,n) = str2double(str{n});
+               rawData(i,n) = str2double(str{n})
            end
 
            % time interval from last one
            if i ~= 1
-               rawData(i,n+1) = rawData(i,1) - rawData(i-1,1);
+               rawData(i,n+1) = rawData(i,1) - rawData(i-1,1)
            end
 
            i = i+1;
