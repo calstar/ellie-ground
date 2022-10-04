@@ -4,12 +4,13 @@
 #include <Wire.h>
 #include <Arduino.h>
 #include "HX711.h"
-#define FMPIN 18
+#define FMPIN 19
+
 
 // define PT pins (3)
 #define PTDOUT1 35
 #define CLKPT1 25
-#define PTDOUT2 19
+#define PTDOUT2 18
 #define CLKPT2 2
 #define PTDOUT3 36
 #define CLKPT3 5
@@ -69,7 +70,8 @@ void loop() {
   scaleReading();
   // 1 pulse ~= 2.25 mL
   pulseStart = pulseIn(FMPIN, HIGH);
-  flowFreq = FlowRateCalc(pulseStart);
+  pulseEnd = pulseIn(FMPIN, LOW);
+  flowFreq = FlowRateCalc(pulseStart,pulseEnd);
 //
   Serial.print(OperateTime);
   Serial.print(" ");
@@ -86,9 +88,9 @@ void loop() {
   delay(delayTimeMs);
 }
 
-double FlowRateCalc(double pulseStart)
+double FlowRateCalc(double pulseStart, double pulseEnd)
 {
-  period = ((pulseStart) / 1000) / 60;
+  period = ((pulseStart+pulseEnd)/1000000) ;
   if (period <= 0) {
      OperateTime = millis();
 //    Serial.print("period 0, time is  ");
@@ -101,7 +103,7 @@ double FlowRateCalc(double pulseStart)
     // frequency in 1/seconds
     frequency = 1.00 / period;
     // convert frequency to 1/minute, 1/s * s / m
-    frequency = frequency * 60 / 1;
+//    frequency = frequency * 60 / 1;
     // flowrate (Vol/Time) = frequency (1/Time) / Pulserate (1/Vol)
     return frequency;
   }

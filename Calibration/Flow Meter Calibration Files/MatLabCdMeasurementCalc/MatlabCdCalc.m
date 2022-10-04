@@ -16,20 +16,20 @@ cleanupObj = onCleanup(@cleanMeUp);
 % The code will read from the previous data, or establish a new file if no
 % data present.
 % MUST CHANGE NAME OR DELETE PREVIOUS FILE IF DIFFERENT NUMBER OF SENSORS REPORT DATA
-fileName = 'Sep102022CdCalcr1';
+fileName = 'OCt32022CdCalcr3';
 
 % NAME THE FOLDER YOU WANT THE TEST TO BE IN
-folderName = 'Sep102022CdTest';
+folderName = 'Oct32022CdTest';
 
 % Name the sensors (will be used in data logging and graph titles)
 testDevice = 'PT ';
 
 % Name the device that will be next to the flow meter
-downStreamPTNum = 2;
-upStreamPTNum = 3;
+downStreamPTNum = 3;
+upStreamPTNum = 2;
 
 % What is the density of fluid (kg/m^3)
-density = 1000;
+density = 1.27;
 
 % Pulse rate 
 % small plastic flow sensor
@@ -215,12 +215,15 @@ end
 
         rawData
         volFlow = rawData(:,5)/PULSE_RATE
-        volFlowMetric = volFlow*6.309e-5;
+        volFlowMetric = volFlow*0.003785;
         massFlowRate = volFlowMetric*density;
 
         leftPTVals = arrayInput(:,leftPTNum);
         rightPTVals = arrayInput(:,rightPTNum);
         cdVals = massFlowRate./(sqrt(2*density*(rightPTVals-leftPTVals)));
+
+        area = 17e-6;
+        cdVals = cdVals/area;
 
         arrayInput(:,5) = volFlowMetric
         reynolds = density*L*(volFlowMetric/pi*(L/2*0.69))/0.001;
