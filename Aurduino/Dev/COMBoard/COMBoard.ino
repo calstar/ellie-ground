@@ -9,6 +9,8 @@
 #define BUTTON2 17
 #define BUTTON3 16
 #define BUTTON4 21 //SET PIN NUMBER BUTTON
+#define PRESS_BUTTON
+#define QD_BUTTON
 
 #define INDICATOR1  4 // state 2 light
 #define INDICATOR2 23 // armed indicator
@@ -19,7 +21,8 @@
 
 
 
-
+// Comes from manual calibration. Adjust if servos no longer
+// in correct closed or open position
 #define servo1ClosedPosition 100
 #define servo1OpenPosition 10
 #define servo2ClosedPosition 130
@@ -42,9 +45,9 @@ float incomingS2 = 0;
  int incomingPT3 = 4;
  int incomingPT4 = 4;
  int incomingFM = 0;
- int incomingLC1 = 0;
- int incomingLC2 = 0;
- int incomingLC3 = 0;
+ int incomingPT5 = 4;
+ int incomingPT6 = 4;
+ int incomingPT7 = 4;
 short int incomingI = 0;
 int incomingDebug=0;
 int actualState = -5;
@@ -61,6 +64,7 @@ int state=-1;
 int loopStartTime=0;
 int ignitionSendDelay=50;
 int pollingSendDelay=100;
+int dataCollectionDelay=10;
 int SendDelay=pollingSendDelay;
 
 int commandedState;
@@ -97,6 +101,7 @@ unsigned long t2;
 
 //
 
+//ENSURE IP ADDRESS IS CORRECT FOR DEVICE IN USE!!!
 //DAQ Breadboard {0x24, 0x62, 0xAB, 0xD2, 0x85, 0xDC}
 //DAQ Protoboard {0x0C, 0xDC, 0x7E, 0xCB, 0x05, 0xC4}
 //NON BUSTED DAQ {0x7C, 0x9E, 0xBD, 0xD8, 0xFC, 0x14}
@@ -110,14 +115,14 @@ uint8_t broadcastAddress[] = {0x30, 0xC6, 0xF7, 0x2A, 0x28, 0x04};
 //Must match the receiver structure
 typedef struct struct_message {
     int messageTime;
-     int pt1;
-     int pt2;
-     int pt3;
-     int pt4;
-     int lc1;
-     int lc2;
-     int lc3;
-     int fm;
+     int pt1val;
+     int pt2val;
+     int pt3val;
+     int pt4val;
+     int pt5val;
+     int pt6val;
+     int pt7val;
+     int fmval;
     unsigned char S1;
     unsigned char S2;
         int commandedState = 0;
@@ -163,16 +168,16 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   incomingPT1 = incomingReadings.pt1;
      // Serial.print(incomingPT1);
 
-     digitalWrite(INDICATOR1,HIGH);
+  digitalWrite(INDICATOR1,HIGH);
 
   incomingMessageTime= incomingReadings.messageTime;
   incomingPT2 = incomingReadings.pt2;
   incomingPT3 = incomingReadings.pt3;
   incomingPT4 = incomingReadings.pt4;
-  incomingFM = incomingReadings.fm;
-  incomingLC1 = incomingReadings.lc1;
-  incomingLC2 = incomingReadings.lc2;
-  incomingLC3 = incomingReadings.lc3;
+  incomingFM = incomingReadings.fmval;
+  incomingPT5 = incomingReadings.pt5;
+  incomingPT6 = incomingReadings.pt6;
+  incomingPT7 = incomingReadings.pt7;
   incomingS1 = incomingReadings.S1;
   incomingS2 = incomingReadings.S2;
   queueSize= incomingReadings.queueSize;
@@ -200,14 +205,6 @@ void SerialRead() {
 
 }
 
-
-
-
-
-
-
-
-
 void setup() {
   Commands.S1 = servo1ClosedPosition;
   Commands.S2 = servo2ClosedPosition;
@@ -215,6 +212,7 @@ void setup() {
   Serial.begin(115200);
    // Serial.println("Start of Setup");
 
+  // Use buttons for moving between states
   pinMode(BUTTON1,INPUT);
   pinMode(BUTTON2, INPUT);
   pinMode(BUTTON3,INPUT);
@@ -227,6 +225,9 @@ void setup() {
   pinMode(INDICATOR6, OUTPUT);
   pinMode(INDICATOR1, OUTPUT);
 
+  pinMode(PRESS_BUTTON, OUTPUT);
+  pinMode(QD_BUTTON, OUTPUT);
+
   digitalWrite(INDICATOR2,LOW);
   digitalWrite(INDICATOR3, LOW);
   digitalWrite(INDICATOR4, LOW);
@@ -234,6 +235,8 @@ void setup() {
   digitalWrite(INDICATOR6, LOW);
   digitalWrite(INDICATOR1, LOW);
 
+  digitalWrite(PRESS_BUTTON, LOW);
+  digitalWrite(QD_BUTTON, LOW);
 
   //set device as WiFi station
   WiFi.mode(WIFI_STA);
@@ -260,7 +263,7 @@ void setup() {
   // Register for a callback function that will be called when data is received
   esp_now_register_recv_cb(OnDataRecv);
 
-   Serial.println(WiFi.macAddress());
+  Serial.println(WiFi.macAddress());
 
 
 }
@@ -273,24 +276,21 @@ void printLine(String string) {
 
 
 void LEDUpdate() {
-  
 
-if (incomingS1 == servo1OpenPosition) digitalWrite(INDICATOR3,HIGH); else digitalWrite(INDICATOR3,LOW);
-if (incomingS2 == servo2OpenPosition) digitalWrite(INDICATOR4,HIGH); else digitalWrite(INDICATOR4,LOW);
-digitalWrite(INDICATOR1,LOW);
-
-
+  if (incomingS1 == servo1OpenPosition) digitalWrite(INDICATOR3,HIGH); else digitalWrite(INDICATOR3,LOW);
+  if (incomingS2 == servo2OpenPosition) digitalWrite(INDICATOR4,HIGH); else digitalWrite(INDICATOR4,LOW);
+  digitalWrite(INDICATOR1,LOW);
 }
 
 
 
 void loop() {
-loopStartTime=millis();
-SerialRead();
-// State selector
-//Serial.println(actualState);
+  loopStartTime=millis();
+  SerialRead();
+  // State selector
+  //Serial.println(actualState);
 
-LEDUpdate();
+  LEDUpdate();
 
 
 switch (state) {
@@ -310,46 +310,39 @@ switch (state) {
 
   case (-1): //start single loop
 
-  state=0; 
+    state=0; 
   break;
 
 
   case (0): //Default/idle
       idle();
-
-
-    state=1;  
+      state=1;  
     break;
 
   case (1): //Polling
-      polling();
+    polling();
 
-
-
-      if ((digitalRead(BUTTON2)==1)||(serialState==2)) { state=3; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay; }
+    if ((digitalRead(BUTTON2)==1)||(serialState==2)) { state=3; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay; }
     if (serialState==18) {state=18;} 
     if (serialState==17) {state=17;} 
+    if (digitalRead(PRESS_BUTTON)==30) {state=30;}
 
     break;
 
   case (2): //Manual Servo Control
 
  manualControl();
+  if ((serialState==40)) { state=0; SendDelay=pollingSendDelay; }
 
- 
-   if ((serialState==40)) { state=0; SendDelay=pollingSendDelay; }
-
-    break;
+  break;
 
   case (3): //Armed
-
-armed();
-
+    armed();
 
     //button to ignition 
-      if ((digitalRead(BUTTON3)==1)||(serialState==3)) { state=4; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=ignitionSendDelay; }
-      //RETURN BUTTON
-      if ((digitalRead(BUTTON1)==1)||(serialState==1)) { state=1; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay; }
+    if ((digitalRead(BUTTON3)==1)||(serialState==3)) { state=4; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=ignitionSendDelay; }
+    //RETURN BUTTON
+    if ((digitalRead(BUTTON1)==1)||(serialState==1)) { state=1; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay; }
       
     break;
 
@@ -374,6 +367,24 @@ armed();
 
     break;
 
+  case (30): //Pressurization
+    pressurize();
+    if ((digitalRead(QD_BUTTON) == 31)) {
+      state = 31;
+    }
+    if (digitalRead(BUTTON1)==1) {
+      state = 1;
+    }
+  
+  case (31): //QDs
+    disconnect();
+    if (digitalRead(BUTTON1) == 1) {
+      state==1;
+    }
+    if (digitalRead(BUTTON2 == 1)) {
+      state = 3;
+    }
+
 }
 
 }
@@ -384,9 +395,19 @@ void statePrint() {
 
 
 
+void pressurize() {
+  commandedState=30;
+  dataSendCheck();
+}
+
+void disconnect() {
+  commandedState=31;
+  dataSendCheck();
+}
+
 void idle() {
   dataSendCheck();
-    digitalWrite(INDICATOR5,LOW);
+  digitalWrite(INDICATOR5,LOW);
 
 }
 
@@ -754,11 +775,11 @@ void RecieveDataPrint() {
   message.concat(" ");
   message.concat(incomingPT4);
   message.concat(" ");
-  message.concat(incomingLC1);
+  message.concat(incomingPT5);
   message.concat(" ");
-  message.concat(incomingLC2);
+  message.concat(incomingPT6);
   message.concat(" ");
-  message.concat(incomingLC3);
+  message.concat(incomingPT7);
   message.concat(" ");
   message.concat(incomingFM);
   message.concat(" ");

@@ -35,10 +35,23 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 #define RELAYPIN1 14
 #define RELAYPIN2 27
 
+//SET PINOUTS
+#define solenoidPinFuel
+#define solenoidPinOx
+#define fuelSolVent
+#define oxSolVent
+#define oxQD
+#define fuelQD
+
 #define servo1ClosedPosition 100
 #define servo1OpenPosition 10
 #define servo2ClosedPosition 80
 #define servo2OpenPosition 160
+
+#define pressureFuel 450    //In units of psi. May need to convert to different val in terms of sensor units
+#define pressureOx 450    //In units of psi. May need to convert to different val in terms of sensor units
+#define tolerance 0.10   //Acceptable range within set pressure
+#define pressureDelay 0.5
 
 float currentPosition1 = float('inf');
 float currentPosition2 = float('inf');
@@ -49,18 +62,12 @@ float currentPosition2 = float('inf');
 //define servo necessary values
 #define ADC_Max 4096;
 
-
-
-
-
-
 //Initialize flow meter variables for how it computes the flow amount
 short currentMillis = 0;
 short goalTime = 50;
 short currReading1;
 short currReading2;
 short loopTime=10;
-
 
 unsigned long igniteTimeControl = 0;
 unsigned long igniteTime =  250;
@@ -250,9 +257,6 @@ void SerialRead() {
 
 }
 
-
-
-
 void setup() {
   //attach servo pins
   servo1.attach(SERVOPIN1,SERVO_MIN_USEC,SERVO_MAX_USEC);
@@ -263,8 +267,21 @@ void setup() {
   pinMode(RELAYPIN1, OUTPUT);
   pinMode(RELAYPIN2, OUTPUT);
 
+  pinMode(solenoidPinFuel, OUTPUT);
+  pinMode(solenoidPinOx, OUTPUT);
+  pinMode(fuelSolVent, OUTPUT);
+  pinMode(oxSolVent, OUTPUT);
+  pinMode(oxQD, OUTPUT);
+  pinMode(fuelQD, OUTPUT);
+
   digitalWrite(RELAYPIN1, HIGH);
   digitalWrite(RELAYPIN2, HIGH);
+  digitalWrite(solenoidPinFuel, HIGH);
+  digitalWrite(solenoidPinOx, HIGH);
+  digitalWrite(fuelSolVent, HIGH);
+  digitalWrite(oxSolVent, HIGH);
+  digitalWrite(oxQD, LOW);
+  digitalWrite(fuelQD, LOW);
 
 //set gains for pt pins
   scale1.begin(PTDOUT1, CLKPT1); scale1.set_gain(64);
@@ -320,30 +337,28 @@ void servoWrite() {
 
 
 void loop() {
-loopStartTime=millis();
-SerialRead();
-// State selector
+  loopStartTime=millis();
+  SerialRead();
+  // State selector
 
-statePrint();
-
+  statePrint();
 
 switch (state) {
 
   case (17): //BASIC WIFI TEST DEBUG STATE B
-   wifiDebug();
+    wifiDebug();
    
     if (commandedState==1) {state=1;} 
-  break;
+    break;
 
   case (-1): //start single loop
 
-  servo1curr=servo1ClosedPosition;
-  servo2curr=servo2ClosedPosition;
-  servoWrite();
+    servo1curr=servo1ClosedPosition;
+    servo2curr=servo2ClosedPosition;
+    servoWrite();
   
-  state=0;
-  break;
-
+    state=0;
+    break;
 
   case (0): //Default/idle
       idle();
@@ -351,38 +366,32 @@ switch (state) {
       if (commandedState==1) { state=1; MeasurementDelay=pollingMeasurementDelay; }
       if (commandedState==2) { state=2; MeasurementDelay=pollingMeasurementDelay; }
       if (commandedState==3) { state=3; MeasurementDelay=pollingMeasurementDelay; }
-    break;
+      break;
 
   case (1): //Polling
       polling();
 
-
-
       if (commandedState==0) { state=0; MeasurementDelay=idleMeasurementDelay; }
       if (commandedState==2){  state=2; MeasurementDelay=pollingMeasurementDelay; }
       if (commandedState==3) { state=3; MeasurementDelay=pollingMeasurementDelay; }
-    if (commandedState==17) {state=17;} 
+      if (commandedState==17) {state=17;} 
+      if (commandedState==30) {state=30;}
 
     break;
 
   case (2): //Manual Servo Control
-
-
- manualControl();
-      if (commandedState==0) { state=0; MeasurementDelay=idleMeasurementDelay; }
-      if (commandedState==1) { state=1; MeasurementDelay=pollingMeasurementDelay; }
-      if (commandedState==3) { state=3; MeasurementDelay=pollingMeasurementDelay; }
+    manualControl();
+    if (commandedState==0) { state=0; MeasurementDelay=idleMeasurementDelay; }
+    if (commandedState==1) { state=1; MeasurementDelay=pollingMeasurementDelay; }
+    if (commandedState==3) { state=3; MeasurementDelay=pollingMeasurementDelay; }
     break;
 
   case (3): //Armed
-
-armed();
-
-      if (commandedState==0) { state=0; MeasurementDelay=idleMeasurementDelay; }
-      if (commandedState==1) { state=1; MeasurementDelay=idleMeasurementDelay; }
-      if (commandedState==4) { state=4; igniterTimer=loopStartTime; }
+    armed();
+    if (commandedState==0) { state=0; MeasurementDelay=idleMeasurementDelay; }
+    if (commandedState==1) { state=1; MeasurementDelay=idleMeasurementDelay; }
+    if (commandedState==4) { state=4; igniterTimer=loopStartTime; }
     break;
-
 
   case (4): //Ignition
 
@@ -400,33 +409,40 @@ armed();
 
     if ((loopStartTime-hotfireTimer) > hotfireStage1Time) state=6;
 
-
     break;
-
 
   case (6): //Hotfire stage 2
 
     hotfire2();
-  if ((loopStartTime-hotfireTimer) > hotfireStage2Time) state=7;
+    if ((loopStartTime-hotfireTimer) > hotfireStage2Time) state=7;
 
     break;
 
-
   case (7): //Hotfire stage 3
-
     hotfire3();
-  if ((loopStartTime-hotfireTimer) > hotfireStage3Time) state=8;
+    if ((loopStartTime-hotfireTimer) > hotfireStage3Time) state=8;
 
     break;
 
   case (8): //Hotfire stage 4
-
     hotfire4();
-  if ((loopStartTime-hotfireTimer) > hotfireStage4Time){  state=0; MeasurementDelay=idleMeasurementDelay; }
+    if ((loopStartTime-hotfireTimer) > hotfireStage4Time){  state=0; MeasurementDelay=idleMeasurementDelay; }
 
     break;
 
+  case (30): //Pressurization
+    bool fuelStatus = pressurizeFuel();
+    bool OxStatus = pressurizeOx();
+    if (commandedState == 1) {state = 1; closeSolenoidOx(); closeSolenoidFuel(); vent();}
+    if ((fuelStatus && OxStatus) && commandedState = 31) {
+      state = 31;
+    }
 
+  case (31): //QDs
+    disconnectOx();
+    disconnectFuel();
+    if (commandedState == 1) {state=1; reconnect();}
+    if (commandedState == 3) {state=3; MeasurementDelay=pollingMeasurementDelay;}
 
 }
 
@@ -436,6 +452,11 @@ void statePrint() {
   
   if ((loopStartTime-lastPrintTime) > PrintDelay) { Serial.println(state); lastPrintTime=loopStartTime; }
 
+}
+
+void reconnect() {
+  digitalWrite(oxQD, LOW);
+  digitalWrite(fuelQD, LOW);
 }
 
 
@@ -452,9 +473,10 @@ void dataCheck() {
 }
 
 void polling() {
-    DAQstate = state;
+  DAQstate = state;
   dataCheck();
 }
+
 void manualControl() {
   DAQstate = state;
   servo1curr=S1;
@@ -468,11 +490,11 @@ void armed() {
 }
 
 void ignition() {
-DAQstate = state;
+  DAQstate = state;
 
-    if ((loopStartTime-igniterTimer) < igniterTime) { digitalWrite(RELAYPIN1, LOW); digitalWrite(RELAYPIN2, LOW); Serial.print("IGNITE"); }
-    if ((loopStartTime-igniterTimer) > igniterTime) {  digitalWrite(RELAYPIN1, HIGH); digitalWrite(RELAYPIN2, HIGH); Serial.print("NO"); }
-        dataCheck();
+  if ((loopStartTime-igniterTimer) < igniterTime) { digitalWrite(RELAYPIN1, LOW); digitalWrite(RELAYPIN2, LOW); Serial.print("IGNITE"); }
+  if ((loopStartTime-igniterTimer) > igniterTime) {  digitalWrite(RELAYPIN1, HIGH); digitalWrite(RELAYPIN2, HIGH); Serial.print("NO"); }
+  dataCheck();
 
   Serial.println(loopStartTime-igniterTimer);
   Serial.println("Igniter time");
@@ -480,11 +502,112 @@ DAQstate = state;
   Serial.println(" ");
 }
 
+bool pressurizeFuel() {
+  // Increase pressure
+  while (Readings.pt1val < pressureFuel) {
+    openSolenoidFuel();
+    if (commandedState = 1) {
+      closeSolenoidFuel();
+      ventFuel();
+      state = 1;
+      return false;
+    }
+  }
+  closeSolenoidFuel();
+  // Address potential overshoot & hold pressure (within tolerance)
+  sleep(pressureDelay);
+  if (Readings.pt1val > (1+tolerance)*pressureFuel) {
+    while (Readings.pt1val > pressure) {
+      openSolenoidFuel();
+      if (commandedState = 1) {
+        closeSolenoidFuel();
+        ventFuel();
+        state = 1;
+        return false;
+      }
+    }
+    closeSolenoidFuel();
+    sleep(pressureDelay);
+    if (Readings.pt1val < (1-tolerance)*pressureFuel) {
+      pressurizeFuel();
+    }
+  }
+  return true;
+}
 
+bool pressurizeOx() {
+  // Increase pressure
+  while (Readings.pt2val < pressureOx) {
+    openSolenoidOx();
+    if (commandedState = 1) {
+      closeSolenoidOx();
+      ventOx();
+      state = 1;
+      return false;
+    }
+  }
+  closeSolenoidOx();
+  // Address potential overshoot & hold pressure (within tolerance)
+  sleep(pressureDelay);
+  if (Readings.pt1val > (1+tolerance)*pressureOx) {
+    while (Readings.pt1val > pressure) {
+      openSolenoidOx();
+      if (commandedState = 1) {
+        closeSolenoidOx();
+        ventOx();
+        state = 1;
+        return false;
+      }
+    }
+    closeSolenoidOx();
+    sleep(pressureDelay);
+    if (Readings.pt1val < (1-tolerance)*pressureOx) {
+      pressurizeOx();
+    }
+  }
+  return true;
+}
+
+void openSolenoidFuel() {
+  digitalWrite(solenoidPinFuel, LOW);
+}
+
+void closeSolenoidFuel() {
+  digitalWrite(solenoidPinOx, HIGH);
+}
+
+void openSolenoidOx() {
+  digitalWrite(solenoidPinOx, LOW);
+}
+
+void closeSolenoidOx() {
+  digitalWrite(solenoidPinOx, HIGH);
+}
+
+void vent() {
+  ventOx();
+  ventFuel();
+}
+
+void ventFuel() {
+  digitalWrite(fuelSolVent, LOW);
+}
+
+void ventOx() {
+  digitalWrite(oxSolVent, LOW);
+}
+
+void disconnectOx() {
+  digitalWrite(oxQD, HIGH);
+}
+
+void disconnectFuel() {
+  digitalWrite(fuelQD, HIGH);
+}
 
 void hotfire1() {
   DAQstate = 5;
-dataCheck();
+  dataCheck();
 
   servo1curr=servo1ClosedPosition;
   servo2curr=servo2OpenPosition;
@@ -533,13 +656,8 @@ void addReadingsToQueue() {
   ReadingsQueue[queueLength].I = I;
   ReadingsQueue[queueLength].DAQstate = DAQstate;
   ReadingsQueue[queueLength].S1 = servo1curr;
-  ReadingsQueue[queueLength].S2 = servo2curr;
-
-  
-  
+  ReadingsQueue[queueLength].S2 = servo2curr;  
 }
-
-
 
 void getReadings(){
 
@@ -607,7 +725,7 @@ void printSensorReadings() {
  serialMessage.concat(pt7val);
  serialMessage.concat(" Queue Length: ");
  serialMessage.concat(queueLength);
-  serialMessage.concat(" Current State: ");
+ serialMessage.concat(" Current State: ");
  serialMessage.concat(state);
  Serial.println(serialMessage);
 
@@ -653,7 +771,4 @@ void wifiDebug() {
   Readings.Debug=17;
   dataSend();
   Serial.println(Commands.Debug);
-
-  
-  
 }
