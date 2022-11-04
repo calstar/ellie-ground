@@ -16,10 +16,10 @@ cleanupObj = onCleanup(@cleanMeUp);
 % The code will read from the previous data, or establish a new file if no
 % data present.
 % MUST CHANGE NAME OR DELETE PREVIOUS FILE IF DIFFERENT NUMBER OF SENSORS REPORT DATA
-fileName = 'OCt32022CdCalcr3';
+fileName = 'OCt082022CdCalcr3';
 
 % NAME THE FOLDER YOU WANT THE TEST TO BE IN
-folderName = 'Oct32022CdTest';
+folderName = 'Oct072022CdTest';
 
 % Name the sensors (will be used in data logging and graph titles)
 testDevice = 'PT ';
@@ -106,8 +106,8 @@ finalArray = [];
 
 
 % set up serial object
-serialPortName = '/dev/cu.SLAB_USBtoUART'
-% serialPortName = 'COM14'; % on Windows would be COMx
+%serialPortName = '/dev/cu.SLAB_USBtoUART'
+serialPortName = 'COM14'; % on Windows would be COMx
 %s = serialport(serialPortName,115200);
 s = serial(serialPortName,'BaudRate',115200);
 
@@ -214,7 +214,7 @@ end
     function returnArray = finalizeData(arrayInput, leftPTNum, rightPTNum)
 
         rawData
-        volFlow = rawData(:,5)/PULSE_RATE
+        volFlow = rawData(:,5)
         volFlowMetric = volFlow*0.003785;
         massFlowRate = volFlowMetric*density;
 

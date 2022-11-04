@@ -8,8 +8,8 @@
 
 
 // define PT pins (3)
-#define PTDOUT1 35
-#define CLKPT1 25
+#define PTDOUT1 15
+#define CLKPT1 2
 #define PTDOUT2 19
 #define CLKPT2 2
 #define PTDOUT3 36
@@ -24,7 +24,7 @@
 
 // how mamy pulses per gallon
 // plastic sensor
-#define PULSE_RATE 1694.9
+#define PULSE_RATE 1874
 
 double flowFreq;
 volatile float count;
@@ -39,6 +39,7 @@ float frequency;
 double totalVL = 0;
 double totalVGal = 0;
 double q = 0;
+int counter = 0;
 
 unsigned long timeDelta = 0;
 unsigned long firstTime;
@@ -66,53 +67,50 @@ void setup() {
 }
 
 void loop() {
-  OperateTime = millis();
-  scaleReading();
-  // 1 pulse ~= 2.25 mL
   pulseStart = pulseIn(FMPIN, HIGH);
   pulseEnd = pulseIn(FMPIN, LOW);
   flowFreq = FlowRateCalc(pulseStart,pulseEnd);
+ 
+  OperateTime = millis();
+  scaleReading();
+  // 1 pulse ~= 2.25 mL
+  
 //
   Serial.print(OperateTime);
-  Serial.print(" ");
+  Serial.print(", ");
   Serial.print(pt1val*psi2Pa);
-  Serial.print(" ");
+  Serial.print(", ");
   Serial.print(14.7*psi2Pa);
-  Serial.print(" ");
+  Serial.print(", ");
   Serial.print(pt3val);
-  Serial.print(" ");
-  Serial.print(flowFreq);
+  Serial.print(", ");
+  Serial.print(flowFreq/PULSE_RATE);
   Serial.println(" ");
 
+  
 
-  delay(delayTimeMs);
 }
 
 double FlowRateCalc(double pulseStart, double pulseEnd)
 {
-  period = ((pulseStart+pulseEnd)/1000000) ;
-  if (period <= 0) {
-     OperateTime = millis();
-//    Serial.print("period 0, time is  ");
-//    Serial.println(OperateTime);
-    return 0;
-  } else {
-    OperateTime = millis();
-//    Serial.print("period Not 0, time is  ");
-//    Serial.println(OperateTime);
-    // frequency in 1/seconds
-    frequency = 1.00 / period;
-    // convert frequency to 1/minute, 1/s * s / m
-//    frequency = frequency * 60 / 1;
-    // flowrate (Vol/Time) = frequency (1/Time) / Pulserate (1/Vol)
-    return frequency;
+  if(pulseIn(FMPIN, HIGH)){
+    counter = counter + 1;
   }
+  if(millis()%50==0){
+    frequency = counter/0.05;
+    counter = 0;
+  }
+  
+    return frequency;
+  
 }
 
 void scaleReading() {
-  pt1val = scale1.read()*2.9256e-05+20.5070;
-  pt2val = scale2.read() ;
-  pt3val = scale3.read();
+  if(millis()%50==0){
+    pt1val = scale1.read()*2.42744E-05+15.88;
+    pt2val = scale2.read() ;
+    pt3val = scale3.read();
+  }
 }
 
 

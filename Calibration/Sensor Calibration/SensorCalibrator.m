@@ -16,10 +16,10 @@ cleanupObj = onCleanup(@cleanMeUp);
 % The code will read from the previous data, or establish a new file if no
 % data present.
 % MUST CHANGE NAME OR DELETE PREVIOUS FILE IF DIFFERENT NUMBER OF SENSORS REPORT DATA
-fileName = 'PTCalibration_2';
+fileName = 'PTCalibration_Oct29_newnew';
 
 % NAME THE FOLDER YOU WANT THE TEST TO BE IN
-folderName = 'Sep24PTNum';
+folderName = 'Oct29PTNum_Newnew';
 
 % Name the sensors (will be used in data logging and graph titles)
 testDevice = 'PT ';
@@ -72,8 +72,8 @@ reading = [];
 
 
 % set up serial object
-serialPortName = '/dev/cu.SLAB_USBtoUART'
-% serialPortName = 'COM6'; % on Windows would be COMx
+%serialPortName = '/dev/cu.SLAB_USBtoUART'
+ serialPortName = 'COM14'; % on Windows would be COM#
 %s = serialport(serialPortName,115200);
 s = serial(serialPortName,'BaudRate',115200);
 
