@@ -36,12 +36,13 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 #define RELAYPIN2 27
 
 //SET PINOUTS
-#define solenoidPinFuel
-#define solenoidPinOx
-#define fuelSolVent
-#define oxSolVent
-#define oxQD
-#define fuelQD
+#define DUMMY 1
+#define solenoidPinFuel DUMMY
+#define solenoidPinOx DUMMY
+#define fuelSolVent DUMMY
+#define oxSolVent DUMMY
+#define oxQD DUMMY
+#define fuelQD DUMMY
 
 #define servo1ClosedPosition 100
 #define servo1OpenPosition 10
@@ -119,7 +120,22 @@ uint8_t broadcastAddress[] ={0x7C, 0x9E, 0xBD, 0xD7, 0x2B, 0xE8};
 int count=3;
 
 //STATEFLOW VARIABLES
-int state=-1;
+enum states {
+  WIFIDEBUG = 17,
+  START = -1,
+  IDLE = 0,
+  POLLING = 1,
+  MANUALSERVOCONTROL = 2,
+  ARMED = 3,
+  IGNITION = 4,
+  HOTFIRESTAGE1 = 5,
+  HOTFIRESTAGE2 = 6,
+  HOTFIRESTAGE3 = 7,
+  HOTFIRESTAGE4 = 8,
+  PRESSURIZATION = 30,
+  QDS = 31,
+};
+int state = states::START;
 unsigned int dataArraySize =0;
 int loopStartTime=0;
 int MeasurementDelay=1000; //Delay between data measurment periods in the idle loop state in m
@@ -276,10 +292,10 @@ void setup() {
 
   digitalWrite(RELAYPIN1, HIGH);
   digitalWrite(RELAYPIN2, HIGH);
-  digitalWrite(solenoidPinFuel, HIGH);
-  digitalWrite(solenoidPinOx, HIGH);
-  digitalWrite(fuelSolVent, HIGH);
-  digitalWrite(oxSolVent, HIGH);
+  closeSolenoidFuel();
+  closeSolenoidOx();
+  closeVentFuel();
+  closeVentOx();
   digitalWrite(oxQD, LOW);
   digitalWrite(fuelQD, LOW);
 
@@ -334,8 +350,6 @@ void servoWrite() {
     S2=servo2curr;
 }
 
-
-
 void loop() {
   loopStartTime=millis();
   SerialRead();
@@ -343,109 +357,118 @@ void loop() {
 
   statePrint();
 
-switch (state) {
+  switch (state) {
 
-  case (17): //BASIC WIFI TEST DEBUG STATE B
-    wifiDebug();
-   
-    if (commandedState==1) {state=1;} 
-    break;
+    case (states::WIFIDEBUG): //BASIC WIFI TEST DEBUG STATE B
+      wifiDebug();
+      if (commandedState==states::POLLING) {state=states::POLLING;} 
 
-  case (-1): //start single loop
-
-    servo1curr=servo1ClosedPosition;
-    servo2curr=servo2ClosedPosition;
-    servoWrite();
-  
-    state=0;
-    break;
-
-  case (0): //Default/idle
-      idle();
-
-      if (commandedState==1) { state=1; MeasurementDelay=pollingMeasurementDelay; }
-      if (commandedState==2) { state=2; MeasurementDelay=pollingMeasurementDelay; }
-      if (commandedState==3) { state=3; MeasurementDelay=pollingMeasurementDelay; }
       break;
 
-  case (1): //Polling
+    case (states::START): //start single loop
+
+      servo1curr=servo1ClosedPosition;
+      servo2curr=servo2ClosedPosition;
+      servoWrite();
+      state=states::IDLE;
+
+      break;
+
+    case (states::IDLE): //Default/idle
+      idle();
+
+      if (commandedState==states::POLLING) { state=states::POLLING; MeasurementDelay=pollingMeasurementDelay; }
+      if (commandedState==states::MANUALSERVOCONTROL) { state=states::MANUALSERVOCONTROL; MeasurementDelay=pollingMeasurementDelay; }
+      if (commandedState==states::ARMED) { state=states::ARMED; MeasurementDelay=pollingMeasurementDelay; }
+
+      break;
+
+    case (states::POLLING): //Polling
       polling();
 
-      if (commandedState==0) { state=0; MeasurementDelay=idleMeasurementDelay; }
-      if (commandedState==2){  state=2; MeasurementDelay=pollingMeasurementDelay; }
-      if (commandedState==3) { state=3; MeasurementDelay=pollingMeasurementDelay; }
-      if (commandedState==17) {state=17;} 
-      if (commandedState==30) {state=30;}
+      if (commandedState==states::IDLE) { state=states::IDLE; MeasurementDelay=idleMeasurementDelay; }
+      if (commandedState==states::MANUALSERVOCONTROL){  state=states::MANUALSERVOCONTROL; MeasurementDelay=pollingMeasurementDelay; }
+      if (commandedState==states::ARMED) { state=states::ARMED; MeasurementDelay=pollingMeasurementDelay; }
+      if (commandedState==states::WIFIDEBUG) {state=states::WIFIDEBUG;} 
+      if (commandedState==states::PRESSURIZATION) {state=states::PRESSURIZATION;}
 
-    break;
+      break;
 
-  case (2): //Manual Servo Control
-    manualControl();
-    if (commandedState==0) { state=0; MeasurementDelay=idleMeasurementDelay; }
-    if (commandedState==1) { state=1; MeasurementDelay=pollingMeasurementDelay; }
-    if (commandedState==3) { state=3; MeasurementDelay=pollingMeasurementDelay; }
-    break;
+    case (states::MANUALSERVOCONTROL): //Manual Servo Control
+      manualControl();
+      if (commandedState==states::IDLE) { state=states::IDLE; MeasurementDelay=idleMeasurementDelay; }
+      if (commandedState==states::POLLING) { state=states::POLLING; MeasurementDelay=pollingMeasurementDelay; }
+      if (commandedState==states::ARMED) { state=states::ARMED; MeasurementDelay=pollingMeasurementDelay; }
 
-  case (3): //Armed
-    armed();
-    if (commandedState==0) { state=0; MeasurementDelay=idleMeasurementDelay; }
-    if (commandedState==1) { state=1; MeasurementDelay=idleMeasurementDelay; }
-    if (commandedState==4) { state=4; igniterTimer=loopStartTime; }
-    break;
+      break;
 
-  case (4): //Ignition
+    case (states::ARMED): //Armed
+      armed();
+      if (commandedState==states::IDLE) { state=states::IDLE; MeasurementDelay=idleMeasurementDelay; }
+      if (commandedState==states::POLLING) { state=states::POLLING; MeasurementDelay=idleMeasurementDelay; }
+      if (commandedState==states::IGNITION) { state=states::IGNITION; igniterTimer=loopStartTime; }
 
-    ignition();
-    if (commandedState==0) { state=0; MeasurementDelay=idleMeasurementDelay; }
-    if (commandedState==1) { state=1; MeasurementDelay=idleMeasurementDelay; }
+      break;
 
-    if (commandedState==5) { state=5; hotfireTimer=loopStartTime; MeasurementDelay=hotfireMeasurementDelay; }
+    case (states::IGNITION): //Ignition
 
+      ignition();
+      if (commandedState==states::IDLE) { state=states::IDLE; MeasurementDelay=idleMeasurementDelay; }
+      if (commandedState==states::POLLING) { state=states::POLLING; MeasurementDelay=idleMeasurementDelay; }
+      if (commandedState==states::HOTFIRESTAGE1) { state=states::HOTFIRESTAGE1; hotfireTimer=loopStartTime; MeasurementDelay=hotfireMeasurementDelay; }
 
-    break;
-  case (5): //Hotfire stage 1
+      break;
 
-    hotfire1();
+    case (states::HOTFIRESTAGE1): //Hotfire stage 1
 
-    if ((loopStartTime-hotfireTimer) > hotfireStage1Time) state=6;
+      hotfire1();
+      if ((loopStartTime-hotfireTimer) > hotfireStage1Time) state=states::HOTFIRESTAGE2;
 
-    break;
+      break;
 
-  case (6): //Hotfire stage 2
+    case (states::HOTFIRESTAGE2): //Hotfire stage 2
 
-    hotfire2();
-    if ((loopStartTime-hotfireTimer) > hotfireStage2Time) state=7;
+      hotfire2();
+      if ((loopStartTime-hotfireTimer) > hotfireStage2Time) state=states::HOTFIRESTAGE3;
 
-    break;
+      break;
 
-  case (7): //Hotfire stage 3
-    hotfire3();
-    if ((loopStartTime-hotfireTimer) > hotfireStage3Time) state=8;
+    case (states::HOTFIRESTAGE3): //Hotfire stage 3
 
-    break;
+      hotfire3();
+      if ((loopStartTime-hotfireTimer) > hotfireStage3Time) state=states::HOTFIRESTAGE4;
 
-  case (8): //Hotfire stage 4
-    hotfire4();
-    if ((loopStartTime-hotfireTimer) > hotfireStage4Time){  state=0; MeasurementDelay=idleMeasurementDelay; }
+      break;
 
-    break;
+    case (states::HOTFIRESTAGE4): //Hotfire stage 4
 
-  case (30): //Pressurization
-    bool fuelStatus = pressurizeFuel();
-    bool OxStatus = pressurizeOx();
-    if (commandedState == 1) {state = 1; closeSolenoidOx(); closeSolenoidFuel(); vent();}
-    if ((fuelStatus && OxStatus) && commandedState = 31) {
-      state = 31;
-    }
+      hotfire4();
+      if ((loopStartTime-hotfireTimer) > hotfireStage4Time){  state=states::IDLE; MeasurementDelay=idleMeasurementDelay; }
 
-  case (31): //QDs
-    disconnectOx();
-    disconnectFuel();
-    if (commandedState == 1) {state=1; reconnect();}
-    if (commandedState == 3) {state=3; MeasurementDelay=pollingMeasurementDelay;}
+      break;
 
-}
+    case (states::PRESSURIZATION): //Pressurization
+      { // note these brackets are added here to contain the declaration of 
+        // fuelStatus and OxStatus, whose definition spreads to other case statements if not contained within a local scope
+        bool fuelStatus = pressurizeFuel();
+        bool OxStatus = pressurizeOx();
+        if (commandedState == states::POLLING) {state = states::POLLING; closeSolenoidOx(); closeSolenoidFuel(); ventBoth();}
+        if ((fuelStatus && OxStatus) && commandedState == states::QDS) {
+          state = states::QDS;
+        }
 
+      }
+
+      break; // this wasn't here originally, was a fall through intended? If so, please put a comment about that
+      
+    case (states::QDS): //QDs
+      disconnectOx();
+      disconnectFuel();
+      if (commandedState == states::POLLING) {state=states::POLLING; reconnect();}
+      if (commandedState == states::ARMED) {state=states::ARMED; MeasurementDelay=pollingMeasurementDelay;}
+
+      break;
+  }
 }
 
 void statePrint() {
@@ -461,10 +484,8 @@ void reconnect() {
 
 
 void idle() {
-    DAQstate = state;
-
-dataCheck();
-
+  DAQstate = state;
+  dataCheck();
 }
 
 void dataCheck() {
@@ -502,99 +523,196 @@ void ignition() {
   Serial.println(" ");
 }
 
-bool pressurizeFuel() {
-  // Increase pressure
-  while (Readings.pt1val < pressureFuel) {
-    openSolenoidFuel();
-    if (commandedState = 1) {
-      closeSolenoidFuel();
-      ventFuel();
-      state = 1;
+template <typename F> // F is the type of the lambda function cond
+bool openSolenoidWhile(F cond, uint8_t oPin, uint8_t vPin, int pressure) {
+  while(cond()){
+    openSolenoid(oPin);
+    if (commandedState == states::POLLING) {
+      closeSolenoid(oPin);
+      vent(vPin);
+      state = states::POLLING;
       return false;
     }
   }
-  closeSolenoidFuel();
+  closeSolenoid(oPin);
+  return true;
+}
+
+int pressureFromPtval(int ptval) {
+  // This function should take a ptval in ticks and convert to 
+  // psi
+  Serial.println("pressureFromPtval NOT IMPLEMENTED");
+  throw "pressureFromPtval NOT IMPLEMENTED";
+}
+
+bool pressurize(uint8_t sPin, uint8_t vPin, int pressure, int* ptval) {
+  // sPin: solenoid to open to fill tank
+  // vPin: solenoid to open to vent
+  // pressure: goal pressure
+  // ptval: pointer to current pressure in ticks
+  if (!openSolenoidWhile([&](){return pressureFromPtval(*ptval) < pressure;}, sPin, vPin, pressure)) {
+    return false;
+  }
+  // while (Readings.pt1val < pressureFuel) {
+  //   openSolenoid(sPin);
+  //   if (commandedState == states::POLLING) {
+  //     closeSolenoid(sPin);
+  //     vent(vPin);
+  //     state = states::POLLING;
+  //     return false;
+  //   }
+  // }
+  // closeSolenoid(sPin);
+
   // Address potential overshoot & hold pressure (within tolerance)
   sleep(pressureDelay);
-  if (Readings.pt1val > (1+tolerance)*pressureFuel) {
-    while (Readings.pt1val > pressure) {
-      openSolenoidFuel();
-      if (commandedState = 1) {
-        closeSolenoidFuel();
-        ventFuel();
-        state = 1;
-        return false;
-      }
+  if (pressureFromPtval(*ptval) > (1+tolerance)*pressure) { 
+    // vent while pressure is greater than the wanted pressure, if the pressure was over the tolerance.
+    if (!openSolenoidWhile([&](){return pressureFromPtval(*ptval) > pressure;}, vPin, vPin, pressure)) {
+      return false;
     }
-    closeSolenoidFuel();
+    // while (*ptval > pressure) {
+    //   openSolenoid(sPin);
+    //   if (commandedState == states::POLLING) {
+    //     closeSolenoid(sPin);
+    //     vent(vPin);
+    //     state = states::POLLING;
+    //     return false;
+    //   }
+    // }
+    // closeSolenoid(sPin);
     sleep(pressureDelay);
-    if (Readings.pt1val < (1-tolerance)*pressureFuel) {
-      pressurizeFuel();
+
+    // recurse if the pressure is too low
+    if (pressureFromPtval(*ptval) < (1-tolerance)*pressure) { // there's no real guarantee that this won't cause an infinite loop...
+      pressurize(sPin, vPin, pressure, ptval);
     }
   }
   return true;
+}
+
+bool pressurizeFuelAndOx() {
+  bool res1 = pressurizeFuel();
+  bool res2 = pressurizeOx();
+  return res1 && res2;
+}
+
+bool pressurizeFuel() {
+  // Increase pressure
+  // OLD CODE
+  // while (Readings.pt1val < pressureFuel) {
+  //   openSolenoidFuel();
+  //   if (commandedState = states::POLLING) {
+  //     closeSolenoidFuel();
+  //     ventFuel();
+  //     state = states::POLLING;
+  //     return false;
+  //   }
+  // }
+  // closeSolenoidFuel();
+  // // Address potential overshoot & hold pressure (within tolerance)
+  // sleep(pressureDelay);
+  // if (Readings.pt1val > (1+tolerance)*pressureFuel) {
+  //   while (Readings.pt1val > pressure) {
+  //     openSolenoidFuel();
+  //     if (commandedState = 1) {
+  //       closeSolenoidFuel();
+  //       ventFuel();
+  //       state = 1;
+  //       return false;
+  //     }
+  //   }
+  //   closeSolenoidFuel();
+  //   sleep(pressureDelay);
+  //   if (Readings.pt1val < (1-tolerance)*pressureFuel) {
+  //     pressurizeFuel();
+  //   }
+  // }
+  // return true;
+  return pressurize(solenoidPinFuel, fuelSolVent, pressureFuel, &Readings.pt1val);
 }
 
 bool pressurizeOx() {
   // Increase pressure
-  while (Readings.pt2val < pressureOx) {
-    openSolenoidOx();
-    if (commandedState = 1) {
-      closeSolenoidOx();
-      ventOx();
-      state = 1;
-      return false;
-    }
-  }
-  closeSolenoidOx();
-  // Address potential overshoot & hold pressure (within tolerance)
-  sleep(pressureDelay);
-  if (Readings.pt1val > (1+tolerance)*pressureOx) {
-    while (Readings.pt1val > pressure) {
-      openSolenoidOx();
-      if (commandedState = 1) {
-        closeSolenoidOx();
-        ventOx();
-        state = 1;
-        return false;
-      }
-    }
-    closeSolenoidOx();
-    sleep(pressureDelay);
-    if (Readings.pt1val < (1-tolerance)*pressureOx) {
-      pressurizeOx();
-    }
-  }
-  return true;
+  // while (Readings.pt2val < pressureOx) {
+  //   openSolenoidOx();
+  //   if (commandedState = states::POLLING) {
+  //     closeSolenoidOx();
+  //     ventOx();
+  //     state = states::POLLING;
+  //     return false;
+  //   }
+  // }
+  // closeSolenoidOx();
+  // // Address potential overshoot & hold pressure (within tolerance)
+  // sleep(pressureDelay);
+  // if (Readings.pt1val > (1+tolerance)*pressureOx) {
+  //   while (Readings.pt1val > pressure) {
+  //     openSolenoidOx();
+  //     if (commandedState = states::POLLING) {
+  //       closeSolenoidOx();
+  //       ventOx();
+  //       state = states::POLLING;
+  //       return false;
+  //     }
+  //   }
+  //   closeSolenoidOx();
+  //   sleep(pressureDelay);
+  //   if (Readings.pt1val < (1-tolerance)*pressureOx) {
+  //     pressurizeOx();
+  //   }
+  // }
+  // return true;
+  return pressurize(solenoidPinOx, oxSolVent, pressureOx, &Readings.pt2val);
+}
+
+void openSolenoid(uint8_t PIN) {
+  digitalWrite(PIN, LOW);
+}
+
+void closeSolenoid(uint8_t PIN) {
+  digitalWrite(PIN, HIGH);
 }
 
 void openSolenoidFuel() {
-  digitalWrite(solenoidPinFuel, LOW);
+  openSolenoid(solenoidPinFuel);
 }
 
 void closeSolenoidFuel() {
-  digitalWrite(solenoidPinOx, HIGH);
+  closeSolenoid(solenoidPinOx);
 }
 
 void openSolenoidOx() {
-  digitalWrite(solenoidPinOx, LOW);
+  openSolenoid(solenoidPinOx);
 }
 
 void closeSolenoidOx() {
-  digitalWrite(solenoidPinOx, HIGH);
+  closeSolenoid(solenoidPinOx);
 }
 
-void vent() {
+void ventBoth() {
   ventOx();
   ventFuel();
 }
 
+void vent(uint8_t PIN) {
+  openSolenoid(PIN);
+}
+
 void ventFuel() {
-  digitalWrite(fuelSolVent, LOW);
+  openSolenoid(fuelSolVent);
 }
 
 void ventOx() {
-  digitalWrite(oxSolVent, LOW);
+  openSolenoid(oxSolVent);
+}
+
+void closeVentFuel() {
+  closeSolenoid(fuelSolVent);
+}
+
+void closeVentOx() {
+  closeSolenoid(oxSolVent);
 }
 
 void disconnectOx() {
@@ -606,7 +724,7 @@ void disconnectFuel() {
 }
 
 void hotfire1() {
-  DAQstate = 5;
+  DAQstate = states::HOTFIRESTAGE1;
   dataCheck();
 
   servo1curr=servo1ClosedPosition;
@@ -614,6 +732,7 @@ void hotfire1() {
   servoWrite();
 
 }
+
 void hotfire2() {
   dataCheck();
 
@@ -621,6 +740,7 @@ void hotfire2() {
   servo2curr=servo2OpenPosition;
   servoWrite();
 }
+
 void hotfire3() {
   dataCheck();
 
@@ -628,6 +748,7 @@ void hotfire3() {
   servo2curr=servo2ClosedPosition;
   servoWrite();
 }
+
 void hotfire4() {
   dataCheck();
 
@@ -635,10 +756,6 @@ void hotfire4() {
   servo2curr=servo2ClosedPosition;
   servoWrite();
 }
-
-
-
-
 
 void addReadingsToQueue() {
   getReadings();
@@ -660,34 +777,29 @@ void addReadingsToQueue() {
 }
 
 void getReadings(){
+  pt1val = scale1.read(); 
+  pt2val = scale2.read() ; 
+  pt3val = scale3.read(); 
+  pt4val = scale4.read(); 
+  pt5val = scale5.read(); 
+  pt6val = scale6.read(); 
+  pt7val = scale7.read();
 
- pt1val = scale1.read(); 
- pt2val = scale2.read() ; 
- pt3val = scale3.read(); 
- pt4val = scale4.read(); 
- pt5val = scale5.read(); 
- pt6val = scale6.read(); 
- pt7val = scale7.read();
-
-
-
-   // flowMeterReadings();
+  // flowMeterReadings();
     printSensorReadings();
     lastMeasurementTime=loopStartTime;
-   // Serial.print("Queue Length :");
+  // Serial.print("Queue Length :");
   //  Serial.println(queueLength);
 
-   // Serial.print("Current State: ");
-    //Serial.println(state);
+  // Serial.print("Current State: ");
+  //Serial.println(state);
 }
-
-
 
 void flowMeterReadings() {
   currentMillis = millis();
   fmcount = 0;
 
-   while (millis() - currentMillis < goalTime) {
+  while (millis() - currentMillis < goalTime) {
     servo1.write(servo1curr);
     servo2.write(servo2curr);
 
@@ -695,10 +807,10 @@ void flowMeterReadings() {
     currentState = digitalRead(FMPIN);
     if (!(currentState == lastState)) {
 
-     lastState = currentState;
-     fmcount += 1;
-   }
- }
+      lastState = currentState;
+      fmcount += 1;
+    }
+  }
   flowRate = fmcount;
   fmval =int(flowRate+1);  // Print the integer part of the variable
 }
@@ -706,31 +818,28 @@ void flowMeterReadings() {
 
 
 void printSensorReadings() {
-   serialMessage = "";
- //
- serialMessage.concat(millis());
- serialMessage.concat(" ");
- serialMessage.concat(pt1val);
- serialMessage.concat(" ");
- serialMessage.concat(pt2val);
- serialMessage.concat(" ");
- serialMessage.concat(pt3val);
- serialMessage.concat(" ");
- serialMessage.concat(pt4val);
- serialMessage.concat(" ");
- serialMessage.concat(pt5val);
- serialMessage.concat(" ");
- serialMessage.concat(pt6val);
- serialMessage.concat(" ");
- serialMessage.concat(pt7val);
- serialMessage.concat(" Queue Length: ");
- serialMessage.concat(queueLength);
- serialMessage.concat(" Current State: ");
- serialMessage.concat(state);
- Serial.println(serialMessage);
-
+  serialMessage = "";
+  serialMessage.concat(millis());
+  serialMessage.concat(" ");
+  serialMessage.concat(pt1val);
+  serialMessage.concat(" ");
+  serialMessage.concat(pt2val);
+  serialMessage.concat(" ");
+  serialMessage.concat(pt3val);
+  serialMessage.concat(" ");
+  serialMessage.concat(pt4val);
+  serialMessage.concat(" ");
+  serialMessage.concat(pt5val);
+  serialMessage.concat(" ");
+  serialMessage.concat(pt6val);
+  serialMessage.concat(" ");
+  serialMessage.concat(pt7val);
+  serialMessage.concat(" Queue Length: ");
+  serialMessage.concat(queueLength);
+  serialMessage.concat(" Current State: ");
+  serialMessage.concat(state);
+  Serial.println(serialMessage);
 }
-
 
 void checkQueue() {
   if (queueLength>0){
@@ -739,7 +848,7 @@ void checkQueue() {
 }
 
 void dataSend() {
-   // Set values to send
+  // Set values to send
   Readings.messageTime=ReadingsQueue[queueLength].messageTime;
   Readings.pt1val = ReadingsQueue[queueLength].pt1val;
   Readings.pt2val = ReadingsQueue[queueLength].pt2val;
@@ -758,17 +867,17 @@ void dataSend() {
   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &Readings, sizeof(Readings));
 
   if (result == ESP_OK) {
-     Serial.println("Sent with success Data Send");
-   //  ReadingsQueue[queueLength].pt1val=0;
-     queueLength-=1;
+    Serial.println("Sent with success Data Send");
+    //  ReadingsQueue[queueLength].pt1val=0;
+    queueLength-=1;
   }
   else {
-     Serial.println("Error sending the data");
+    Serial.println("Error sending the data");
   }
 }
 
 void wifiDebug() {
-  Readings.Debug=17;
+  Readings.Debug=17; 
   dataSend();
   Serial.println(Commands.Debug);
 }
