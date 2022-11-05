@@ -51,6 +51,7 @@ This code runs on the DAQ ESP32 and has a couple of main functions.
 
 #define pressureFuel 450    //In units of psi. May need to convert to different val in terms of sensor units
 #define pressureOx 450    //In units of psi. May need to convert to different val in terms of sensor units
+#define pressureCheckRel 50
 #define tolerance 0.10   //Acceptable range within set pressure
 #define pressureDelay 0.5
 
@@ -523,15 +524,19 @@ void ignition() {
   Serial.println(" ");
 }
 
+bool retToPollingFromPressure(uint8_t oPin, uint8_t vPin) {
+  closeSolenoid(oPin);
+  vent(vPin);
+  state = states::POLLING;
+  return false;
+}
+
 template <typename F> // F is the type of the lambda function cond
-bool openSolenoidWhile(F cond, uint8_t oPin, uint8_t vPin, int pressure) {
+bool openSolenoidWhile(F cond, uint8_t oPin, uint8_t vPin) {
   while(cond()){
     openSolenoid(oPin);
     if (commandedState == states::POLLING) {
-      closeSolenoid(oPin);
-      vent(vPin);
-      state = states::POLLING;
-      return false;
+      return retToPollingFromPressure(oPin, vPin);
     }
   }
   closeSolenoid(oPin);
@@ -550,7 +555,16 @@ bool pressurize(uint8_t sPin, uint8_t vPin, int pressure, int* ptval) {
   // vPin: solenoid to open to vent
   // pressure: goal pressure
   // ptval: pointer to current pressure in ticks
-  if (!openSolenoidWhile([&](){return pressureFromPtval(*ptval) < pressure;}, sPin, vPin, pressure)) {
+
+  // fill to almost the amount we want, so we can measure how much we overshot this goal, to adjust for the true goal
+  if (!openSolenoidWhile([&](){return pressureFromPtval(*ptval) < (pressure - pressureCheckRel);}, sPin, vPin)) {
+    return false;
+  }
+
+  sleep(pressureDelay);
+  int pressureOvershoot = pressureFromPtval(*ptval) - (pressure - pressureCheckRel);
+
+  if (!openSolenoidWhile([&](){return pressureFromPtval(*ptval) < (pressure - pressureOvershoot);}, sPin, vPin)) {
     return false;
   }
   // while (Readings.pt1val < pressureFuel) {
@@ -568,7 +582,7 @@ bool pressurize(uint8_t sPin, uint8_t vPin, int pressure, int* ptval) {
   sleep(pressureDelay);
   if (pressureFromPtval(*ptval) > (1+tolerance)*pressure) { 
     // vent while pressure is greater than the wanted pressure, if the pressure was over the tolerance.
-    if (!openSolenoidWhile([&](){return pressureFromPtval(*ptval) > pressure;}, vPin, vPin, pressure)) {
+    if (!openSolenoidWhile([&](){return pressureFromPtval(*ptval) > pressure;}, vPin, vPin)) {
       return false;
     }
     // while (*ptval > pressure) {
@@ -583,9 +597,12 @@ bool pressurize(uint8_t sPin, uint8_t vPin, int pressure, int* ptval) {
     // closeSolenoid(sPin);
     sleep(pressureDelay);
 
-    // recurse if the pressure is too low
-    if (pressureFromPtval(*ptval) < (1-tolerance)*pressure) { // there's no real guarantee that this won't cause an infinite loop...
-      pressurize(sPin, vPin, pressure, ptval);
+    if (pressureFromPtval(*ptval) < (1-tolerance)*pressure) { 
+      //pressurize(sPin, vPin, pressure, ptval); // this could've caused an infinite loop, so replacing with a error, then setting state back to polling
+      Serial.println("Pressure too low after venting.");
+      Serial.println("Pressure is ");
+      Serial.println(pressureFromPtval(*ptval));
+      return retToPollingFromPressure(sPin, vPin);
     }
   }
   return true;
