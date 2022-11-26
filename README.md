@@ -53,7 +53,7 @@ Please refer to https://rocketry.gitbook.io/public/tutorials/avionics/git-and-wo
 
 
 ## Helpful resources
-### ESP32-DevkitC (for PCB application)
+### ESP32-DevkitC (for PCB application - antenna sticks out of board)
 Getting started
 
 https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/esp32/get-started-devkitc.html
@@ -61,6 +61,11 @@ https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/esp32/g
 Pinout reference
 
 ![esp32 devkitC pinout](https://github.com/calstar/ellie-ground/blob/main/Misc_resources/esp32-devkitC-v4-pinout.png?raw=true "ESP32 DevkitC Pinout")
+
+### ESP32-WROOM (for breadboard/protoboard application - antenna does NOT stick out of board)
+
+Pinout reference
+![esp32 wroom pinout](https://www.electronicshub.org/wp-content/uploads/2021/02/ESP32-36-Pin-Pinout.jpg)
 
 ### ESP32-HUZZAH (for breadboard/protoboard application)
 
