@@ -65,7 +65,7 @@ Pinout reference
 ### ESP32-WROOM (for breadboard/protoboard application - antenna does NOT stick out of board)
 
 Pinout reference
-![esp32 wroom pinout](https://www.electronicshub.org/wp-content/uploads/2021/02/ESP32-36-Pin-Pinout.jpg)
+![esp32 wroom pinout](https://www.mischianti.org/wp-content/uploads/2020/11/ESP32-DOIT-DEV-KIT-v1-pinout-mischianti.png)
 
 ### ESP32-HUZZAH (for breadboard/protoboard application)
 
