@@ -9,8 +9,10 @@
 #define BUTTON2 17
 #define BUTTON3 16
 #define BUTTON4 21 //SET PIN NUMBER BUTTON
-#define PRESS_BUTTON
-#define QD_BUTTON
+
+#define DUMMY 1 
+#define PRESS_BUTTON DUMMY
+#define QD_BUTTON DUMMY
 
 #define INDICATOR1  4 // state 2 light
 #define INDICATOR2 23 // armed indicator
@@ -29,9 +31,6 @@
 #define servo2OpenPosition 0
 
 float pressTime = 0;
-
-
-
 
 String success;
 String message;
@@ -60,7 +59,23 @@ int commandstate = 0;
 
 
 //TIMING VARIABLES
-int state=-1;
+enum states {
+  WIFIDEBUG = 17,
+  START = -1,
+  IDLE = 0,
+  POLLING = 1,
+  MANUALSERVOCONTROL = 2,
+  ARMED = 3,
+  IGNITION = 4,
+  HOTFIRESTAGE1 = 5,
+  HOTFIRESTAGE2 = 6,
+  HOTFIRESTAGE3 = 7,
+  HOTFIRESTAGE4 = 8,
+  PRESSURIZATION = 30,
+  QDS = 31,
+  COMINTERFACEDEBUG = 18
+};
+int state=-states::START;
 int loopStartTime=0;
 int ignitionSendDelay=50;
 int pollingSendDelay=100;
@@ -125,8 +140,8 @@ typedef struct struct_message {
      int fmval;
     unsigned char S1;
     unsigned char S2;
-        int commandedState = 0;
-        int DAQstate=0;
+        int commandedState = states::IDLE;
+        int DAQstate=states::IDLE;
 
     unsigned char I;
     short int queueSize;
@@ -165,19 +180,19 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&incomingReadings, incomingData, sizeof(incomingReadings));
  // Serial.print("Bytes received: ");
    // Serial.println(len);
-  incomingPT1 = incomingReadings.pt1;
+  incomingPT1 = incomingReadings.pt1val;
      // Serial.print(incomingPT1);
 
   digitalWrite(INDICATOR1,HIGH);
 
   incomingMessageTime= incomingReadings.messageTime;
-  incomingPT2 = incomingReadings.pt2;
-  incomingPT3 = incomingReadings.pt3;
-  incomingPT4 = incomingReadings.pt4;
+  incomingPT2 = incomingReadings.pt2val;
+  incomingPT3 = incomingReadings.pt3val;
+  incomingPT4 = incomingReadings.pt4val;
   incomingFM = incomingReadings.fmval;
-  incomingPT5 = incomingReadings.pt5;
-  incomingPT6 = incomingReadings.pt6;
-  incomingPT7 = incomingReadings.pt7;
+  incomingPT5 = incomingReadings.pt5val;
+  incomingPT6 = incomingReadings.pt6val;
+  incomingPT7 = incomingReadings.pt7val;
   incomingS1 = incomingReadings.S1;
   incomingS2 = incomingReadings.S2;
   queueSize= incomingReadings.queueSize;
@@ -295,113 +310,111 @@ void loop() {
 
 switch (state) {
 
-  case (17): //BASIC WIFI TEST DEBUG STATE A STATE
+  case (states::WIFIDEBUG): //BASIC WIFI TEST DEBUG STATE A STATE
    wifiDebug();
    
-    if (serialState==1) {state=1;} 
+    if (serialState==1) {state=states::POLLING;} 
   break;
   
 
-  case (18): //COM INTERFACE BUTTON DEBUG STATE  B STATE
+  case (states::COMINTERFACEDEBUG): //COM INTERFACE BUTTON DEBUG STATE  B STATE
   comDebug();
 
-    if (serialState==1) {state=1;} 
+    if (serialState==1) {state=states::POLLING;} 
   break;
 
-  case (-1): //start single loop
+  case (states::START): //start single loop
 
-    state=0; 
+    state=states::IDLE; 
   break;
 
 
-  case (0): //Default/idle
+  case (states::IDLE): //Default/idle
       idle();
-      state=1;  
+      state=states::POLLING;  
     break;
 
   case (1): //Polling
     polling();
 
-    if ((digitalRead(BUTTON2)==1)||(serialState==2)) { state=3; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay; }
-    if (serialState==18) {state=18;} 
-    if (serialState==17) {state=17;} 
-    if (digitalRead(PRESS_BUTTON)==30) {state=30;}
+    if ((digitalRead(BUTTON2)==1)||(serialState==2)) { state=states::ARMED; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay; }
+    if (serialState==18) {state=states::COMINTERFACEDEBUG;} 
+    if (serialState==17) {state=states::WIFIDEBUG;} 
+    if (digitalRead(PRESS_BUTTON)==30) {state=states::PRESSURIZATION;}
 
     break;
 
-  case (2): //Manual Servo Control
+  case (states::MANUALSERVOCONTROL): //Manual Servo Control
 
  manualControl();
-  if ((serialState==40)) { state=0; SendDelay=pollingSendDelay; }
+  if ((serialState==40)) { state=states::IDLE; SendDelay=pollingSendDelay; }
 
   break;
 
-  case (3): //Armed
+  case (states::ARMED): //Armed
     armed();
 
     //button to ignition 
-    if ((digitalRead(BUTTON3)==1)||(serialState==3)) { state=4; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=ignitionSendDelay; }
+    if ((digitalRead(BUTTON3)==1)||(serialState==3)) { state=states::IGNITION; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=ignitionSendDelay; }
     //RETURN BUTTON
-    if ((digitalRead(BUTTON1)==1)||(serialState==1)) { state=1; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay; }
+    if ((digitalRead(BUTTON1)==1)||(serialState==1)) { state=states::POLLING; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay; }
       
     break;
 
 
-  case (4): //Ignition
+  case (states::IGNITION): //Ignition
 
     ignition();
     //HOTFIRE BUTTON
-      if ((digitalRead(BUTTON4)==1)||(serialState==4)) state=5; 
+      if ((digitalRead(BUTTON4)==1)||(serialState==4)) state=states::HOTFIRESTAGE1; 
       //RETURN BUTTON
-      if ((digitalRead(BUTTON1)==1)||(serialState==1)) { state=1; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay; }
+      if ((digitalRead(BUTTON1)==1)||(serialState==1)) { state=states::POLLING; S1=servo1ClosedPosition; S2=servo2ClosedPosition; SendDelay=pollingSendDelay; }
       
 
 
     break;
-  case (5): //Hotfire stage 1
+  case (states::HOTFIRESTAGE1): //Hotfire stage 1
 
     hotfire();
 
-    if (actualState==0) state=0;
+    if (actualState==0) state=states::IDLE;
 
 
     break;
 
-  case (30): //Pressurization
+  case (states::PRESSURIZATION): //Pressurization
     pressurize();
     if ((digitalRead(QD_BUTTON) == 31)) {
-      state = 31;
+      state = states::QDS;
     }
     if (digitalRead(BUTTON1)==1) {
-      state = 1;
+      state = states::POLLING;
     }
-  
-  case (31): //QDs
+    break;
+  case (states::QDS): //QDs
     disconnect();
     if (digitalRead(BUTTON1) == 1) {
-      state==1;
+      state = states::POLLING;
     }
     if (digitalRead(BUTTON2 == 1)) {
-      state = 3;
+      state = states::ARMED;
     }
-
+    break;
 }
 
 }
 void statePrint() {
-  
-
 }
 
 
 
 void pressurize() {
-  commandedState=30;
+  commandedState=states::PRESSURIZATION;
   dataSendCheck();
 }
 
 void disconnect() {
-  commandedState=31;
+  commandedState=states::QDS;
   dataSendCheck();
 }
 
@@ -412,14 +425,14 @@ void idle() {
 }
 
 void polling() {
-  commandedState=1;
+  commandedState=states::POLLING;
   dataSendCheck();
   digitalWrite(INDICATOR5,HIGH);
 
 }
 
 void manualControl() {
-  commandedState=2;
+  commandedState=states::MANUALSERVOCONTROL;
   dataSendCheck();
 
     digitalWrite(INDICATOR5,LOW);
@@ -428,20 +441,20 @@ void manualControl() {
 }
 
 void armed() {
-  commandedState=3;
+  commandedState=states::ARMED;
   dataSendCheck();
   digitalWrite(INDICATOR5,LOW);
 
 }
 
 void ignition() {
-  commandedState=4;
+  commandedState=states::IGNITION;
   dataSendCheck();
 
 }
 
 void hotfire() {
-  commandedState=5;
+  commandedState=states::HOTFIRESTAGE1;
   dataSendCheck();
 
 }
@@ -484,7 +497,7 @@ void oldcode() {
 
 
   switch (state) {
-    case 0:
+    case states::IDLE:
 
 
       digitalWrite(INDICATOR2, LOW);
@@ -500,7 +513,7 @@ void oldcode() {
   
       break;
 
-    case 1:
+    case states::POLLING:
 
  
       pressed2 = digitalRead(BUTTON2);
